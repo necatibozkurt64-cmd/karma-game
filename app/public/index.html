@@ -3,100 +3,136 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Karma – Das Kartenspiel</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🃏</text></svg>">
+<title>KARMA</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 104 100'%3E%3Crect width='104' height='100' fill='%23050507'/%3E%3Cpath fill='%234b5080' fill-rule='evenodd' d='M24 54a38 38 0 1 0 76 0a38 38 0 1 0-76 0ZM15 54a33 33 0 1 0 66 0a33 33 0 1 0-66 0Z'/%3E%3Cpath fill='%23ffffff' fill-rule='evenodd' d='M2 48a40 40 0 1 0 80 0a40 40 0 1 0-80 0ZM21 48a35 35 0 1 0 70 0a35 35 0 1 0-70 0Z'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@200;300;400;500;600&display=swap" rel="stylesheet">
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 :root {
-  --felt: #0d3520;
-  --felt2: #0a2a19;
+  /* ── KARMA Brand Tokens ──────────────────────────────────────────────
+     Schwarz als Bühne, Weiß als Stimme, Indigo als Akzent – exakt die
+     Palette der Logo-Dateien. --gold bleibt als Alias bestehen, damit
+     ältere Regeln automatisch den neuen Akzent bekommen. */
+  --bg-0:    #050507;
+  --bg-1:    #0b0d14;
+  --glow:    #191d33;
+  --brand:      #4b5080;
+  --brand-lift: #737bc4;
+  --brand-deep: #2b2f52;
+  --ink:   #ffffff;
+  --ink-2: rgba(255,255,255,.62);
+  --ink-3: rgba(255,255,255,.34);
+  --line:    rgba(255,255,255,.10);
+  --line-2:  rgba(255,255,255,.18);
+  --surface: rgba(255,255,255,.045);
+  --accent: var(--brand-lift);
+  --gold: var(--brand-lift);
+  --silver: #C0C0C0;
+  /* Alt-Namen: einige Regeln bauen Verläufe aus --felt/--felt2 */
+  --felt:  #14172a;
+  --felt2: #06070c;
   --card-w: 130px;
   --card-h: 190px;
   --radius: 14px;
-  --gold: #FFD700;
-  --silver: #C0C0C0;
+  /* Die Bildmarke als Datei-URI – nutzbar für Kartenrücken, Muster, Wasserzeichen */
+  --mark: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 104 100'%3E%3Cpath fill='%234b5080' fill-rule='evenodd' d='M24 54a38 38 0 1 0 76 0a38 38 0 1 0-76 0ZM15 54a33 33 0 1 0 66 0a33 33 0 1 0-66 0Z'/%3E%3Cpath fill='%23ffffff' fill-rule='evenodd' d='M2 48a40 40 0 1 0 80 0a40 40 0 1 0-80 0ZM21 48a35 35 0 1 0 70 0a35 35 0 1 0-70 0Z'/%3E%3C/svg%3E");
+  --mark-mono: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 104 100'%3E%3Cpath fill='%23ffffff' fill-opacity='.55' fill-rule='evenodd' d='M24 54a38 38 0 1 0 76 0a38 38 0 1 0-76 0ZM15 54a33 33 0 1 0 66 0a33 33 0 1 0-66 0Z'/%3E%3Cpath fill='%23ffffff' fill-rule='evenodd' d='M2 48a40 40 0 1 0 80 0a40 40 0 1 0-80 0ZM21 48a35 35 0 1 0 70 0a35 35 0 1 0-70 0Z'/%3E%3C/svg%3E");
 }
-/* ── Hintergrund-Themes ── */
-body[data-bg="black"]    { --felt: #14141a; --felt2: #050507; }
-body[data-bg="grey"]     { --felt: #343941; --felt2: #1a1d22; }
-body[data-bg="blue"]     { --felt: #103055; --felt2: #071628; }
-body[data-bg="violet"]   { --felt: #33144f; --felt2: #170a29; }
-body[data-bg="mint"]     { --felt: #12564a; --felt2: #062b26; }
-body[data-bg="british"]  { --felt: #0d3520; --felt2: #061a10; }
-body[data-bg="brown"]    { --felt: #4a2e1d; --felt2: #1f1309; }
+/* ── Hintergrund-Themes (alle auf der dunklen Markenbasis) ── */
+body[data-bg="onyx"]    { --bg-0: #050507; --glow: #191d33; --felt: #14172a; --felt2: #06070c; }
+body[data-bg="mitter"]  { --bg-0: #04060c; --glow: #10203c; --felt: #10203c; --felt2: #04060c; }
+body[data-bg="nebel"]   { --bg-0: #0a0b0e; --glow: #262a33; --felt: #23262e; --felt2: #0a0b0e; }
+body[data-bg="violett"] { --bg-0: #06040b; --glow: #241a3d; --felt: #241a3d; --felt2: #06040b; }
+body[data-bg="tiefsee"] { --bg-0: #03080a; --glow: #0d2c33; --felt: #0d2c33; --felt2: #03080a; }
+body[data-bg="wein"]    { --bg-0: #080406; --glow: #331424; --felt: #331424; --felt2: #080406; }
+body[data-bg="reinweiss"] { --bg-0: #000000; --glow: #101010; --felt: #16161a; --felt2: #000000; }
 body {
-  font-family: 'Segoe UI', system-ui, sans-serif;
-  background: radial-gradient(ellipse at 50% 0%, var(--felt) 0%, var(--felt2) 100%) fixed;
-  color: #fff; min-height: 100vh; overflow-x: hidden;
+  font-family: 'Jost', 'Futura', 'Avenir Next', 'Century Gothic', system-ui, sans-serif;
+  font-weight: 300;
+  background:
+    radial-gradient(1200px 720px at 50% -12%, var(--glow) 0%, transparent 62%),
+    radial-gradient(900px 620px at 50% 112%, color-mix(in srgb, var(--glow) 70%, transparent) 0%, transparent 62%),
+    var(--bg-0);
+  background-attachment: fixed;
+  color: var(--ink); min-height: 100vh; overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
 }
 
+/* ── Marke ── */
+.brand-mark { width: 118px; aspect-ratio: 104 / 100; display: block; filter: drop-shadow(0 0 38px rgba(115,123,196,.45)); }
+.brand-word { width: min(330px, 68vw); aspect-ratio: 470 / 112; display: block; color: var(--ink); }
+.brand-lockup { display: flex; flex-direction: column; align-items: center; gap: 26px; }
+
 /* ── LOBBY ── */
-#lobby { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; gap: 24px; padding: 20px; }
-.logo { font-size: 64px; font-weight: 900; letter-spacing: -2px; text-transform: uppercase; background: linear-gradient(135deg, #FFD700, #FF8C00); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-shadow: none; filter: drop-shadow(0 4px 8px rgba(0,0,0,.5)); }
-.logo-sub { color: rgba(255,255,255,.6); font-size: 14px; letter-spacing: 4px; text-transform: uppercase; margin-top: -20px; }
-.card-box { background: rgba(0,0,0,.4); border: 1px solid rgba(255,255,255,.1); border-radius: 16px; padding: 32px; width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 14px; }
-.card-box h2 { font-size: 18px; color: rgba(255,255,255,.8); border-bottom: 1px solid rgba(255,255,255,.1); padding-bottom: 10px; }
-input, select { background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.15); border-radius: 8px; color: #fff; padding: 12px 14px; font-size: 15px; width: 100%; outline: none; transition: border-color .2s; }
-input::placeholder { color: rgba(255,255,255,.35); }
-input:focus, select:focus { border-color: rgba(255,215,0,.5); }
-select option { background: var(--felt2); }
-.btn { padding: 13px 20px; border-radius: 10px; border: none; font-size: 15px; font-weight: 700; cursor: pointer; transition: all .2s; letter-spacing: .5px; }
-.btn-gold { background: linear-gradient(135deg, #FFD700, #FF8C00); color: #000; }
-.btn-gold:hover { transform: translateY(-1px); box-shadow: 0 4px 20px rgba(255,140,0,.4); }
-.btn-outline { background: transparent; border: 1.5px solid rgba(255,255,255,.3); color: #fff; }
-.btn-outline:hover { border-color: rgba(255,255,255,.7); background: rgba(255,255,255,.05); }
-.btn-red { background: linear-gradient(135deg, #ef4444, #dc2626); color: #fff; }
-.btn-green { background: linear-gradient(135deg, #22c55e, #16a34a); color: #fff; }
-.btn-green:hover { transform: translateY(-1px); box-shadow: 0 4px 20px rgba(34,197,94,.4); }
-.btn-purple { background: linear-gradient(135deg, #a855f7, #7c3aed); color: #fff; }
-.divider { text-align: center; color: rgba(255,255,255,.3); font-size: 13px; position: relative; }
-.divider::before, .divider::after { content: ''; position: absolute; top: 50%; width: 40%; height: 1px; background: rgba(255,255,255,.15); }
+#lobby { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; gap: 30px; padding: 24px; }
+.logo-sub { color: var(--ink-3); font-size: 11px; letter-spacing: .42em; text-transform: uppercase; margin-top: -14px; font-weight: 300; }
+.card-box { background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02)); border: 1px solid var(--line); border-radius: 18px; padding: 30px; width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 14px; backdrop-filter: blur(10px); box-shadow: 0 24px 60px rgba(0,0,0,.55); }
+.card-box h2 { font-size: 12px; font-weight: 400; color: var(--ink-2); border-bottom: 1px solid var(--line); padding-bottom: 12px; text-transform: uppercase; letter-spacing: .24em; }
+input, select { background: rgba(255,255,255,.05); border: 1px solid var(--line-2); border-radius: 10px; color: var(--ink); padding: 13px 14px; font-size: 15px; font-family: inherit; font-weight: 300; width: 100%; outline: none; transition: border-color .2s, background .2s; }
+input::placeholder { color: var(--ink-3); }
+input:focus, select:focus { border-color: rgba(115,123,196,.75); background: rgba(115,123,196,.08); }
+select option { background: #0b0d14; }
+.btn { padding: 13px 20px; border-radius: 10px; border: none; font-size: 12px; font-weight: 500; font-family: inherit; cursor: pointer; transition: all .2s; letter-spacing: .18em; text-transform: uppercase; }
+.btn-gold { background: linear-gradient(135deg, var(--brand-lift), var(--brand)); color: #fff; box-shadow: 0 6px 22px rgba(75,80,128,.35); }
+.btn-gold:hover { transform: translateY(-1px); box-shadow: 0 10px 30px rgba(115,123,196,.45); }
+.btn-outline { background: transparent; border: 1px solid var(--line-2); color: var(--ink); }
+.btn-outline:hover { border-color: rgba(255,255,255,.55); background: rgba(255,255,255,.05); }
+.btn-red { background: linear-gradient(135deg, #b83a3a, #8f2626); color: #fff; }
+.btn-green { background: linear-gradient(135deg, var(--brand-lift), var(--brand)); color: #fff; }
+.btn-green:hover { transform: translateY(-1px); box-shadow: 0 10px 30px rgba(115,123,196,.45); }
+.btn-purple { background: linear-gradient(135deg, #8b7fd6, #5b5395); color: #fff; }
+.divider { text-align: center; color: var(--ink-3); font-size: 10px; text-transform: uppercase; letter-spacing: .28em; position: relative; }
+.divider::before, .divider::after { content: ''; position: absolute; top: 50%; width: 36%; height: 1px; background: var(--line); }
 .divider::before { left: 0; }
 .divider::after { right: 0; }
-#session-id-display { font-size: 36px; font-weight: 900; letter-spacing: 8px; color: var(--gold); text-align: center; padding: 10px; background: rgba(0,0,0,.3); border-radius: 8px; border: 1px solid rgba(255,215,0,.3); }
+#session-id-display { font-size: 32px; font-weight: 300; letter-spacing: .32em; text-indent: .32em; color: var(--ink); text-align: center; padding: 14px 10px; background: rgba(0,0,0,.35); border-radius: 10px; border: 1px solid rgba(115,123,196,.35); }
 #players-list { display: flex; flex-direction: column; gap: 8px; }
-.player-chip { display: flex; align-items: center; gap: 10px; background: rgba(255,255,255,.06); border-radius: 8px; padding: 10px 14px; font-size: 14px; }
-.player-chip .crown { color: var(--gold); }
+.player-chip { display: flex; align-items: center; gap: 10px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 11px 14px; font-size: 14px; }
+.player-chip .crown { color: var(--brand-lift); }
 
 /* ── GAME ── */
 #game { display: none; flex-direction: column; height: 100vh; overflow: hidden; }
 
 /* Top bar */
 #topbar { display: flex; align-items: center; gap: 12px; padding: 8px 16px; background: rgba(0,0,0,.4); border-bottom: 1px solid rgba(255,255,255,.08); flex-shrink: 0; }
-.tb-logo { font-size: 20px; font-weight: 900; background: linear-gradient(135deg, #FFD700, #FF8C00); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-.tb-info { color: rgba(255,255,255,.5); font-size: 12px; }
-.tb-phase { margin-left: auto; background: rgba(255,255,255,.1); border-radius: 20px; padding: 4px 12px; font-size: 12px; font-weight: 600; }
+.tb-brand { display: flex; align-items: center; gap: 9px; flex-shrink: 0; }
+.tb-brand .brand-mark { width: 22px; filter: none; }
+.tb-brand .brand-word { width: 78px; }
+.tb-info { color: var(--ink-3); font-size: 11px; letter-spacing: .1em; }
+.tb-phase { margin-left: auto; background: rgba(255,255,255,.06); border: 1px solid var(--line); border-radius: 999px; padding: 4px 14px; font-size: 10px; font-weight: 400; text-transform: uppercase; letter-spacing: .18em; }
 .tb-scores { display: flex; gap: 8px; }
-.score-chip { background: rgba(0,0,0,.3); border-radius: 6px; padding: 3px 8px; font-size: 11px; }
-.score-chip.me { border: 1px solid rgba(255,215,0,.4); color: var(--gold); }
+.score-chip { background: rgba(0,0,0,.3); border: 1px solid var(--line); border-radius: 999px; padding: 3px 10px; font-size: 11px; color: var(--ink-2); }
+.score-chip.me { border-color: rgba(115,123,196,.55); color: var(--brand-lift); }
 
 /* Opponents zone */
 #opponents { display: flex; justify-content: center; gap: 20px; padding: 10px 16px; flex-shrink: 0; flex-wrap: wrap; }
 .opponent-zone { display: flex; flex-direction: column; align-items: center; gap: 8px; }
-.opp-name { font-size: 12px; font-weight: 700; color: rgba(255,255,255,.7); text-align: center; text-transform: uppercase; letter-spacing: 0.5px; }
-.opp-name.active { color: #4ade80; }
+.opp-name { font-size: 10px; font-weight: 400; color: var(--ink-2); text-align: center; text-transform: uppercase; letter-spacing: .2em; }
+.opp-name.active { color: var(--brand-lift); }
 .opp-hand { display: flex; gap: 4px; }
-.opp-card { width: 75px; height: 105px; border-radius: 8px; }
+.opp-card { width: 75px; height: 105px; border-radius: 8px; position: relative; }
 
 /* Center zone */
 #center { flex: 1; display: flex; align-items: center; justify-content: center; gap: 30px; }
 .pile-area { display: flex; flex-direction: column; align-items: center; gap: 8px; }
-.pile-label { font-size: 11px; color: rgba(255,255,255,.4); text-transform: uppercase; letter-spacing: 2px; }
+.pile-label { font-size: 9px; color: var(--ink-3); text-transform: uppercase; letter-spacing: .28em; }
 
 /* My zone */
 #myzone { padding: 10px 16px 16px; flex-shrink: 0; }
-.my-label { font-size: 11px; color: rgba(255,255,255,.5); text-align: center; margin-bottom: 8px; }
-.my-name-row { display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 8px; }
-.my-name { font-size: 14px; font-weight: 700; }
-.turn-badge { background: #22c55e; border-radius: 20px; padding: 2px 10px; font-size: 11px; font-weight: 700; }
-.hand-heading { font-size: 12px; font-weight: 700; color: rgba(255,255,255,.7); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; text-align: center; }
+.my-label { font-size: 11px; color: var(--ink-3); text-align: center; margin-bottom: 8px; }
+.my-name-row { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 8px; }
+.my-name { font-size: 13px; font-weight: 400; text-transform: uppercase; letter-spacing: .2em; }
+.turn-badge { background: linear-gradient(135deg, var(--brand-lift), var(--brand)); border-radius: 999px; padding: 3px 12px; font-size: 9px; font-weight: 500; text-transform: uppercase; letter-spacing: .18em; }
+.hand-heading { font-size: 9px; font-weight: 400; color: var(--ink-3); text-transform: uppercase; letter-spacing: .28em; margin-bottom: 10px; text-align: center; }
 #my-hand { display: flex; justify-content: center; gap: 10px; }
 #action-bar { display: flex; justify-content: center; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
 
 /* ── CARD ── */
 .card { width: var(--card-w); height: var(--card-h); border-radius: var(--radius); cursor: pointer; position: relative; transition: transform .2s, box-shadow .2s; flex-shrink: 0; }
 .card:hover { transform: translateY(-4px); box-shadow: 0 8px 24px rgba(0,0,0,.5); }
-.card.selected { transform: translateY(-8px); box-shadow: 0 0 0 3px #FFD700, 0 8px 24px rgba(255,215,0,.4); }
+.card.selected { transform: translateY(-8px); box-shadow: 0 0 0 2px var(--brand-lift), 0 8px 24px rgba(115,123,196,.45); }
 .card.disabled { opacity: .4; cursor: not-allowed; pointer-events: none; }
 .card.glow-green { box-shadow: 0 0 0 2px #22c55e, 0 4px 20px rgba(34,197,94,.4); }
 .card.glow-red { box-shadow: 0 0 0 2px #ef4444, 0 4px 20px rgba(239,68,68,.4); }
@@ -108,49 +144,58 @@ select option { background: var(--felt2); }
 .card-value { font-size: 18px; font-weight: 900; color: #fff; text-align: center; line-height: 1.1; }
 .card-ability-icon { position: absolute; top: 4px; right: 4px; width: 18px; height: 18px; border-radius: 50%; font-size: 10px; display: flex; align-items: center; justify-content: center; font-weight: 700; }
 
-.card-back { width: 100%; height: 100%; border-radius: var(--radius); background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); border: 2px solid rgba(255,255,255,.15); position: relative; overflow: hidden; }
-.card-back::before { content: 'K'; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 48px; font-weight: 900; color: rgba(255,215,0,.15); }
-.card-back::after { content: ''; position: absolute; inset: 6px; border: 1px solid rgba(255,215,0,.2); border-radius: 6px; }
+.card-back { width: 100%; height: 100%; border-radius: var(--radius); background: linear-gradient(180deg, #1c1e34 0%, #0f1124 100%); border: 1px solid var(--line); position: relative; overflow: hidden; }
+.card-back::before { content: ''; position: absolute; inset: 0; background-image: var(--mark-mono); background-position: center; background-repeat: no-repeat; background-size: 62%; opacity: .18; }
+.card-back::after { content: ''; position: absolute; inset: 5px; border: 1px solid rgba(115,123,196,.16); border-radius: 5px; }
 
-/* ── Kartenrücken-Muster ── */
-/* 1 · Klassik – tiefes Marineblau mit goldenem K */
+/* ── Kartenrücken-Muster – alle mit KARMA-Sichel im Zentrum ── */
+/* 1 · Onyx – dunkles Grafit, Sichel als Marke */
 body[data-cardback="classic"] .card-back {
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  background: radial-gradient(120% 90% at 50% 50%, #232743 0%, #0b0d16 78%);
+  border-color: var(--line);
 }
-/* 2 · Rauten – Argyle-Gitter in Burgund/Gold */
+body[data-cardback="classic"] .card-back::before {
+  content: ''; background: var(--mark) center / 55% no-repeat; opacity: .55;
+}
+body[data-cardback="classic"] .card-back::after { border-color: rgba(115,123,196,.25); }
+
+/* 2 · Indigo – volle Markenfarbe, Sichel monoton */
 body[data-cardback="rauten"] .card-back {
   background:
-    repeating-linear-gradient(45deg,  transparent 0 9px, rgba(255,215,0,.13) 9px 18px),
-    repeating-linear-gradient(-45deg, transparent 0 9px, rgba(255,215,0,.13) 9px 18px),
-    linear-gradient(150deg, #4a0f22 0%, #7a1734 100%);
-  border-color: rgba(255,215,0,.3);
+    radial-gradient(140% 100% at 50% 50%, #3a3f6e 0%, #14162a 88%);
+  border-color: rgba(115,123,196,.45);
 }
-body[data-cardback="rauten"] .card-back::before { content: '◆'; font-size: 26px; color: rgba(255,215,0,.35); }
-body[data-cardback="rauten"] .card-back::after { border-color: rgba(255,215,0,.35); }
+body[data-cardback="rauten"] .card-back::before {
+  content: ''; background: var(--mark-mono) center / 58% no-repeat; opacity: .85;
+}
+body[data-cardback="rauten"] .card-back::after { border-color: rgba(255,255,255,.18); }
 
-/* 3 · Wellen – konzentrische Guilloche in Petrol */
+/* 3 · Guilloche – konzentrische Linien + Sichel */
 body[data-cardback="wellen"] .card-back {
   background:
-    repeating-radial-gradient(circle at 50% 50%, rgba(255,255,255,.11) 0 1.5px, transparent 1.5px 8px),
-    linear-gradient(160deg, #052e42 0%, #0a5c72 100%);
-  border-color: rgba(180,240,255,.25);
+    repeating-radial-gradient(circle at 50% 50%, rgba(115,123,196,.16) 0 1px, transparent 1px 7px),
+    radial-gradient(120% 90% at 50% 50%, #1c1f3a 0%, #060811 90%);
+  border-color: rgba(115,123,196,.32);
 }
-body[data-cardback="wellen"] .card-back::before { content: 'K'; color: rgba(220,250,255,.22); }
-body[data-cardback="wellen"] .card-back::after { border-color: rgba(180,240,255,.28); }
+body[data-cardback="wellen"] .card-back::before {
+  content: ''; background: var(--mark) center / 44% no-repeat; opacity: .95;
+}
+body[data-cardback="wellen"] .card-back::after { border-color: rgba(115,123,196,.30); }
 
-/* 4 · Karo – Tartan-Karo in sattem Grün */
+/* 4 · Sternen – Punktraster + Sichel */
 body[data-cardback="karo"] .card-back {
   background:
-    repeating-linear-gradient(0deg,  rgba(0,0,0,.30) 0 5px, transparent 5px 11px),
-    repeating-linear-gradient(90deg, rgba(0,0,0,.30) 0 5px, transparent 5px 11px),
-    linear-gradient(135deg, #0d3d1e 0%, #1c7a3c 100%);
-  border-color: rgba(255,255,255,.22);
+    radial-gradient(rgba(255,255,255,.15) 1px, transparent 1.3px) 0 0 / 12px 12px,
+    linear-gradient(180deg, #10132a, #04050b);
+  border-color: rgba(255,255,255,.18);
 }
-body[data-cardback="karo"] .card-back::before { content: '♠'; font-size: 30px; color: rgba(255,255,255,.20); }
-body[data-cardback="karo"] .card-back::after { border-color: rgba(255,255,255,.25); }
+body[data-cardback="karo"] .card-back::before {
+  content: ''; background: var(--mark-mono) center / 52% no-repeat; opacity: .55;
+}
+body[data-cardback="karo"] .card-back::after { border-color: rgba(255,255,255,.18); }
 
 /* Deck pile */
-.deck-pile { width: var(--card-w); height: var(--card-h); position: relative; cursor: pointer; }
+.deck-pile { width: 190px; height: 280px; position: relative; cursor: pointer; }
 .deck-pile .card-back { transition: transform .15s; }
 .deck-pile:hover .card-back { transform: translateY(-3px); }
 .deck-count { position: absolute; bottom: -20px; left: 50%; transform: translateX(-50%); font-size: 11px; color: rgba(255,255,255,.5); white-space: nowrap; }
@@ -169,7 +214,7 @@ body[data-cardback="karo"] .card-back::after { border-color: rgba(255,255,255,.2
 .drawn-hint { font-size: 13px; color: rgba(255,255,255,.65); text-align: center; max-width: 340px; }
 #drawn-hand { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
 #drawn-hand .card { width: 78px; height: 114px; }
-#drawn-hand .card:hover { transform: translateY(-6px); box-shadow: 0 0 0 2px var(--gold), 0 8px 22px rgba(255,215,0,.35); }
+#drawn-hand .card:hover { transform: translateY(-6px); box-shadow: 0 0 0 2px var(--gold), 0 8px 22px rgba(115,123,196,.35); }
 .drawn-slot { display: flex; flex-direction: column; align-items: center; gap: 4px; }
 .drawn-slot-lbl { font-size: 10px; color: rgba(255,255,255,.4); }
 
@@ -186,20 +231,22 @@ body[data-cardback="karo"] .card-back::after { border-color: rgba(255,255,255,.2
 #peek-modal { max-width: 520px; }
 #peek-modal .peek-hand { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; justify-items: center; margin: 18px 0 4px; }
 #peek-modal .peek-count { text-align: center; font-size: 13px; color: rgba(255,255,255,.5); margin-bottom: 8px; }
-.peek-slot { display: flex; flex-direction: column; align-items: center; gap: 6px; width: 100%; }
-.peek-slot .card { width: 100%; max-width: 210px; height: auto; aspect-ratio: 210 / 322; }
+.peek-slot { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+/* Die Maße kommen inline aus buildCardInner – renderPeekModal rechnet sie
+   passend zur Modalbreite aus. */
+.peek-slot .card { width: auto; height: auto; }
 /* Solange nur Rückseiten zu sehen sind (Auswahl / nach dem Merken) gibt es
    nichts zu lesen – dann bleibt die kompakte Viererreihe. */
 #peek-modal .peek-hand.picking { display: flex; gap: 10px; justify-content: center; }
-#peek-modal .peek-hand.picking .peek-slot { width: auto; }
-#peek-modal .peek-hand.picking .peek-slot .card { width: 92px; max-width: none; }
+#peek-modal .peek-hand.picking .peek-slot .card { width: 92px; height: 133px; }
 .peek-slot-lbl { font-size: 11px; color: rgba(255,255,255,.4); letter-spacing: .5px; }
 .peek-slot.is-peeked .peek-slot-lbl { color: var(--gold); font-weight: 700; }
-/* Karte füllt den Slot – überschreibt die festen Pixelmaße aus buildCardInner,
-   damit das Info-Panel mitwächst statt zu clippen. */
-#peek-hand .tcg-card-container { width: 100% !important; height: 100% !important; }
-#peek-hand .tcg-card-image { height: auto !important; flex: 0 0 42%; }
-#peek-hand .tcg-card-info { height: auto !important; }
+/* buildCardInner rechnet das Info-Panel mit einer 24px-Kopfzeile – die ist real
+   ~60px hoch, deshalb wurde der Flavor-Text abgeschnitten. Hier bekommt das
+   Info-Panel seine natürliche Höhe und das Bild den Rest – so wird nie etwas
+   abgeschnitten, egal wie groß die Karte gerade ist. */
+#peek-hand .tcg-card-image { height: auto !important; flex: 1 1 auto; min-height: 40px; }
+#peek-hand .tcg-card-info { height: auto !important; flex: 0 0 auto; }
 #peek-hand .tcg-card-name { font-size: 13px; }
 #peek-hand .tcg-ability-label { font-size: 10px; margin-bottom: 5px; }
 #peek-hand .tcg-ability-name { font-size: 13px; }
@@ -213,6 +260,18 @@ body[data-cardback="karo"] .card-back::after { border-color: rgba(255,255,255,.2
   #peek-modal > p { font-size: 13px; margin-bottom: 10px; }
   #peek-modal .reveal-timer { margin: 8px 0 4px; }
   #peek-modal .peek-hand { gap: 10px; margin: 12px 0 4px; }
+  /* Vier Rückseiten nebeneinander müssen in die Modalbreite passen. */
+  #peek-modal .peek-hand.picking { gap: 8px; }
+  #peek-modal .peek-hand.picking .peek-slot .card { width: 68px; height: 98px; }
+  /* Kleinere Karte → weniger Platz für die Kopfzeile und das Info-Panel. */
+  #peek-hand .tcg-card-header { padding: 5px 7px; }
+  #peek-hand .tcg-card-value-hex { width: 29px; height: 34px; font-size: 15px; margin-right: 5px; }
+  #peek-hand .tcg-card-info { padding: 6px 7px; }
+  #peek-hand .tcg-card-name { font-size: 11px; letter-spacing: .3px; }
+  #peek-hand .tcg-ability-label { font-size: 8px; padding: 2px 6px; margin-bottom: 3px; }
+  #peek-hand .tcg-ability-name { font-size: 11px; }
+  #peek-hand .tcg-ability-desc { font-size: 9.5px; }
+  #peek-hand .tcg-flavor-text { font-size: 9px; }
 }
 
 /* Ability modal */
@@ -221,95 +280,90 @@ body[data-cardback="karo"] .card-back::after { border-color: rgba(255,255,255,.2
 .ability-player-name { font-size: 11px; color: rgba(255,255,255,.6); }
 .ability-player-hand { display: flex; gap: 4px; }
 
-/* Ability observer animations */
-.ability-observer-board { display: flex; flex-direction: column; gap: 14px; margin: 16px 0; align-items: center; }
-.ability-obs-player { display: flex; flex-direction: column; align-items: center; gap: 4px; }
-.ability-obs-player-name { font-size: 11px; color: rgba(255,255,255,.5); font-weight: 600; }
-.ability-obs-hand { display: flex; gap: 6px; }
-.ability-obs-card { width: 55px; height: 80px; border-radius: 8px; position: relative; transition: all 0.3s ease; }
-.ability-obs-card .card-back { border-radius: 6px; }
-.ability-obs-card .card-back::before { font-size: 18px; }
-.ability-obs-card .card-back::after { inset: 3px; }
+/* ── Fähigkeiten am Tisch (Flugbahn) ───────────────────────────────────────────
+   Wer nicht am Zug ist, bekommt kein Vollbild-Modal mehr, sondern verfolgt die
+   Fähigkeit direkt in der Tischansicht: die betroffenen Karten sind markiert,
+   während gewählt wird, und fliegen sichtbar von Slot zu Slot, wenn getauscht
+   wird. Bewegt werden ausschließlich Rückseiten – Werte bleiben verborgen. */
 
-/* Peek glow — pulsing eye icon */
-@keyframes peekGlow {
-  0%, 100% { box-shadow: 0 0 8px 2px rgba(255,215,0,.4); }
-  50% { box-shadow: 0 0 20px 6px rgba(255,215,0,.7); }
+/* Laufband statt Modal für Beobachter */
+/* Im Fluss statt überlagert: der Streifen darf den Gegnernamen nicht verdecken.
+   Er bleibt darum immer im Layout und wird nur unsichtbar geschaltet – sonst
+   würde der Tisch bei jeder Fähigkeit um seine Höhe springen. */
+#ability-ticker {
+  visibility: hidden;
+  margin: 6px auto 0; width: max-content;
+  display: flex; align-items: center; gap: 10px;
+  padding: 7px 16px; border-radius: 999px;
+  min-height: 34px; box-sizing: border-box;
+  background: rgba(10,14,26,.92); border: 1px solid rgba(255,255,255,.14);
+  box-shadow: 0 6px 24px rgba(0,0,0,.45);
+  font-size: 13px; max-width: min(92vw, 560px);
 }
-@keyframes peekEyeFade {
-  0% { opacity: 0; transform: translate(-50%,-50%) scale(0.5); }
-  20% { opacity: 1; transform: translate(-50%,-50%) scale(1.1); }
-  30% { opacity: 1; transform: translate(-50%,-50%) scale(1); }
-  80% { opacity: 1; }
-  100% { opacity: 0.6; }
-}
-.ability-obs-card.peek-target {
-  animation: peekGlow 1.2s ease-in-out infinite;
-  border: 2px solid var(--gold);
-  z-index: 2;
-}
-.ability-obs-card.peek-target::after {
-  content: '👁';
-  position: absolute; top: 50%; left: 50%;
-  transform: translate(-50%, -50%);
-  font-size: 24px; filter: drop-shadow(0 0 6px rgba(255,215,0,.8));
-  animation: peekEyeFade 1.5s ease forwards;
-  pointer-events: none; z-index: 3;
-}
+#ability-ticker.show { visibility: visible; }
+#ability-ticker .tick-icon { font-size: 17px; line-height: 1; flex-shrink: 0; }
+#ability-ticker .tick-text { color: rgba(255,255,255,.85); }
+#ability-ticker .tick-text strong { color: var(--gold); }
+#ability-ticker.mode-swap { border-color: rgba(156,39,176,.55); }
+#ability-ticker.mode-peek { border-color: rgba(115,123,196,.5); }
 
-/* Swap glow — pulsing purple */
-@keyframes swapGlow {
-  0%, 100% { box-shadow: 0 0 8px 2px rgba(156,39,176,.4); }
-  50% { box-shadow: 0 0 20px 6px rgba(156,39,176,.7); }
+/* Tisch-Markierungen */
+@keyframes tblPeekGlow {
+  0%, 100% { box-shadow: 0 0 8px 2px rgba(115,123,196,.35); }
+  50% { box-shadow: 0 0 22px 7px rgba(115,123,196,.7); }
 }
-@keyframes swapBounce {
-  0% { transform: translateY(0); }
-  25% { transform: translateY(-6px); }
-  50% { transform: translateY(0); }
-  75% { transform: translateY(-3px); }
-  100% { transform: translateY(0); }
-}
-.ability-obs-card.swap-target {
-  animation: swapGlow 1s ease-in-out infinite, swapBounce 0.8s ease-in-out;
-  border: 2px solid #9C27B0;
-  z-index: 2;
-}
-.ability-obs-card.swap-target::after {
-  content: '↔';
-  position: absolute; top: 50%; left: 50%;
-  transform: translate(-50%, -50%);
-  font-size: 20px; font-weight: 900; color: #CE93D8;
-  text-shadow: 0 0 8px rgba(156,39,176,.8);
-  pointer-events: none; z-index: 3;
-}
-
-/* Swap-select (first card chosen, waiting for second) */
-@keyframes selectPulse {
+@keyframes tblSelPulse {
   0%, 100% { box-shadow: 0 0 6px 2px rgba(156,39,176,.3); }
-  50% { box-shadow: 0 0 12px 4px rgba(156,39,176,.5); }
+  50% { box-shadow: 0 0 16px 5px rgba(156,39,176,.6); }
 }
-.ability-obs-card.swap-selected {
-  animation: selectPulse 1.5s ease-in-out infinite;
-  border: 2px solid #9C27B0;
-}
-
-/* See-own glow */
-.ability-obs-card.see-own-target {
-  animation: peekGlow 1.2s ease-in-out infinite;
-  border: 2px solid var(--gold);
-}
-.ability-obs-card.see-own-target::after {
-  content: '👁';
+.tbl-peek::after, .tbl-swap-sel::after, .tbl-swap-pair::after {
   position: absolute; top: 50%; left: 50%;
-  transform: translate(-50%, -50%);
-  font-size: 24px; filter: drop-shadow(0 0 6px rgba(255,215,0,.8));
-  animation: peekEyeFade 1.5s ease forwards;
+  transform: translate(-50%,-50%);
   pointer-events: none; z-index: 3;
 }
+.tbl-peek { animation: tblPeekGlow 1.2s ease-in-out infinite; outline: 2px solid var(--gold); outline-offset: -2px; border-radius: var(--radius); }
+.tbl-peek::after { content: '👁'; font-size: 26px; filter: drop-shadow(0 0 6px rgba(115,123,196,.85)); }
+.tbl-swap-sel { animation: tblSelPulse 1.4s ease-in-out infinite; outline: 2px dashed #9C27B0; outline-offset: -2px; border-radius: var(--radius); }
+.tbl-swap-sel::after { content: '1'; font-size: 16px; font-weight: 900; color: #CE93D8; text-shadow: 0 0 8px rgba(156,39,176,.9); }
+.tbl-swap-pair { animation: tblSelPulse 1s ease-in-out infinite; outline: 2px solid #9C27B0; outline-offset: -2px; border-radius: var(--radius); }
+.tbl-swap-pair::after { content: '↔'; font-size: 22px; font-weight: 900; color: #CE93D8; text-shadow: 0 0 8px rgba(156,39,176,.9); }
 
-/* Swap arrow connector between players */
-.swap-arrow-row { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 4px 0; }
-.swap-arrow { font-size: 22px; color: #CE93D8; animation: swapBounce 1s ease-in-out infinite; }
+/* Flug: die Karte bewegt sich physisch von Slot zu Slot */
+.card-flying { z-index: 200 !important; pointer-events: none; filter: drop-shadow(0 14px 26px rgba(0,0,0,.6)) drop-shadow(0 0 12px rgba(156,39,176,.75)); }
+.card-shifting { z-index: 150 !important; pointer-events: none; }
+@keyframes cardLanded {
+  0%   { box-shadow: 0 0 0 3px rgba(156,39,176,.9), 0 0 26px 8px rgba(156,39,176,.55); }
+  100% { box-shadow: 0 0 0 0 rgba(156,39,176,0), 0 0 0 0 rgba(156,39,176,0); }
+}
+.card-landed { animation: cardLanded .7s ease-out forwards; border-radius: var(--radius); }
+
+/* Der Startslot bleibt als gestrichelter Umriss stehen, solange die Karte fliegt */
+.slot-ghost {
+  position: fixed; z-index: 120; pointer-events: none;
+  border: 2px dashed rgba(206,147,216,.75); border-radius: var(--radius);
+  background: rgba(156,39,176,.12);
+  animation: ghostFade .95s ease-out forwards;
+}
+@keyframes ghostFade {
+  0%   { opacity: 1; }
+  70%  { opacity: .8; }
+  100% { opacity: 0; }
+}
+
+/* Hund ohne Tausch: die Karten heben kurz ab und legen sich zurück */
+@keyframes stayBounce {
+  0%   { transform: translateY(0) rotate(0deg); }
+  35%  { transform: translateY(-14px) rotate(-3deg); }
+  70%  { transform: translateY(0) rotate(1deg); }
+  100% { transform: translateY(0) rotate(0deg); }
+}
+.card-stay { animation: stayBounce .7s ease-in-out; z-index: 150; }
+.card-stay::after {
+  content: '↩'; position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%,-50%);
+  font-size: 24px; font-weight: 900; color: rgba(255,255,255,.85);
+  text-shadow: 0 0 10px rgba(0,0,0,.9); pointer-events: none; z-index: 3;
+}
 
 /* Racing */
 #racing-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.85); display: none; align-items: center; justify-content: center; z-index: 90; flex-direction: column; gap: 20px; }
@@ -362,7 +416,7 @@ body[data-cardback="karo"] .card-back::after { border-color: rgba(255,255,255,.2
 .reveal-secs { font-size: 30px; font-weight: 900; color: var(--gold); line-height: 1; font-variant-numeric: tabular-nums; }
 .reveal-timer-lbl { font-size: 12px; color: rgba(255,255,255,.55); }
 .reveal-bar { height: 6px; background: rgba(255,255,255,.14); border-radius: 3px; overflow: hidden; }
-.reveal-fill { height: 100%; width: 100%; background: linear-gradient(90deg, #FFD700, #FF8C00); border-radius: 3px; }
+.reveal-fill { height: 100%; width: 100%; background: linear-gradient(90deg, #737bc4, #4b5080); border-radius: 3px; }
 
 /* ── Einstellungen ── */
 .gear-btn { background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.15); color: #fff; border-radius: 8px; width: 34px; height: 30px; font-size: 15px; cursor: pointer; line-height: 1; flex-shrink: 0; }
@@ -400,7 +454,7 @@ body[data-cardback="karo"] .card-back::after { border-color: rgba(255,255,255,.2
   position: relative;
   padding: 8px 10px;
   background: rgba(0,0,0,.3);
-  border-bottom: 2px solid rgba(255,215,0,.4);
+  border-bottom: 2px solid rgba(115,123,196,.4);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -410,7 +464,7 @@ body[data-cardback="karo"] .card-back::after { border-color: rgba(255,255,255,.2
 
 .tcg-card-name {
   font-weight: 700;
-  color: #FFD700;
+  color: #737bc4;
   text-transform: uppercase;
   letter-spacing: 0.8px;
   flex: 1;
@@ -421,7 +475,7 @@ body[data-cardback="karo"] .card-back::after { border-color: rgba(255,255,255,.2
 }
 
 .tcg-card-star {
-  color: #FFD700;
+  color: #737bc4;
   font-size: 12px;
   margin-left: 6px;
 }
@@ -540,9 +594,9 @@ body[data-cardback="karo"] .card-back::after { border-color: rgba(255,255,255,.2
 .tcg-silver .tcg-ability-label { background: #9E9E9E; }
 .tcg-silver .tcg-card-border { box-shadow: inset 0 0 20px rgba(158, 158, 158, 0.3); }
 
-.tcg-gold { border: 2px solid #FFD700; }
-.tcg-gold .tcg-card-header { border-bottom-color: #FFD700; }
-.tcg-gold .tcg-ability-label { background: #FFD700; color: #000; }
+.tcg-gold { border: 2px solid #737bc4; }
+.tcg-gold .tcg-card-header { border-bottom-color: #737bc4; }
+.tcg-gold .tcg-ability-label { background: #737bc4; color: #000; }
 .tcg-gold .tcg-card-border { box-shadow: inset 0 0 20px rgba(255, 215, 0, 0.5); }
 
 /* Pop-In Animation */
@@ -571,7 +625,7 @@ body[data-cardback="karo"] .card-back::after { border-color: rgba(255,255,255,.2
     <button id="lobby-help" class="gear-btn" onclick="openHelp()" title="Spielregeln">❓</button>
     <button id="lobby-gear" class="gear-btn" onclick="openSettings()" title="Einstellungen">⚙</button>
   </div>
-  <div class="logo">KARMA</div>
+  <svg class="brand-mark" viewBox="0 0 104 100"><rect width="104" height="100" fill="transparent"/><path fill="#4b5080" fill-rule="evenodd" d="M24 54a38 38 0 1 0 76 0a38 38 0 1 0-76 0ZM15 54a33 33 0 1 0 66 0a33 33 0 1 0-66 0Z"/><path fill="#ffffff" fill-rule="evenodd" d="M2 48a40 40 0 1 0 80 0a40 40 0 1 0-80 0ZM21 48a35 35 0 1 0 70 0a35 35 0 1 0-70 0Z"/></svg>
   <div class="logo-sub">Das Kartenspiel</div>
 
   <div id="lobby-home" class="card-box">
@@ -607,13 +661,19 @@ body[data-cardback="karo"] .card-back::after { border-color: rgba(255,255,255,.2
 <!-- GAME -->
 <div id="game">
   <div id="topbar">
-    <div class="tb-logo">KARMA</div>
+    <div class="tb-brand">
+      <svg class="brand-mark" viewBox="0 0 104 100"><path fill="#4b5080" fill-rule="evenodd" d="M24 54a38 38 0 1 0 76 0a38 38 0 1 0-76 0ZM15 54a33 33 0 1 0 66 0a33 33 0 1 0-66 0Z"/><path fill="#ffffff" fill-rule="evenodd" d="M2 48a40 40 0 1 0 80 0a40 40 0 1 0-80 0ZM21 48a35 35 0 1 0 70 0a35 35 0 1 0-70 0Z"/></svg>
+      <svg class="brand-word" viewBox="-6 -6 470 112" fill="none" stroke="currentColor" stroke-width="3.4"><path d="M2 0 V100 M2 56 L48 0 M2 56 L48 100"/><path d="M90 100 L120 0 L150 100"/><path d="M192 100 V0 H222 A26 26 0 0 1 222 52 H192 M220 52 L250 100"/><path d="M292 100 V0 L324 72 L356 0 V100"/><path d="M398 100 L428 0 L458 100"/></svg>
+    </div>
     <div id="tb-mode" class="tb-info"></div>
     <div id="tb-scores" class="tb-scores"></div>
     <div id="tb-phase" class="tb-phase"></div>
     <button class="gear-btn" onclick="openHelp()" title="Spielregeln">❓</button>
     <button class="gear-btn" onclick="openSettings()" title="Einstellungen">⚙</button>
   </div>
+
+  <!-- Beobachter-Laufband: zeigt laufende Fähigkeiten, ohne den Tisch zu verdecken -->
+  <div id="ability-ticker"><span class="tick-icon"></span><span class="tick-text"></span></div>
 
   <div id="opponents"></div>
 
@@ -709,12 +769,12 @@ body[data-cardback="karo"] .card-back::after { border-color: rgba(255,255,255,.2
     <h2>📖 Spielregeln – Karma</h2>
 
     <div style="margin-top:20px">
-      <h3 style="font-size:15px;color:#FFD700;margin-bottom:8px">🎯 Ziel des Spiels</h3>
+      <h3 style="font-size:15px;color:#737bc4;margin-bottom:8px">🎯 Ziel des Spiels</h3>
       <p style="font-size:13px;line-height:1.6">Wer am Ende der Runde die wenigsten Punkte hat, gewinnt die Runde. Der Spieler mit den wenigsten Gesamtpunkten am Ende aller Runden gewinnt das Spiel!</p>
     </div>
 
     <div style="margin-top:16px">
-      <h3 style="font-size:15px;color:#FFD700;margin-bottom:8px">🎴 Spielvorbereitung</h3>
+      <h3 style="font-size:15px;color:#737bc4;margin-bottom:8px">🎴 Spielvorbereitung</h3>
       <ul style="font-size:13px;line-height:1.8;margin-left:20px">
         <li><strong>2–4 Spieler</strong> können zusammen spielen</li>
         <li>Jeder Spieler erhält <strong>4 verdeckte Karten</strong> auf die Hand</li>
@@ -724,7 +784,7 @@ body[data-cardback="karo"] .card-back::after { border-color: rgba(255,255,255,.2
     </div>
 
     <div style="margin-top:16px">
-      <h3 style="font-size:15px;color:#FFD700;margin-bottom:8px">🔄 Der Spielablauf</h3>
+      <h3 style="font-size:15px;color:#737bc4;margin-bottom:8px">🔄 Der Spielablauf</h3>
       <p style="font-size:13px;line-height:1.8;margin-bottom:8px"><strong>Jeder Zug besteht aus:</strong></p>
       <ol style="font-size:13px;line-height:1.8;margin-left:20px">
         <li><strong>Ziehe eine Karte</strong> vom Nachziehstapel</li>
@@ -739,12 +799,12 @@ body[data-cardback="karo"] .card-back::after { border-color: rgba(255,255,255,.2
     </div>
 
     <div style="margin-top:16px">
-      <h3 style="font-size:15px;color:#FFD700;margin-bottom:8px">⚡ Spiel beenden</h3>
+      <h3 style="font-size:15px;color:#737bc4;margin-bottom:8px">⚡ Spiel beenden</h3>
       <p style="font-size:13px;line-height:1.6">Wenn du denkst, du hast die besten Karten oder willst das Risiko eingehen, kannst du jederzeit <strong>„Spiel beenden"</strong> rufen. Danach hat jeder Spieler <strong>noch einen Zug</strong>, dann ist die Runde zu Ende.</p>
     </div>
 
     <div style="margin-top:16px">
-      <h3 style="font-size:15px;color:#FFD700;margin-bottom:8px">🎁 Spezielle Karten – Fähigkeiten</h3>
+      <h3 style="font-size:15px;color:#737bc4;margin-bottom:8px">🎁 Spezielle Karten – Fähigkeiten</h3>
       <p style="font-size:13px;line-height:1.6;margin-bottom:8px">Manche Karten haben besondere Fähigkeiten:</p>
       <ul style="font-size:13px;line-height:1.8;margin-left:20px">
         <li><strong>Eigene Karte sehen:</strong> Schau dir kurz eine deiner verdeckten Karten an</li>
@@ -755,12 +815,12 @@ body[data-cardback="karo"] .card-back::after { border-color: rgba(255,255,255,.2
     </div>
 
     <div style="margin-top:16px">
-      <h3 style="font-size:15px;color:#FFD700;margin-bottom:8px">🏃 Racing – Schnell reagieren!</h3>
+      <h3 style="font-size:15px;color:#737bc4;margin-bottom:8px">🏃 Racing – Schnell reagieren!</h3>
       <p style="font-size:13px;line-height:1.6">Wenn eine Karte mit gleichem Wert wie die oberste Karte des Ablagestapels gespielt wird, kann jeder Spieler sofort eine Karte mit demselben Wert ablegen – wer es schafft, gewinnt den Stapel!</p>
     </div>
 
     <div style="margin-top:16px">
-      <h3 style="font-size:15px;color:#FFD700;margin-bottom:8px">🎯 Kartenwerte & Punkte</h3>
+      <h3 style="font-size:15px;color:#737bc4;margin-bottom:8px">🎯 Kartenwerte & Punkte</h3>
       <p style="font-size:13px;line-height:1.6;margin-bottom:8px">Jede Karte hat einen Wert (von 1 bis K). Deine Punkte in der Runde sind die <strong>Summe aller Kartenwerte</strong> auf deiner Hand:</p>
       <ul style="font-size:13px;line-height:1.8;margin-left:20px">
         <li><strong>2–10:</strong> Ihr Zahlenwert (2 Punkte, 10 Punkte, usw.)</li>
@@ -771,7 +831,7 @@ body[data-cardback="karo"] .card-back::after { border-color: rgba(255,255,255,.2
       </ul>
     </div>
 
-    <div style="margin-top:16px;padding:12px;background:rgba(255,215,0,.1);border-left:3px solid #FFD700;border-radius:8px">
+    <div style="margin-top:16px;padding:12px;background:rgba(115,123,196,.1);border-left:3px solid #737bc4;border-radius:8px">
       <p style="font-size:12px;color:rgba(255,255,255,.8);margin:0"><strong>💡 Tipp:</strong> Merke dir gut, welche Karten du ansehen darfst! Je besser du weißt, wo die niedrigen Karten sind, desto besser kannst du deine Hand verbessern.</p>
     </div>
 
@@ -874,6 +934,9 @@ function handleMessage(msg) {
   }
   if (msg.type === 'error') { showToast(msg.msg, '#ef4444'); return; }
   if (msg.type === 'toast') { showToast(msg.msg, msg.color); return; }
+  // Kommt unmittelbar vor dem State mit den vertauschten Händen: markiert, welche
+  // Karten fliegen sollen (bzw. dass bewusst nicht getauscht wurde).
+  if (msg.type === 'swap_anim') { noteSwapAnim(msg); return; }
   if (msg.type === 'state') {
     state = msg;
     syncRevealCountdown();
@@ -947,19 +1010,19 @@ const TRANSLATIONS = {
     remember: 'Sekunden – einprägen!',
     rules: 'Spielregeln',
     BGThemes: {
-      black: 'Schwarz',
-      grey: 'Grau',
-      blue: 'Blau',
-      violet: 'Violett',
-      mint: 'Mint',
-      british: 'British Green',
-      brown: 'Braun',
+      onyx: 'Onyx',
+      mitter: 'Mitternacht',
+      nebel: 'Nebel',
+      violett: 'Violett',
+      tiefsee: 'Tiefsee',
+      wein: 'Wein',
+      reinweiss: 'Rein Schwarz',
     },
     CardBacks: {
-      classic: 'Klassik',
-      rauten: 'Rauten',
-      wellen: 'Wellen',
-      karo: 'Karo',
+      classic: 'Onyx',
+      rauten: 'Indigo',
+      wellen: 'Guilloche',
+      karo: 'Sternenfeld',
     }
   },
   en: {
@@ -998,19 +1061,19 @@ const TRANSLATIONS = {
     remember: 'seconds – remember!',
     rules: 'Game Rules',
     BGThemes: {
-      black: 'Black',
-      grey: 'Grey',
-      blue: 'Blue',
-      violet: 'Violet',
-      mint: 'Mint',
-      british: 'British Green',
-      brown: 'Brown',
+      onyx: 'Onyx',
+      mitter: 'Midnight',
+      nebel: 'Fog',
+      violett: 'Violet',
+      tiefsee: 'Deep Sea',
+      wein: 'Wine',
+      reinweiss: 'Pure Black',
     },
     CardBacks: {
-      classic: 'Classic',
-      rauten: 'Diamonds',
-      wellen: 'Waves',
-      karo: 'Tartan',
+      classic: 'Onyx',
+      rauten: 'Indigo',
+      wellen: 'Guilloche',
+      karo: 'Starfield',
     }
   }
 };
@@ -1026,28 +1089,34 @@ function t(key) {
 }
 
 const BG_THEMES = [
-  { id: 'black',   label: () => t('BGThemes.black'),        css: 'linear-gradient(160deg,#14141a,#050507)' },
-  { id: 'grey',    label: () => t('BGThemes.grey'),         css: 'linear-gradient(160deg,#343941,#1a1d22)' },
-  { id: 'blue',    label: () => t('BGThemes.blue'),         css: 'linear-gradient(160deg,#103055,#071628)' },
-  { id: 'violet',  label: () => t('BGThemes.violet'),       css: 'linear-gradient(160deg,#33144f,#170a29)' },
-  { id: 'mint',    label: () => t('BGThemes.mint'),         css: 'linear-gradient(160deg,#12564a,#062b26)' },
-  { id: 'british', label: () => t('BGThemes.british'),      css: 'linear-gradient(160deg,#0d3520,#061a10)' },
-  { id: 'brown',   label: () => t('BGThemes.brown'),        css: 'linear-gradient(160deg,#4a2e1d,#1f1309)' },
+  { id: 'onyx',      label: () => t('BGThemes.onyx'),      css: 'radial-gradient(circle at 50% 30%,#191d33 0%,#050507 78%)' },
+  { id: 'mitter',    label: () => t('BGThemes.mitter'),    css: 'radial-gradient(circle at 50% 30%,#10203c 0%,#04060c 78%)' },
+  { id: 'nebel',     label: () => t('BGThemes.nebel'),     css: 'radial-gradient(circle at 50% 30%,#262a33 0%,#0a0b0e 78%)' },
+  { id: 'violett',   label: () => t('BGThemes.violett'),   css: 'radial-gradient(circle at 50% 30%,#241a3d 0%,#06040b 78%)' },
+  { id: 'tiefsee',   label: () => t('BGThemes.tiefsee'),   css: 'radial-gradient(circle at 50% 30%,#0d2c33 0%,#03080a 78%)' },
+  { id: 'wein',      label: () => t('BGThemes.wein'),      css: 'radial-gradient(circle at 50% 30%,#331424 0%,#080406 78%)' },
+  { id: 'reinweiss', label: () => t('BGThemes.reinweiss'), css: 'linear-gradient(180deg,#101010,#000000)' },
 ];
+// Kartenrücken – der Mond-Emblem als SVG bleibt in .card-back::before; hier nur die Preview-Kacheln.
+const KARMA_MARK_URL = "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 104 100'%3E%3Cpath fill='%234b5080' fill-rule='evenodd' d='M24 54a38 38 0 1 0 76 0a38 38 0 1 0-76 0ZM15 54a33 33 0 1 0 66 0a33 33 0 1 0-66 0Z'/%3E%3Cpath fill='%23ffffff' fill-rule='evenodd' d='M2 48a40 40 0 1 0 80 0a40 40 0 1 0-80 0ZM21 48a35 35 0 1 0 70 0a35 35 0 1 0-70 0Z'/%3E%3C/svg%3E\")";
+const KARMA_MARK_MONO = "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 104 100'%3E%3Cpath fill='%23ffffff' fill-opacity='.55' fill-rule='evenodd' d='M24 54a38 38 0 1 0 76 0a38 38 0 1 0-76 0ZM15 54a33 33 0 1 0 66 0a33 33 0 1 0-66 0Z'/%3E%3Cpath fill='%23ffffff' fill-rule='evenodd' d='M2 48a40 40 0 1 0 80 0a40 40 0 1 0-80 0ZM21 48a35 35 0 1 0 70 0a35 35 0 1 0-70 0Z'/%3E%3C/svg%3E\")";
 const CARD_BACKS = [
-  { id: 'classic', label: () => t('CardBacks.classic'), emblem: 'K', color: 'rgba(255,215,0,.35)',
-    css: 'linear-gradient(135deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%)', ring: 'rgba(255,215,0,.35)' },
-  { id: 'rauten',  label: () => t('CardBacks.rauten'),  emblem: '◆', color: 'rgba(255,215,0,.5)',
-    css: 'repeating-linear-gradient(45deg,transparent 0 7px,rgba(255,215,0,.13) 7px 14px),repeating-linear-gradient(-45deg,transparent 0 7px,rgba(255,215,0,.13) 7px 14px),linear-gradient(150deg,#4a0f22,#7a1734)', ring: 'rgba(255,215,0,.4)' },
-  { id: 'wellen',  label: () => t('CardBacks.wellen'),  emblem: 'K', color: 'rgba(220,250,255,.4)',
-    css: 'repeating-radial-gradient(circle at 50% 50%,rgba(255,255,255,.11) 0 1.5px,transparent 1.5px 8px),linear-gradient(160deg,#052e42,#0a5c72)', ring: 'rgba(180,240,255,.35)' },
-  { id: 'karo',    label: () => t('CardBacks.karo'),    emblem: '♠', color: 'rgba(255,255,255,.35)',
-    css: 'repeating-linear-gradient(0deg,rgba(0,0,0,.30) 0 4px,transparent 4px 9px),repeating-linear-gradient(90deg,rgba(0,0,0,.30) 0 4px,transparent 4px 9px),linear-gradient(135deg,#0d3d1e,#1c7a3c)', ring: 'rgba(255,255,255,.3)' },
+  { id: 'classic', label: () => t('CardBacks.classic'),
+    css: `${KARMA_MARK_URL} center / 55% no-repeat, radial-gradient(120% 90% at 50% 50%,#232743 0%,#0b0d16 78%)`, ring: 'rgba(115,123,196,.35)' },
+  { id: 'rauten',  label: () => t('CardBacks.rauten'),
+    css: `${KARMA_MARK_MONO} center / 58% no-repeat, radial-gradient(140% 100% at 50% 50%,#3a3f6e 0%,#14162a 88%)`, ring: 'rgba(115,123,196,.55)' },
+  { id: 'wellen',  label: () => t('CardBacks.wellen'),
+    css: `${KARMA_MARK_URL} center / 44% no-repeat, repeating-radial-gradient(circle at 50% 50%,rgba(115,123,196,.16) 0 1px,transparent 1px 7px), radial-gradient(120% 90% at 50% 50%,#1c1f3a 0%,#060811 90%)`, ring: 'rgba(115,123,196,.4)' },
+  { id: 'karo',    label: () => t('CardBacks.karo'),
+    css: `${KARMA_MARK_MONO} center / 52% no-repeat, radial-gradient(rgba(255,255,255,.15) 1px, transparent 1.3px) 0 0 / 12px 12px, linear-gradient(180deg,#10132a,#04050b)`, ring: 'rgba(255,255,255,.25)' },
 ];
 
 function loadSettings() {
   currentLanguage = localStorage.getItem('karma_language') || 'de';
-  const bg = localStorage.getItem('karma_bg') || 'british';
+  // Alte gespeicherte IDs (british, blue, …) sind nicht mehr vorhanden – auf Onyx zurückfallen.
+  const validBg = new Set(['onyx','mitter','nebel','violett','tiefsee','wein','reinweiss']);
+  const storedBg = localStorage.getItem('karma_bg');
+  const bg = validBg.has(storedBg) ? storedBg : 'onyx';
   const back = localStorage.getItem('karma_cardback') || 'classic';
   document.body.dataset.bg = bg;
   document.body.dataset.cardback = back;
@@ -1154,6 +1223,9 @@ function render() {
   document.getElementById('lobby').style.display = 'none';
   document.getElementById('game').style.display = 'flex';
 
+  // Positionen VOR dem Neuaufbau merken – danach wird die Differenz animiert.
+  const beforeRects = captureTableRects();
+
   renderTopBar();
   renderOpponents();
   renderMyZone();
@@ -1161,7 +1233,11 @@ function render() {
   renderInstruction();
   renderEndBanner();
   renderAbilityModal();
+  renderAbilityTicker();
+  applyAbilityHighlights();
   renderRacingOverlay();
+
+  runTableFlip(beforeRects);
 
   if (state.phase === 'peek') renderPeekModal();
   else document.getElementById('peek-overlay').classList.add('hidden');
@@ -1183,7 +1259,7 @@ function renderTopBar() {
     scores.appendChild(chip);
   }
 
-  const phaseNames = { peek:'Karten ansehen', playing:'Spielen', ability:'Fähigkeit', racing:'Schnapp!', scoring:'Wertung', done:'Fertig' };
+  const phaseNames = { peek:'Karten ansehen', playing:'Spielen', ability:'Fähigkeit', swap_flight:'Tausch', racing:'Schnapp!', scoring:'Wertung', done:'Fertig' };
   document.getElementById('tb-phase').textContent = phaseNames[state.phase] || state.phase;
 }
 
@@ -1204,6 +1280,10 @@ function renderOpponents() {
       const c = p.hand[i];
       const cardEl = document.createElement('div');
       cardEl.className = 'opp-card';
+      // uid = Identität der Karte über Neuaufbauten hinweg; Grundlage für FLIP.
+      if (c && c.uid) cardEl.dataset.uid = c.uid;
+      cardEl.dataset.pid = p.id;
+      cardEl.dataset.index = i;
       if (c && !c.hidden) {
         cardEl.innerHTML = buildCardInner(c, 52, 75);
       } else {
@@ -1297,6 +1377,8 @@ function renderMyZone() {
     const card = document.createElement('div');
     card.className = 'card';
     card.dataset.index = i;
+    card.dataset.pid = me.id;
+    if (c && c.uid) card.dataset.uid = c.uid;
     if (c && !c.hidden) {
       card.innerHTML = buildCardInner(c, 90, 130);
     } else {
@@ -1313,7 +1395,7 @@ function renderActionBar(isMyTurn, me) {
   const bar = document.getElementById('action-bar');
   bar.innerHTML = '';
 
-  if (!isMyTurn || state.phase === 'racing' || state.phase === 'ability') return;
+  if (!isMyTurn || state.phase === 'racing' || state.phase === 'ability' || state.phase === 'swap_flight') return;
 
   if (state.phase === 'playing' && !state.drawnCard) {
     if (!state.endCalledBy) {
@@ -1363,10 +1445,10 @@ function renderInstruction() {
     if (as?.activatedBy === state.myId) {
       const hints = { see_own: 'Wähle eine deiner Karten', see_others: 'Wähle eine Karte eines Mitspielers', swap: 'Wähle zwei Karten zum Tauschen', see_swap: 'Wähle zwei Karten' };
       txt = hints[as.type] || '';
-    } else {
-      const activator = state.players.find(p => p.id === as?.activatedBy);
-      txt = `${activator?.name || '?'} nutzt eine Fähigkeit…`;
     }
+    // Für Beobachter übernimmt das Laufband – hier keine zweite Zeile.
+  } else if (state.phase === 'swap_flight') {
+    txt = 'Achte darauf, wohin die Karten wandern…';
   }
   el.textContent = txt;
   el.classList.toggle('hidden', !txt);
@@ -1425,6 +1507,31 @@ function renderPeekModal() {
   const anyRevealed = me.hand.some(c => c && !c.hidden);
   handEl.className = 'peek-hand' + (anyRevealed ? '' : ' picking');
   handEl.innerHTML = '';
+
+  // Karten so groß wie möglich, aber so, dass das 2×2-Grid komplett sichtbar
+  // bleibt – während der 6 Sekunden will niemand scrollen. Begrenzt wird
+  // sowohl durch die Modalbreite als auch durch die Viewport-Höhe.
+  const modalEl = document.getElementById('peek-modal');
+  const gap = parseFloat(getComputedStyle(handEl).columnGap) || 14;
+  const avail = handEl.clientWidth || 434;
+  let cardW = Math.min(210, Math.floor((avail - gap) / 2));
+
+  const mcs = getComputedStyle(modalEl);
+  const hcs = getComputedStyle(handEl);
+  // Alles außer dem Kartengrid: Padding, Titel, Text, Timer, plus die
+  // Positionslabels unter den Karten (~24px inkl. Slot-Gap).
+  let chrome = parseFloat(mcs.paddingTop) + parseFloat(mcs.paddingBottom)
+             + parseFloat(hcs.marginTop) + parseFloat(hcs.marginBottom)
+             + 2 * 24 + gap;
+  for (const el of modalEl.children) {
+    if (el !== handEl) chrome += el.getBoundingClientRect().height;
+  }
+  const maxH = Math.floor((window.innerHeight * 0.9 - 40 - chrome) / 2);
+  // Untergrenze: darunter passt das Info-Panel nicht mehr in die Karte. Auf sehr
+  // flachen Fenstern lieber das Modal scrollen lassen als unleserlich schrumpfen.
+  const cardH = Math.max(250, Math.min(Math.round(cardW * 322 / 210), maxH));
+  cardW = Math.min(cardW, Math.round(cardH * 210 / 322));
+
   for (let i = 0; i < me.hand.length; i++) {
     const c = me.hand[i];
     const isSel = sel.includes(i);
@@ -1433,8 +1540,14 @@ function renderPeekModal() {
     wrap.className = 'peek-slot' + (isSel || revealed ? ' is-peeked' : '');
     const card = document.createElement('div');
     card.className = 'card' + (isSel ? ' selected' : '');
+    if (anyRevealed) {
+      // Im Grid trägt der Wrapper die Maße – sonst kollabieren die Rückseiten,
+      // die ihre Größe vom Elternelement beziehen.
+      card.style.width = cardW + 'px';
+      card.style.height = cardH + 'px';
+    }
     if (revealed) {
-      card.innerHTML = buildCardInner(c, 210, 322);
+      card.innerHTML = buildCardInner(c, cardW, cardH);
     } else {
       card.innerHTML = '<div class="card-back"></div>';
       if (!revealing && !done) card.onclick = () => send({ type: 'peek', cardIndex: i });
@@ -1451,6 +1564,173 @@ function renderPeekModal() {
 
 function sendPeekDone() { send({ type: 'peek_done' }); }
 
+// ── Flugbahn: Kartenbewegungen am Tisch sichtbar machen ───────────────────────
+// Alle Spieler sollen in Echtzeit nachvollziehen können, welche Karte den Platz
+// gewechselt hat. Grundlage ist die uid jeder Karte: sie bleibt über Tausche
+// hinweg gleich, auch wenn die Karte verdeckt ist. Damit lässt sich die alte
+// Bildschirmposition mit der neuen vergleichen (FLIP) und die Karte fliegt
+// sichtbar dorthin – immer als Rückseite, es wird nichts aufgedeckt.
+
+let pendingSwapAnim = null;        // vom Server angekündigter Tausch
+let pendingSwapAnimTimer = null;
+
+function noteSwapAnim(msg) {
+  pendingSwapAnim = msg;
+  // Sicherheitsnetz: bleibt der zugehörige State aus, verfällt der Hinweis,
+  // statt beim nächsten beliebigen Render loszufliegen.
+  clearTimeout(pendingSwapAnimTimer);
+  pendingSwapAnimTimer = setTimeout(() => { pendingSwapAnim = null; }, 2500);
+}
+
+function reducedMotion() {
+  return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
+
+function tableCards() {
+  return document.querySelectorAll('#opponents [data-uid], #my-hand [data-uid]');
+}
+
+function captureTableRects() {
+  const m = new Map();
+  for (const el of tableCards()) m.set(el.dataset.uid, el.getBoundingClientRect());
+  return m;
+}
+
+function tableCardEl(playerId, index) {
+  const pid = (window.CSS && CSS.escape) ? CSS.escape(playerId) : playerId;
+  return document.querySelector(`#opponents [data-pid="${pid}"][data-index="${index}"]`)
+      || document.querySelector(`#my-hand [data-pid="${pid}"][data-index="${index}"]`);
+}
+
+function runTableFlip(before) {
+  const anim = pendingSwapAnim;
+  if (anim) { pendingSwapAnim = null; clearTimeout(pendingSwapAnimTimer); }
+  if (anim && anim.mode === 'stay') { animateStay(anim.cards); return; }
+  if (!before || !before.size) return;
+
+  const swapping = new Set((anim && anim.cards ? anim.cards : []).map(c => c.uid));
+
+  for (const el of tableCards()) {
+    const from = before.get(el.dataset.uid);
+    if (!from) continue;
+    const to = el.getBoundingClientRect();
+    const dx = from.left - to.left, dy = from.top - to.top;
+    if (Math.abs(dx) < 2 && Math.abs(dy) < 2) continue;
+    const isSwap = swapping.has(el.dataset.uid);
+    if (isSwap) spawnSlotGhost(from);
+    flyCard(el, dx, dy, from.width / to.width, from.height / to.height, isSwap);
+  }
+}
+
+// Die Karte startet optisch an ihrer alten Stelle und bewegt sich von dort auf
+// die neue – über einen Bogen, damit zwei tauschende Karten sich nicht decken.
+function flyCard(el, dx, dy, sx, sy, isSwap) {
+  const len = Math.hypot(dx, dy) || 1;
+  const bow = isSwap ? Math.min(90, len * 0.3) : 0;
+  const px = (-dy / len) * bow, py = (dx / len) * bow;
+  const tilt = isSwap ? (dx > 0 ? 7 : -7) : 0;
+  const midX = (sx + 1) / 2 * (isSwap ? 1.14 : 1);
+  const midY = (sy + 1) / 2 * (isSwap ? 1.14 : 1);
+
+  el.style.transformOrigin = 'top left';
+  el.classList.add(isSwap ? 'card-flying' : 'card-shifting');
+
+  const anim = el.animate([
+    { transform: `translate(${dx}px, ${dy}px) scale(${sx}, ${sy}) rotate(0deg)`, offset: 0 },
+    { transform: `translate(${dx / 2 + px}px, ${dy / 2 + py}px) scale(${midX}, ${midY}) rotate(${tilt}deg)`, offset: .5 },
+    { transform: 'translate(0px, 0px) scale(1, 1) rotate(0deg)', offset: 1 },
+  ], { duration: reducedMotion() ? 1 : (isSwap ? 900 : 380), easing: 'cubic-bezier(.34,.02,.24,1)' });
+
+  anim.onfinish = () => {
+    el.style.transformOrigin = '';
+    el.classList.remove('card-flying', 'card-shifting');
+    if (isSwap) {
+      el.classList.add('card-landed');
+      setTimeout(() => el.classList.remove('card-landed'), 700);
+    }
+  };
+}
+
+// Der verlassene Slot bleibt kurz als gestrichelter Umriss stehen – so ist auch
+// die Herkunft der fliegenden Karte ablesbar, nicht nur ihr Ziel.
+function spawnSlotGhost(rect) {
+  if (reducedMotion()) return;
+  const g = document.createElement('div');
+  g.className = 'slot-ghost';
+  g.style.left = rect.left + 'px';
+  g.style.top = rect.top + 'px';
+  g.style.width = rect.width + 'px';
+  g.style.height = rect.height + 'px';
+  document.body.appendChild(g);
+  setTimeout(() => g.remove(), 1000);
+}
+
+// Hund (12) ohne Tausch: nichts bewegt sich, also muss das Nicht-Ereignis
+// sichtbar sein – sonst wüsste niemand, ob die Position noch stimmt.
+function animateStay(cards) {
+  for (const c of cards || []) {
+    const el = tableCardEl(c.playerId, c.cardIndex);
+    if (!el) continue;
+    el.classList.add('card-stay');
+    setTimeout(() => el.classList.remove('card-stay'), 750);
+  }
+}
+
+// ── Beobachter-Laufband ───────────────────────────────────────────────────────
+// Ersetzt das Vollbild-Modal für alle, die nicht am Zug sind: der Tisch bleibt
+// sichtbar, der Text sagt nur, wer gerade was mit welchem Slot macht.
+function renderAbilityTicker() {
+  const el = document.getElementById('ability-ticker');
+  const as = state.abilityState;
+  if (!as || state.phase !== 'ability' || as.activatedBy === state.myId) {
+    el.className = '';
+    return;
+  }
+  const who = pid => esc(state.players.find(p => p.id === pid)?.name || '?');
+  const slot = s => `${who(s.playerId)} #${s.cardIndex + 1}`;
+  const name = `<strong>${who(as.activatedBy)}</strong>`;
+  const sel = as.selectedCards || [];
+  let icon = '✨', mode = '', text = `${name} nutzt eine Fähigkeit…`;
+
+  if (as.type === 'see_own' || as.type === 'see_others') {
+    icon = '👁'; mode = 'mode-peek';
+    text = sel.length
+      ? `${name} sieht sich <strong>${slot(sel[0])}</strong> an`
+      : `${name} wählt eine Karte zum Ansehen…`;
+  } else if (as.type === 'swap') {
+    icon = '↔'; mode = 'mode-swap';
+    if (sel.length === 2) text = `${name} tauscht <strong>${slot(sel[0])}</strong> ↔ <strong>${slot(sel[1])}</strong>`;
+    else if (sel.length === 1) text = `${name} hat <strong>${slot(sel[0])}</strong> gewählt – zweite Karte folgt…`;
+    else text = `${name} wählt zwei Karten zum Tauschen…`;
+  } else if (as.type === 'see_swap') {
+    icon = '👁'; mode = 'mode-swap';
+    if (sel.length === 2 && as.step === 'decide_swap') text = `${name} sieht <strong>${slot(sel[0])}</strong> und <strong>${slot(sel[1])}</strong> – tauschen oder nicht?`;
+    else if (sel.length === 1) text = `${name} hat <strong>${slot(sel[0])}</strong> gewählt…`;
+    else text = `${name} wählt zwei Karten…`;
+  }
+
+  el.className = 'show ' + mode;
+  el.querySelector('.tick-icon').textContent = icon;
+  el.querySelector('.tick-text').innerHTML = text;
+}
+
+// Markiert die betroffenen Slots direkt am Tisch, während gewählt wird.
+function applyAbilityHighlights() {
+  for (const el of document.querySelectorAll('.tbl-peek, .tbl-swap-sel, .tbl-swap-pair')) {
+    el.classList.remove('tbl-peek', 'tbl-swap-sel', 'tbl-swap-pair');
+  }
+  const as = state.abilityState;
+  if (!as || state.phase !== 'ability') return;
+  const sel = as.selectedCards || [];
+  for (const s of sel) {
+    const el = tableCardEl(s.playerId, s.cardIndex);
+    if (!el) continue;
+    if (as.type === 'see_own' || as.type === 'see_others') el.classList.add('tbl-peek');
+    else if (as.type === 'see_swap' && as.step === 'decide_swap') el.classList.add('tbl-peek');
+    else el.classList.add(sel.length === 2 ? 'tbl-swap-pair' : 'tbl-swap-sel');
+  }
+}
+
 // ── Ability Modal ─────────────────────────────────────────────────────────────
 function renderAbilityModal() {
   const overlay = document.getElementById('ability-overlay');
@@ -1461,7 +1741,12 @@ function renderAbilityModal() {
   const as = state.abilityState;
   const isActivator = as.activatedBy === state.myId;
 
-  // Always show for the activator; show state for observers too
+  // Beobachter bekommen kein Vollbild-Modal mehr – sie verfolgen die Fähigkeit
+  // direkt am Tisch (Laufband, markierte Slots, Flugbahn beim Tausch).
+  if (!isActivator) {
+    overlay.classList.add('hidden');
+    return;
+  }
   overlay.classList.remove('hidden');
 
   // Show drawn card
@@ -1478,64 +1763,6 @@ function renderAbilityModal() {
   const actions = document.getElementById('ability-actions');
   body.innerHTML = '';
   actions.innerHTML = '';
-
-  if (!isActivator) {
-    const activator = state.players.find(p => p.id === as.activatedBy);
-    const aName = esc(activator?.name || '?');
-    const selected = as.selectedCards || [];
-
-    if (as.type === 'see_own') {
-      title.textContent = '👁 Eigene Karte ansehen';
-      if (selected.length > 0) {
-        desc.innerHTML = `<strong>${aName}</strong> sichtet eine eigene Karte…`;
-        body.innerHTML = buildObserverBoard(as.type, selected);
-      } else {
-        desc.innerHTML = `<strong>${aName}</strong> wählt eine eigene Karte zum Ansehen…`;
-      }
-    } else if (as.type === 'see_others') {
-      title.textContent = '👁 Gegner-Karte ansehen';
-      if (selected.length > 0) {
-        const targetPlayer = state.players.find(p => p.id === selected[0].playerId);
-        desc.innerHTML = `<strong>${aName}</strong> sichtet eine Karte von <strong>${esc(targetPlayer?.name || '?')}</strong>!`;
-        body.innerHTML = buildObserverBoard(as.type, selected);
-      } else {
-        desc.innerHTML = `<strong>${aName}</strong> wählt eine Karte eines Mitspielers…`;
-      }
-    } else if (as.type === 'swap') {
-      title.textContent = '↔ Karten tauschen';
-      if (selected.length === 2) {
-        const p1 = state.players.find(p => p.id === selected[0].playerId);
-        const p2 = state.players.find(p => p.id === selected[1].playerId);
-        desc.innerHTML = `<strong>${aName}</strong> tauscht eine Karte von <strong>${esc(p1?.name||'?')}</strong> mit einer von <strong>${esc(p2?.name||'?')}</strong>!`;
-        body.innerHTML = buildObserverBoard(as.type, selected);
-      } else if (selected.length === 1) {
-        desc.innerHTML = `<strong>${aName}</strong> hat die erste Karte gewählt – wählt nun die zweite…`;
-        body.innerHTML = buildObserverBoard(as.type, selected);
-      } else {
-        desc.innerHTML = `<strong>${aName}</strong> wählt zwei Karten zum Tauschen…`;
-      }
-    } else if (as.type === 'see_swap') {
-      title.textContent = '👁↔ Ansehen & Tauschen';
-      if (as.step === 'decide_swap') {
-        const p1 = state.players.find(p => p.id === selected[0]?.playerId);
-        const p2 = state.players.find(p => p.id === selected[1]?.playerId);
-        desc.innerHTML = `<strong>${aName}</strong> entscheidet, ob getauscht wird…`;
-        body.innerHTML = buildObserverBoard(as.type, selected);
-      } else if (selected.length === 2) {
-        desc.innerHTML = `<strong>${aName}</strong> sichtet beide Karten…`;
-        body.innerHTML = buildObserverBoard(as.type, selected);
-      } else if (selected.length === 1) {
-        desc.innerHTML = `<strong>${aName}</strong> hat die erste Karte gewählt…`;
-        body.innerHTML = buildObserverBoard(as.type, selected);
-      } else {
-        desc.innerHTML = `<strong>${aName}</strong> wählt zwei Karten zum Ansehen…`;
-      }
-    } else {
-      title.textContent = 'Fähigkeit wird genutzt';
-      desc.textContent = `${aName} nutzt eine Fähigkeit. Warte…`;
-    }
-    return;
-  }
 
   if (as.type === 'see_own') {
     title.textContent = 'Eigene Karte ansehen';
@@ -1650,36 +1877,6 @@ function buildAllCardsForAbility(selected) {
       const sel = selected.some(s => s.playerId === p.id && s.cardIndex === i);
       const fn = `abilitySelectCard('${p.id}',${i})`;
       html += `<div class="card ${sel?'selected':''}" style="width:65px;height:94px" onclick="${fn}">${c && !c.hidden ? buildCardInner(c,65,94) : '<div class="card-back"></div>'}</div>`;
-    }
-    html += '</div></div>';
-  }
-  html += '</div>';
-  return html;
-}
-
-function buildObserverBoard(abilityType, selectedCards) {
-  let html = '<div class="ability-observer-board">';
-  for (const p of state.players) {
-    html += `<div class="ability-obs-player">`;
-    html += `<div class="ability-obs-player-name">${esc(p.name)}${p.isMe ? ' (Du)' : ''}</div>`;
-    html += `<div class="ability-obs-hand">`;
-    for (let i = 0; i < p.hand.length; i++) {
-      let cls = 'ability-obs-card';
-      const isSelected = selectedCards.some(s => s.playerId === p.id && s.cardIndex === i);
-      if (isSelected) {
-        if (abilityType === 'see_others') {
-          cls += ' peek-target';
-        } else if (abilityType === 'see_own') {
-          cls += ' see-own-target';
-        } else if (abilityType === 'swap' || abilityType === 'see_swap') {
-          if (selectedCards.length === 2) {
-            cls += ' swap-target';
-          } else {
-            cls += ' swap-selected';
-          }
-        }
-      }
-      html += `<div class="${cls}"><div class="card-back"></div></div>`;
     }
     html += '</div></div>';
   }
@@ -1809,7 +2006,7 @@ function renderScoringModal() {
 
   if (isDone) {
     const winner = state.players.reduce((a, b) => (totals[a.id] || 0) <= (totals[b.id] || 0) ? a : b);
-    html += `<div style="text-align:center;margin-top:16px;font-size:18px;font-weight:700;color:#FFD700">🏆 ${esc(winner.name)} gewinnt!</div>`;
+    html += `<div style="text-align:center;margin-top:16px;font-size:18px;font-weight:700;color:#737bc4">🏆 ${esc(winner.name)} gewinnt!</div>`;
     document.getElementById('next-round-btn').textContent = 'Neues Spiel';
   } else {
     const hasMore = state.roundNumber < state.totalRounds;
@@ -1828,7 +2025,7 @@ function getColorClass(hexColor) {
     '#FF9800': 'tcg-orange',
     '#F44336': 'tcg-red',
     '#9E9E9E': 'tcg-silver',
-    '#FFD700': 'tcg-gold',
+    '#737bc4': 'tcg-gold',
   };
   return colorMap[hexColor?.toUpperCase()] || 'tcg-blue';
 }
