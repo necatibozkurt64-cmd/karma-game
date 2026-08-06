@@ -39,6 +39,10 @@ IMAGE_FILES = {
 IMAGES_DIR = Path(__file__).parent / 'app' / 'public' / 'Bilder'
 PUBLIC_DIR = Path(__file__).parent / 'app' / 'public'
 REVEAL_SECONDS = 6
+# Flugfenster: so lange sehen alle Spieler die Karten von Slot zu Slot fliegen,
+# bevor die zeitkritische Schnapp-Phase startet. Muss zur Client-Animation passen
+# (card-flying: 900ms + Nachglühen).
+FLIGHT_SECONDS = 1.4
 
 def _to_snake(name):
     return re.sub(r'(?<!^)(?=[A-Z])', '_', name).lower()
@@ -79,6 +83,7 @@ def new_session(host_id, host_name, host_ws, game_mode):
         round_number=1, match_scores={}, round_scores={},
         score_breakdown={},
         reveal_all=False, ability_reveal_task=None,
+        swap_flight=None, swap_flight_task=None,
     )
     sessions[sid] = s
     _add_player(s, host_id, host_name, host_ws)
@@ -149,6 +154,52 @@ async def _expire_ability_reveal(s, a, seconds):
     else:
         a['revealed_cards'] = None
         await send_state(s)
+
+def _cancel_swap_flight(s):
+    if s.get('swap_flight_task'):
+        s['swap_flight_task'].cancel()
+    s['swap_flight_task'] = None
+    s['swap_flight'] = None
+
+def _flight_cards(s, *refs):
+    """Slot-Referenzen mit uid anreichern – muss VOR dem Tausch aufgerufen werden,
+    damit der Client weiss, welche Karte von wo nach wo fliegt."""
+    out = []
+    for r in refs:
+        p = next((x for x in s['players'] if x['id'] == r['player_id']), None)
+        if not p:
+            return None
+        i = r['card_index']
+        if i < 0 or i >= len(p['hand']) or not p['hand'][i]:
+            return None
+        out.append({'playerId': p['id'], 'cardIndex': i, 'uid': p['hand'][i]['uid']})
+    return out
+
+async def start_swap_flight(s, cards, mode):
+    """Kurzes Fenster, in dem alle Spieler die Karten wandern sehen. Erst danach
+    startet die Schnapp-Phase – sonst konkurriert die Animation mit dem 3s-Timer.
+    mode: 'swap' = Karten wechseln den Slot, 'stay' = Hund hat nicht getauscht."""
+    _cancel_swap_flight(s)
+    if not cards:
+        await start_racing(s)
+        return
+    s['phase'] = 'swap_flight'
+    s['swap_flight'] = dict(cards=cards, mode=mode)
+    # Erst das Ereignis, dann der Zustand: der Client merkt sich das Ereignis und
+    # animiert damit die Positionsänderung, die im folgenden State steckt.
+    await broadcast(s, dict(type='swap_anim', cards=cards, mode=mode))
+    await send_state(s)
+    s['swap_flight_task'] = asyncio.ensure_future(_end_swap_flight(s))
+
+async def _end_swap_flight(s):
+    try:
+        await asyncio.sleep(FLIGHT_SECONDS)
+    except asyncio.CancelledError:
+        return
+    s['swap_flight_task'] = None
+    s['swap_flight'] = None
+    if s['phase'] == 'swap_flight':
+        await start_racing(s)
 
 async def send(ws, msg):
     try:
@@ -255,6 +306,7 @@ async def start_game(s):
     s['reveal_all'] = False
     s['round_scores'] = {}
     _cancel_ability_reveal(s)
+    _cancel_swap_flight(s)
     for p in s['players']:
         p['hand'] = [s['deck'].pop() for _ in range(4)]
         _cancel_reveal(p)
@@ -475,13 +527,16 @@ async def handle_ability(s, pid, data):
             c2 = norm_card_ref(data.get('card2'))
             if c2:
                 c1, = a['selected_cards']
+                flight = _flight_cards(s, c1, c2)
+                if not flight:
+                    return
                 _do_swap(s, c1, c2)
                 s['discard_pile'].append(a['drawn_card'])
                 s['drawn_card'] = None
                 _cancel_ability_reveal(s)
                 s['ability_state'] = None
                 await broadcast(s, dict(type='toast', msg='Karten getauscht!', color='#9C27B0'))
-                await start_racing(s)
+                await start_swap_flight(s, flight, 'swap')
 
     elif t == 'see_swap':
         if a['step'] == 'select1':
@@ -506,15 +561,21 @@ async def handle_ability(s, pid, data):
                 start_ability_reveal(s, a)
                 await send_state(s)
         elif a['step'] == 'decide_swap':
-            if data.get('doSwap', data.get('do_swap')):
-                c1, c2 = a['selected_cards']
+            c1, c2 = a['selected_cards']
+            do_swap = bool(data.get('doSwap', data.get('do_swap')))
+            flight = _flight_cards(s, c1, c2)
+            if do_swap and flight:
                 _do_swap(s, c1, c2)
                 await broadcast(s, dict(type='toast', msg='Karten gesehen & getauscht!', color='#9C27B0'))
+            else:
+                # Auch "nicht getauscht" ist öffentliche Information – sonst wüssten
+                # die anderen nicht, ob sich etwas verändert hat.
+                await broadcast(s, dict(type='toast', msg='Nicht getauscht – die Karten bleiben liegen.', color='#64748b'))
             s['discard_pile'].append(a['drawn_card'])
             s['drawn_card'] = None
             _cancel_ability_reveal(s)
             s['ability_state'] = None
-            await start_racing(s)
+            await start_swap_flight(s, flight, 'swap' if do_swap else 'stay')
 
 def _do_swap(s, c1, c2):
     p1 = next(x for x in s['players'] if x['id'] == c1['player_id'])
@@ -540,6 +601,7 @@ async def end_round(s):
         s['racing_task'].cancel()
         s['racing_task'] = None
     _cancel_ability_reveal(s)
+    _cancel_swap_flight(s)
     for p in s['players']:
         _cancel_reveal(p)
     s['racing_card'] = None
