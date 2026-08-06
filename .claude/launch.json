@@ -1,0 +1,12 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "karma",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["/Users/nb/Claude/Projects/Karma/app/server.py"],
+      "port": 3000,
+      "autoPort": true
+    }
+  ]
+}
