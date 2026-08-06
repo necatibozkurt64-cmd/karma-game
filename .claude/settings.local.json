@@ -38,7 +38,8 @@
       "Bash(tail -20 /tmp/karma.log)",
       "Bash(awk '{print $2}')",
       "Bash(PORT=3000 WS_PORT=3001 python3 /Users/nb/Claude/Projects/Karma/app/server.py)",
-      "Bash(python3 /private/tmp/claude-501/-Users-nb-Claude-Projects-Karma/8190bb40-7464-47fd-b0da-0c66032b4381/scratchpad/test_scoring.py)"
+      "Bash(python3 /private/tmp/claude-501/-Users-nb-Claude-Projects-Karma/8190bb40-7464-47fd-b0da-0c66032b4381/scratchpad/test_scoring.py)",
+      "Bash(git checkout *)"
     ]
   }
 }
