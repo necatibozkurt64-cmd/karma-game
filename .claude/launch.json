@@ -4,7 +4,7 @@
     {
       "name": "karma",
       "runtimeExecutable": "python3",
-      "runtimeArgs": ["/Users/nb/Claude/Projects/Karma/app/server.py"],
+      "runtimeArgs": ["/Users/nb/Claude/Projects/Karma/server_render.py"],
       "port": 3000,
       "autoPort": true
     }

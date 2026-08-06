@@ -190,6 +190,96 @@ body[data-cardback="karo"] .card-back::after { border-color: rgba(255,255,255,.2
 .ability-player-name { font-size: 11px; color: rgba(255,255,255,.6); }
 .ability-player-hand { display: flex; gap: 4px; }
 
+/* Ability observer animations */
+.ability-observer-board { display: flex; flex-direction: column; gap: 14px; margin: 16px 0; align-items: center; }
+.ability-obs-player { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.ability-obs-player-name { font-size: 11px; color: rgba(255,255,255,.5); font-weight: 600; }
+.ability-obs-hand { display: flex; gap: 6px; }
+.ability-obs-card { width: 55px; height: 80px; border-radius: 8px; position: relative; transition: all 0.3s ease; }
+.ability-obs-card .card-back { border-radius: 6px; }
+.ability-obs-card .card-back::before { font-size: 18px; }
+.ability-obs-card .card-back::after { inset: 3px; }
+
+/* Peek glow — pulsing eye icon */
+@keyframes peekGlow {
+  0%, 100% { box-shadow: 0 0 8px 2px rgba(255,215,0,.4); }
+  50% { box-shadow: 0 0 20px 6px rgba(255,215,0,.7); }
+}
+@keyframes peekEyeFade {
+  0% { opacity: 0; transform: translate(-50%,-50%) scale(0.5); }
+  20% { opacity: 1; transform: translate(-50%,-50%) scale(1.1); }
+  30% { opacity: 1; transform: translate(-50%,-50%) scale(1); }
+  80% { opacity: 1; }
+  100% { opacity: 0.6; }
+}
+.ability-obs-card.peek-target {
+  animation: peekGlow 1.2s ease-in-out infinite;
+  border: 2px solid var(--gold);
+  z-index: 2;
+}
+.ability-obs-card.peek-target::after {
+  content: '👁';
+  position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 24px; filter: drop-shadow(0 0 6px rgba(255,215,0,.8));
+  animation: peekEyeFade 1.5s ease forwards;
+  pointer-events: none; z-index: 3;
+}
+
+/* Swap glow — pulsing purple */
+@keyframes swapGlow {
+  0%, 100% { box-shadow: 0 0 8px 2px rgba(156,39,176,.4); }
+  50% { box-shadow: 0 0 20px 6px rgba(156,39,176,.7); }
+}
+@keyframes swapBounce {
+  0% { transform: translateY(0); }
+  25% { transform: translateY(-6px); }
+  50% { transform: translateY(0); }
+  75% { transform: translateY(-3px); }
+  100% { transform: translateY(0); }
+}
+.ability-obs-card.swap-target {
+  animation: swapGlow 1s ease-in-out infinite, swapBounce 0.8s ease-in-out;
+  border: 2px solid #9C27B0;
+  z-index: 2;
+}
+.ability-obs-card.swap-target::after {
+  content: '↔';
+  position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 20px; font-weight: 900; color: #CE93D8;
+  text-shadow: 0 0 8px rgba(156,39,176,.8);
+  pointer-events: none; z-index: 3;
+}
+
+/* Swap-select (first card chosen, waiting for second) */
+@keyframes selectPulse {
+  0%, 100% { box-shadow: 0 0 6px 2px rgba(156,39,176,.3); }
+  50% { box-shadow: 0 0 12px 4px rgba(156,39,176,.5); }
+}
+.ability-obs-card.swap-selected {
+  animation: selectPulse 1.5s ease-in-out infinite;
+  border: 2px solid #9C27B0;
+}
+
+/* See-own glow */
+.ability-obs-card.see-own-target {
+  animation: peekGlow 1.2s ease-in-out infinite;
+  border: 2px solid var(--gold);
+}
+.ability-obs-card.see-own-target::after {
+  content: '👁';
+  position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 24px; filter: drop-shadow(0 0 6px rgba(255,215,0,.8));
+  animation: peekEyeFade 1.5s ease forwards;
+  pointer-events: none; z-index: 3;
+}
+
+/* Swap arrow connector between players */
+.swap-arrow-row { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 4px 0; }
+.swap-arrow { font-size: 22px; color: #CE93D8; animation: swapBounce 1s ease-in-out infinite; }
+
 /* Racing */
 #racing-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.85); display: none; align-items: center; justify-content: center; z-index: 90; flex-direction: column; gap: 20px; }
 #racing-overlay h2 { font-size: 28px; font-weight: 900; color: #fff; text-align: center; }
@@ -1359,8 +1449,59 @@ function renderAbilityModal() {
 
   if (!isActivator) {
     const activator = state.players.find(p => p.id === as.activatedBy);
-    title.textContent = 'Fähigkeit wird genutzt';
-    desc.textContent = `${activator?.name || '?'} nutzt eine Fähigkeit. Warte…`;
+    const aName = esc(activator?.name || '?');
+    const selected = as.selectedCards || [];
+
+    if (as.type === 'see_own') {
+      title.textContent = '👁 Eigene Karte ansehen';
+      if (selected.length > 0) {
+        desc.innerHTML = `<strong>${aName}</strong> sichtet eine eigene Karte…`;
+        body.innerHTML = buildObserverBoard(as.type, selected);
+      } else {
+        desc.innerHTML = `<strong>${aName}</strong> wählt eine eigene Karte zum Ansehen…`;
+      }
+    } else if (as.type === 'see_others') {
+      title.textContent = '👁 Gegner-Karte ansehen';
+      if (selected.length > 0) {
+        const targetPlayer = state.players.find(p => p.id === selected[0].playerId);
+        desc.innerHTML = `<strong>${aName}</strong> sichtet eine Karte von <strong>${esc(targetPlayer?.name || '?')}</strong>!`;
+        body.innerHTML = buildObserverBoard(as.type, selected);
+      } else {
+        desc.innerHTML = `<strong>${aName}</strong> wählt eine Karte eines Mitspielers…`;
+      }
+    } else if (as.type === 'swap') {
+      title.textContent = '↔ Karten tauschen';
+      if (selected.length === 2) {
+        const p1 = state.players.find(p => p.id === selected[0].playerId);
+        const p2 = state.players.find(p => p.id === selected[1].playerId);
+        desc.innerHTML = `<strong>${aName}</strong> tauscht eine Karte von <strong>${esc(p1?.name||'?')}</strong> mit einer von <strong>${esc(p2?.name||'?')}</strong>!`;
+        body.innerHTML = buildObserverBoard(as.type, selected);
+      } else if (selected.length === 1) {
+        desc.innerHTML = `<strong>${aName}</strong> hat die erste Karte gewählt – wählt nun die zweite…`;
+        body.innerHTML = buildObserverBoard(as.type, selected);
+      } else {
+        desc.innerHTML = `<strong>${aName}</strong> wählt zwei Karten zum Tauschen…`;
+      }
+    } else if (as.type === 'see_swap') {
+      title.textContent = '👁↔ Ansehen & Tauschen';
+      if (as.step === 'decide_swap') {
+        const p1 = state.players.find(p => p.id === selected[0]?.playerId);
+        const p2 = state.players.find(p => p.id === selected[1]?.playerId);
+        desc.innerHTML = `<strong>${aName}</strong> entscheidet, ob getauscht wird…`;
+        body.innerHTML = buildObserverBoard(as.type, selected);
+      } else if (selected.length === 2) {
+        desc.innerHTML = `<strong>${aName}</strong> sichtet beide Karten…`;
+        body.innerHTML = buildObserverBoard(as.type, selected);
+      } else if (selected.length === 1) {
+        desc.innerHTML = `<strong>${aName}</strong> hat die erste Karte gewählt…`;
+        body.innerHTML = buildObserverBoard(as.type, selected);
+      } else {
+        desc.innerHTML = `<strong>${aName}</strong> wählt zwei Karten zum Ansehen…`;
+      }
+    } else {
+      title.textContent = 'Fähigkeit wird genutzt';
+      desc.textContent = `${aName} nutzt eine Fähigkeit. Warte…`;
+    }
     return;
   }
 
@@ -1477,6 +1618,36 @@ function buildAllCardsForAbility(selected) {
       const sel = selected.some(s => s.playerId === p.id && s.cardIndex === i);
       const fn = `abilitySelectCard('${p.id}',${i})`;
       html += `<div class="card ${sel?'selected':''}" style="width:65px;height:94px" onclick="${fn}">${c && !c.hidden ? buildCardInner(c,65,94) : '<div class="card-back"></div>'}</div>`;
+    }
+    html += '</div></div>';
+  }
+  html += '</div>';
+  return html;
+}
+
+function buildObserverBoard(abilityType, selectedCards) {
+  let html = '<div class="ability-observer-board">';
+  for (const p of state.players) {
+    html += `<div class="ability-obs-player">`;
+    html += `<div class="ability-obs-player-name">${esc(p.name)}${p.isMe ? ' (Du)' : ''}</div>`;
+    html += `<div class="ability-obs-hand">`;
+    for (let i = 0; i < p.hand.length; i++) {
+      let cls = 'ability-obs-card';
+      const isSelected = selectedCards.some(s => s.playerId === p.id && s.cardIndex === i);
+      if (isSelected) {
+        if (abilityType === 'see_others') {
+          cls += ' peek-target';
+        } else if (abilityType === 'see_own') {
+          cls += ' see-own-target';
+        } else if (abilityType === 'swap' || abilityType === 'see_swap') {
+          if (selectedCards.length === 2) {
+            cls += ' swap-target';
+          } else {
+            cls += ' swap-selected';
+          }
+        }
+      }
+      html += `<div class="${cls}"><div class="card-back"></div></div>`;
     }
     html += '</div></div>';
   }
