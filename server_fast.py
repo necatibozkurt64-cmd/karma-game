@@ -25,8 +25,14 @@ async def broadcast(s, msg):
         await send(p['ws'], msg)
 
 async def send_state(s):
+    player_list = [dict(id=p['id'], name=p['name'], connected=True) for p in s['players']]
     for p in s['players']:
-        await send(p['ws'], dict(type='state', phase=s['phase'], sessionId=s['id']))
+        await send(p['ws'], dict(
+            type='state', phase=s['phase'], sessionId=s['id'],
+            isHost=(p['id'] == s['host_id']),
+            myId=p['id'],
+            players=player_list,
+        ))
 
 async def start_game(s):
     s['phase'] = 'playing'
