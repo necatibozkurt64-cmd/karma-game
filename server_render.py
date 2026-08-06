@@ -15,18 +15,18 @@ from aiohttp import web
 CARD_DEFS = [
     dict(nr=1,  name='Olli',                  value=1,  ability='none',       quote='Eier, we need Eier',                       count=4,  colors=['#4CAF50','#9C27B0','#2196F3','#FF9800']),
     dict(nr=2,  name='Tupac',                  value=2,  ability='none',       quote='Chill, Alter, es kommen auch gute Zeiten.',  count=4,  colors=['#4CAF50','#9C27B0','#2196F3','#FF9800']),
-    dict(nr=3,  name='Arnold Schwarzenegger',  value=3,  ability='none',       quote='I choose four',                             count=4,  colors=['#4CAF50','#9C27B0','#2196F3','#FF9800']),
-    dict(nr=4,  name='Eric Cartman',           value=4,  ability='none',       quote='Respect My Authority!',                    count=4,  colors=['#4CAF50','#9C27B0','#2196F3','#FF9800']),
+    dict(nr=3,  name='Arnold',                 value=3,  ability='none',       quote='I choose four',                             count=4,  colors=['#4CAF50','#9C27B0','#2196F3','#FF9800']),
+    dict(nr=4,  name='Cartman',                value=4,  ability='none',       quote='Respect My Authority!',                    count=4,  colors=['#4CAF50','#9C27B0','#2196F3','#FF9800']),
     dict(nr=5,  name='Zinedine Zidane',        value=5,  ability='none',       quote='Ciao bella ciao!',                         count=4,  colors=['#4CAF50','#9C27B0','#2196F3','#FF9800']),
     dict(nr=6,  name='Bruce Lee',              value=6,  ability='none',       quote='Bee water my friend',                      count=4,  colors=['#4CAF50','#9C27B0','#2196F3','#FF9800']),
     dict(nr=7,  name='Ronaldo',                value=7,  ability='see_own',    quote='SUUUI ...your own card!!!',                 count=4,  colors=['#4CAF50','#9C27B0','#2196F3','#FF9800']),
-    dict(nr=8,  name='Leonardo DiCaprio',      value=8,  ability='see_own',    quote='check this out',                           count=4,  colors=['#4CAF50','#9C27B0','#2196F3','#FF9800']),
+    dict(nr=8,  name='Leo',                     value=8,  ability='see_own',    quote='check this out',                           count=4,  colors=['#4CAF50','#9C27B0','#2196F3','#FF9800']),
     dict(nr=9,  name='Snowden',                value=9,  ability='see_others', quote='They see everything..',                    count=4,  colors=['#4CAF50','#9C27B0','#2196F3','#FF9800']),
     dict(nr=10, name='Trump',                  value=10, ability='see_others', quote='Lets fuck up',                             count=4,  colors=['#4CAF50','#9C27B0','#2196F3','#FF9800']),
     dict(nr=11, name='Joker',                  value=11, ability='swap',       quote="Let's do some confusion.",                 count=4,  colors=['#4CAF50','#9C27B0','#2196F3','#FF9800']),
     dict(nr=12, name='Hund',                   value=12, ability='see_swap',   quote='To the moon!',                             count=4,  colors=['#4CAF50','#9C27B0','#2196F3','#FF9800']),
     dict(nr=13, name='Mr Hankey',              value=13, ability='none',       quote='shit happens.',                            count=2,  colors=['#F44336','#F44336']),
-    dict(nr=14, name='Thierry Henry',          value=0,  ability='none',       quote='Congratulations, you got me.',             count=1,  colors=['#9E9E9E']),
+    dict(nr=14, name='Titi',                    value=0,  ability='none',       quote='Congratulations, you got me.',             count=1,  colors=['#9E9E9E']),
     dict(nr=15, name='Katze',                  value=-1, ability='none',       quote='You lucky bastard.',                       count=1,  colors=['#FFD700']),
 ]
 IMAGE_FILES = {
@@ -36,8 +36,8 @@ IMAGE_FILES = {
     10:'10_trump.jpg', 11:'11_joker.jpg', 12:'12_Hund.jpg',
     13:'13_MrHankey.jpg', 14:'14_Thierry Henry.jpeg', 15:'15_Katze.jpg',
 }
-IMAGES_DIR = Path(__file__).parent / 'public' / 'Bilder'
-PUBLIC_DIR = Path(__file__).parent / 'public'
+IMAGES_DIR = Path(__file__).parent / 'app' / 'public' / 'Bilder'
+PUBLIC_DIR = Path(__file__).parent / 'app' / 'public'
 REVEAL_SECONDS = 6
 
 def _to_snake(name):
@@ -142,11 +142,13 @@ async def _expire_ability_reveal(s, a, seconds):
         return
     a['reveal_until'] = 0.0
     if a['type'] in ('see_own', 'see_others'):
+        s['discard_pile'].append(a['drawn_card'])
+        s['drawn_card'] = None
         s['ability_state'] = None
-        s['phase'] = 'playing'
+        await start_racing(s)
     else:
         a['revealed_cards'] = None
-    await send_state(s)
+        await send_state(s)
 
 async def send(ws, msg):
     try:
@@ -187,13 +189,17 @@ async def send_state(s):
         ability_for_viewer = None
         if s['ability_state']:
             a = s['ability_state']
-            ability_for_viewer = dict(type=a['type'], activatedBy=a['activated_by'], step=a.get('step'), waitingForSelection=a.get('waiting_for_selection'))
+            selected_view = [{'playerId': x['player_id'], 'cardIndex': x['card_index']} for x in a.get('selected_cards', [])]
+            ability_for_viewer = dict(
+                type=a['type'], activatedBy=a['activated_by'],
+                step=a.get('step'), waitingForSelection=a.get('waiting_for_selection'),
+                selectedCards=selected_view,
+            )
             if a['activated_by'] == viewer['id']:
                 reveal_left = max(0.0, a.get('reveal_until', 0.0) - now)
                 ability_for_viewer['revealSecondsLeft'] = round(reveal_left, 1)
                 ability_for_viewer['revealedCard'] = card_view(a.get('revealed_card'), False) if (a.get('revealed_card') and reveal_left > 0) else None
                 ability_for_viewer['revealedCards'] = [{'playerId': r['player_id'], 'cardIndex': r['card_index'], 'card': card_view(r['card'], False)} for r in a['revealed_cards']] if a.get('revealed_cards') else None
-                ability_for_viewer['selectedCards'] = [{'playerId': x['player_id'], 'cardIndex': x['card_index']} for x in a.get('selected_cards', [])]
 
         cp = s['players'][s['current_player_index']] if s['players'] else None
         drawn_view = None
