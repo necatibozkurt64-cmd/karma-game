@@ -698,13 +698,13 @@ async def static_handler(request):
 
     if fpath.exists() and fpath.is_file():
         mime, _ = mimetypes.guess_type(str(fpath))
-        return web.FileResponse(fpath, content_type=mime or 'text/html; charset=utf-8')
+        return web.FileResponse(fpath, headers={'Content-Type': mime or 'text/html; charset=utf-8'})
 
     return web.Response(status=404, text='Not found')
 
 async def index_handler(request):
     fpath = PUBLIC_DIR / 'index.html'
-    return web.FileResponse(fpath, content_type='text/html; charset=utf-8')
+    return web.FileResponse(fpath, headers={'Content-Type': 'text/html; charset=utf-8'})
 
 def create_app():
     app = web.Application()
