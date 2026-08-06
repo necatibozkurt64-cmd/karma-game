@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Karma – Das Kartenspiel</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🃏</text></svg>">
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 :root {
@@ -665,15 +666,28 @@ body[data-cardback="karo"] .card-back::after { border-color: rgba(255,255,255,.2
     <h2>Einstellungen</h2>
     <p>Gilt nur für dich und bleibt gespeichert.</p>
     <div class="set-group">
-      <h3>Hintergrund</h3>
+      <h3 id="lang-label">Sprache</h3>
+      <div style="display:flex;gap:8px">
+        <button class="swatch active" id="lang-de" onclick="setLanguage('de')" style="flex:1">
+          <div style="font-size:24px;margin-bottom:4px">🇩🇪</div>
+          <div class="swatch-lbl">Deutsch</div>
+        </button>
+        <button class="swatch" id="lang-en" onclick="setLanguage('en')" style="flex:1">
+          <div style="font-size:24px;margin-bottom:4px">🇬🇧</div>
+          <div class="swatch-lbl">English</div>
+        </button>
+      </div>
+    </div>
+    <div class="set-group">
+      <h3 id="bg-label">Hintergrund</h3>
       <div class="swatch-grid" id="bg-grid"></div>
     </div>
     <div class="set-group">
-      <h3>Kartenrücken</h3>
+      <h3 id="cardback-label">Kartenrücken</h3>
       <div class="back-grid" id="back-grid"></div>
     </div>
     <div class="btn-row">
-      <button class="btn btn-gold" onclick="closeSettings()" style="width:100%">Fertig</button>
+      <button class="btn btn-gold" id="settings-done-btn" onclick="closeSettings()" style="width:100%">Fertig</button>
     </div>
   </div>
 </div>
@@ -705,7 +719,7 @@ function connect(cb) {
   ws.onopen = cb;
   ws.onmessage = e => handleMessage(JSON.parse(e.data));
   ws.onclose = () => showToast('Verbindung unterbrochen', '#ef4444');
-  ws.onerror = () => showToast('WebSocket-Fehler – prüfe Port ' + WS_PORT, '#ef4444');
+  ws.onerror = () => showToast('WebSocket-Fehler – Verbindung fehlgeschlagen', '#ef4444');
 }
 
 function send(msg) {
@@ -773,31 +787,168 @@ function tickReveal() {
 }
 
 // ── Einstellungen (lokal, pro Browser) ────────────────────────────────────────
+let currentLanguage = localStorage.getItem('karma_language') || 'de';
+
+const TRANSLATIONS = {
+  de: {
+    language: 'Sprache',
+    background: 'Hintergrund',
+    cardback: 'Kartenrücken',
+    done: 'Fertig',
+    settings: 'Einstellungen',
+    player: 'Spieler',
+    host: 'als Host',
+    singleGame: 'Einzelspiel',
+    bestOf3: 'Best of 3',
+    bestOf5: 'Best of 5',
+    bestOf10: 'Best of 10',
+    createSession: 'Session erstellen',
+    orJoin: 'oder joinen',
+    join: 'Beitreten',
+    sessionCode: 'Session-Code',
+    playerName: 'Dein Name',
+    joinCode: 'Session-Code (z.B. ABC123)',
+    disconnect: 'Verbindung unterbrochen',
+    waitingForHost: 'Warte auf den Host…',
+    playersInSession: 'Spieler in der Session:',
+    showCode: 'Zeige diesen Code den anderen Spielern',
+    startGame: 'Spiel starten',
+    drawDeck: 'Nachziehstapel',
+    discardPile: 'Ablagestapel',
+    empty: 'Leer',
+    yourHand: 'Deine Hand',
+    yourTurn: 'Dein Zug',
+    endGame: 'Spiel beenden',
+    discardDrawn: 'Ablegen',
+    peek: 'Karten ansehen',
+    peekDesc: 'Wähle <strong>2</strong> deiner Handkarten aus. Du siehst sie dann <strong>6 Sekunden</strong> lang – danach werden sie wieder verdeckt. Merk sie dir gut!',
+    selected: 'ausgewählt',
+    remember: 'Sekunden – einprägen!',
+    rules: 'Spielregeln',
+    BGThemes: {
+      black: 'Schwarz',
+      grey: 'Grau',
+      blue: 'Blau',
+      violet: 'Violett',
+      mint: 'Mint',
+      british: 'British Green',
+      brown: 'Braun',
+    },
+    CardBacks: {
+      classic: 'Klassik',
+      rauten: 'Rauten',
+      wellen: 'Wellen',
+      karo: 'Karo',
+    }
+  },
+  en: {
+    language: 'Language',
+    background: 'Background',
+    cardback: 'Card Back',
+    done: 'Done',
+    settings: 'Settings',
+    player: 'Player',
+    host: 'as Host',
+    singleGame: 'Single Game',
+    bestOf3: 'Best of 3',
+    bestOf5: 'Best of 5',
+    bestOf10: 'Best of 10',
+    createSession: 'Create Session',
+    orJoin: 'or join',
+    join: 'Join',
+    sessionCode: 'Session Code',
+    playerName: 'Your Name',
+    joinCode: 'Session Code (e.g. ABC123)',
+    disconnect: 'Connection lost',
+    waitingForHost: 'Waiting for host…',
+    playersInSession: 'Players in session:',
+    showCode: 'Share this code with other players',
+    startGame: 'Start Game',
+    drawDeck: 'Draw Deck',
+    discardPile: 'Discard Pile',
+    empty: 'Empty',
+    yourHand: 'Your Hand',
+    yourTurn: 'Your Turn',
+    endGame: 'End Game',
+    discardDrawn: 'Discard',
+    peek: 'View Cards',
+    peekDesc: 'Choose <strong>2</strong> of your cards. You will see them for <strong>6 seconds</strong> – then they will be hidden again. Remember them well!',
+    selected: 'selected',
+    remember: 'seconds – remember!',
+    rules: 'Game Rules',
+    BGThemes: {
+      black: 'Black',
+      grey: 'Grey',
+      blue: 'Blue',
+      violet: 'Violet',
+      mint: 'Mint',
+      british: 'British Green',
+      brown: 'Brown',
+    },
+    CardBacks: {
+      classic: 'Classic',
+      rauten: 'Diamonds',
+      wellen: 'Waves',
+      karo: 'Tartan',
+    }
+  }
+};
+
+function t(key) {
+  const keys = key.split('.');
+  let val = TRANSLATIONS[currentLanguage];
+  for (const k of keys) {
+    val = val[k];
+    if (!val) return key;
+  }
+  return val;
+}
+
 const BG_THEMES = [
-  { id: 'black',   label: 'Schwarz',        css: 'linear-gradient(160deg,#14141a,#050507)' },
-  { id: 'grey',    label: 'Grau',           css: 'linear-gradient(160deg,#343941,#1a1d22)' },
-  { id: 'blue',    label: 'Blau',           css: 'linear-gradient(160deg,#103055,#071628)' },
-  { id: 'violet',  label: 'Violett',        css: 'linear-gradient(160deg,#33144f,#170a29)' },
-  { id: 'mint',    label: 'Mint',           css: 'linear-gradient(160deg,#12564a,#062b26)' },
-  { id: 'british', label: 'British Green',  css: 'linear-gradient(160deg,#0d3520,#061a10)' },
-  { id: 'brown',   label: 'Braun',          css: 'linear-gradient(160deg,#4a2e1d,#1f1309)' },
+  { id: 'black',   label: () => t('BGThemes.black'),        css: 'linear-gradient(160deg,#14141a,#050507)' },
+  { id: 'grey',    label: () => t('BGThemes.grey'),         css: 'linear-gradient(160deg,#343941,#1a1d22)' },
+  { id: 'blue',    label: () => t('BGThemes.blue'),         css: 'linear-gradient(160deg,#103055,#071628)' },
+  { id: 'violet',  label: () => t('BGThemes.violet'),       css: 'linear-gradient(160deg,#33144f,#170a29)' },
+  { id: 'mint',    label: () => t('BGThemes.mint'),         css: 'linear-gradient(160deg,#12564a,#062b26)' },
+  { id: 'british', label: () => t('BGThemes.british'),      css: 'linear-gradient(160deg,#0d3520,#061a10)' },
+  { id: 'brown',   label: () => t('BGThemes.brown'),        css: 'linear-gradient(160deg,#4a2e1d,#1f1309)' },
 ];
 const CARD_BACKS = [
-  { id: 'classic', label: 'Klassik', emblem: 'K', color: 'rgba(255,215,0,.35)',
+  { id: 'classic', label: () => t('CardBacks.classic'), emblem: 'K', color: 'rgba(255,215,0,.35)',
     css: 'linear-gradient(135deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%)', ring: 'rgba(255,215,0,.35)' },
-  { id: 'rauten',  label: 'Rauten',  emblem: '◆', color: 'rgba(255,215,0,.5)',
+  { id: 'rauten',  label: () => t('CardBacks.rauten'),  emblem: '◆', color: 'rgba(255,215,0,.5)',
     css: 'repeating-linear-gradient(45deg,transparent 0 7px,rgba(255,215,0,.13) 7px 14px),repeating-linear-gradient(-45deg,transparent 0 7px,rgba(255,215,0,.13) 7px 14px),linear-gradient(150deg,#4a0f22,#7a1734)', ring: 'rgba(255,215,0,.4)' },
-  { id: 'wellen',  label: 'Wellen',  emblem: 'K', color: 'rgba(220,250,255,.4)',
+  { id: 'wellen',  label: () => t('CardBacks.wellen'),  emblem: 'K', color: 'rgba(220,250,255,.4)',
     css: 'repeating-radial-gradient(circle at 50% 50%,rgba(255,255,255,.11) 0 1.5px,transparent 1.5px 8px),linear-gradient(160deg,#052e42,#0a5c72)', ring: 'rgba(180,240,255,.35)' },
-  { id: 'karo',    label: 'Karo',    emblem: '♠', color: 'rgba(255,255,255,.35)',
+  { id: 'karo',    label: () => t('CardBacks.karo'),    emblem: '♠', color: 'rgba(255,255,255,.35)',
     css: 'repeating-linear-gradient(0deg,rgba(0,0,0,.30) 0 4px,transparent 4px 9px),repeating-linear-gradient(90deg,rgba(0,0,0,.30) 0 4px,transparent 4px 9px),linear-gradient(135deg,#0d3d1e,#1c7a3c)', ring: 'rgba(255,255,255,.3)' },
 ];
 
 function loadSettings() {
+  currentLanguage = localStorage.getItem('karma_language') || 'de';
   const bg = localStorage.getItem('karma_bg') || 'british';
   const back = localStorage.getItem('karma_cardback') || 'classic';
   document.body.dataset.bg = bg;
   document.body.dataset.cardback = back;
+  updateLanguageUI();
+}
+
+function setLanguage(lang) {
+  currentLanguage = lang;
+  localStorage.setItem('karma_language', lang);
+  updateLanguageUI();
+  renderSettings();
+}
+
+function updateLanguageUI() {
+  document.getElementById('lang-de').classList.toggle('active', currentLanguage === 'de');
+  document.getElementById('lang-en').classList.toggle('active', currentLanguage === 'en');
+
+  document.getElementById('lang-label').textContent = t('language');
+  document.getElementById('bg-label').textContent = t('background');
+  document.getElementById('cardback-label').textContent = t('cardback');
+  const settingsDoneBtn = document.getElementById('settings-done-btn');
+  if (settingsDoneBtn) settingsDoneBtn.textContent = t('done');
 }
 
 function setBg(id) {
@@ -814,17 +965,17 @@ function setCardBack(id) {
 
 function renderSettings() {
   const curBg = document.body.dataset.bg, curBack = document.body.dataset.cardback;
-  document.getElementById('bg-grid').innerHTML = BG_THEMES.map(t => `
-    <button class="swatch ${t.id === curBg ? 'active' : ''}" onclick="setBg('${t.id}')">
-      <div class="swatch-dot" style="background:${t.css}"></div>
-      <div class="swatch-lbl">${t.label}</div>
+  document.getElementById('bg-grid').innerHTML = BG_THEMES.map(theme => `
+    <button class="swatch ${theme.id === curBg ? 'active' : ''}" onclick="setBg('${theme.id}')">
+      <div class="swatch-dot" style="background:${theme.css}"></div>
+      <div class="swatch-lbl">${typeof theme.label === 'function' ? theme.label() : theme.label}</div>
     </button>`).join('');
   document.getElementById('back-grid').innerHTML = CARD_BACKS.map(b => `
     <button class="swatch ${b.id === curBack ? 'active' : ''}" onclick="setCardBack('${b.id}')">
       <div class="back-preview" style="background:${b.css};color:${b.color}">${b.emblem}
         <span style="position:absolute;inset:5px;border:1px solid ${b.ring};border-radius:5px"></span>
       </div>
-      <div class="swatch-lbl">${b.label}</div>
+      <div class="swatch-lbl">${typeof b.label === 'function' ? b.label() : b.label}</div>
     </button>`).join('');
 }
 
