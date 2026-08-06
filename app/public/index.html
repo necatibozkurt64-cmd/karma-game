@@ -180,9 +180,40 @@ body[data-cardback="karo"] .card-back::after { border-color: rgba(255,255,255,.2
 .modal p { color: rgba(255,255,255,.65); font-size: 14px; margin-bottom: 16px; }
 .modal .btn-row { display: flex; gap: 10px; flex-wrap: wrap; }
 
-/* Peek modal */
-#peek-modal .peek-hand { display: flex; gap: 10px; justify-content: center; margin: 20px 0; }
+/* Peek modal — 2×2 Grid mit großen Karten, damit Name/Wert/Ability lesbar sind.
+   Die alten 80×115px-Karten haben die Ability auf 8px gequetscht und den
+   Flavor-Text komplett abgeschnitten. */
+#peek-modal { max-width: 520px; }
+#peek-modal .peek-hand { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; justify-items: center; margin: 18px 0 4px; }
 #peek-modal .peek-count { text-align: center; font-size: 13px; color: rgba(255,255,255,.5); margin-bottom: 8px; }
+.peek-slot { display: flex; flex-direction: column; align-items: center; gap: 6px; width: 100%; }
+.peek-slot .card { width: 100%; max-width: 210px; height: auto; aspect-ratio: 210 / 322; }
+/* Solange nur Rückseiten zu sehen sind (Auswahl / nach dem Merken) gibt es
+   nichts zu lesen – dann bleibt die kompakte Viererreihe. */
+#peek-modal .peek-hand.picking { display: flex; gap: 10px; justify-content: center; }
+#peek-modal .peek-hand.picking .peek-slot { width: auto; }
+#peek-modal .peek-hand.picking .peek-slot .card { width: 92px; max-width: none; }
+.peek-slot-lbl { font-size: 11px; color: rgba(255,255,255,.4); letter-spacing: .5px; }
+.peek-slot.is-peeked .peek-slot-lbl { color: var(--gold); font-weight: 700; }
+/* Karte füllt den Slot – überschreibt die festen Pixelmaße aus buildCardInner,
+   damit das Info-Panel mitwächst statt zu clippen. */
+#peek-hand .tcg-card-container { width: 100% !important; height: 100% !important; }
+#peek-hand .tcg-card-image { height: auto !important; flex: 0 0 42%; }
+#peek-hand .tcg-card-info { height: auto !important; }
+#peek-hand .tcg-card-name { font-size: 13px; }
+#peek-hand .tcg-ability-label { font-size: 10px; margin-bottom: 5px; }
+#peek-hand .tcg-ability-name { font-size: 13px; }
+#peek-hand .tcg-ability-desc { font-size: 11px; }
+#peek-hand .tcg-flavor-text { font-size: 10px; padding-top: 4px; }
+/* Auf dem Handy den Kopfbereich straffen, damit das 2×2-Grid während der
+   6 Sekunden ohne Scrollen komplett sichtbar bleibt. */
+@media (max-width: 430px) {
+  #peek-modal { padding: 16px; }
+  #peek-modal h2 { font-size: 19px; }
+  #peek-modal > p { font-size: 13px; margin-bottom: 10px; }
+  #peek-modal .reveal-timer { margin: 8px 0 4px; }
+  #peek-modal .peek-hand { gap: 10px; margin: 12px 0 4px; }
+}
 
 /* Ability modal */
 #ability-modal .ability-target-row { display: flex; gap: 12px; flex-wrap: wrap; margin: 16px 0; }
@@ -1391,24 +1422,25 @@ function renderPeekModal() {
   }
 
   const handEl = document.getElementById('peek-hand');
+  const anyRevealed = me.hand.some(c => c && !c.hidden);
+  handEl.className = 'peek-hand' + (anyRevealed ? '' : ' picking');
   handEl.innerHTML = '';
   for (let i = 0; i < me.hand.length; i++) {
     const c = me.hand[i];
     const isSel = sel.includes(i);
+    const revealed = c && !c.hidden;
     const wrap = document.createElement('div');
-    wrap.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:6px';
+    wrap.className = 'peek-slot' + (isSel || revealed ? ' is-peeked' : '');
     const card = document.createElement('div');
     card.className = 'card' + (isSel ? ' selected' : '');
-    card.style.width = '80px';
-    card.style.height = '115px';
-    if (c && !c.hidden) {
-      card.innerHTML = buildCardInner(c, 80, 115);
+    if (revealed) {
+      card.innerHTML = buildCardInner(c, 210, 322);
     } else {
       card.innerHTML = '<div class="card-back"></div>';
       if (!revealing && !done) card.onclick = () => send({ type: 'peek', cardIndex: i });
     }
     const lbl = document.createElement('div');
-    lbl.style.cssText = 'font-size:10px;color:rgba(255,255,255,.4)';
+    lbl.className = 'peek-slot-lbl';
     lbl.textContent = `Karte ${i+1}`;
     wrap.appendChild(card);
     wrap.appendChild(lbl);
