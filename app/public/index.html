@@ -705,7 +705,7 @@ function connect(cb) {
   ws.onopen = cb;
   ws.onmessage = e => handleMessage(JSON.parse(e.data));
   ws.onclose = () => showToast('Verbindung unterbrochen', '#ef4444');
-  ws.onerror = () => showToast('WebSocket-Fehler – prüfe Port ' + WS_PORT, '#ef4444');
+  ws.onerror = () => showToast('WebSocket-Fehler – Verbindung fehlgeschlagen', '#ef4444');
 }
 
 function send(msg) {
