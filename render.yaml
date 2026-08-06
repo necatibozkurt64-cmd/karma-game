@@ -4,7 +4,7 @@ services:
     env: python
     plan: free
     buildCommand: "pip install -r requirements.txt"
-    startCommand: "cd app && python server_fast.py"
+    startCommand: "cd app && python server_render.py"
     envVars:
       - key: PORT
         value: 3000
