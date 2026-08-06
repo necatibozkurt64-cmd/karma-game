@@ -231,16 +231,36 @@ body[data-cardback="karo"] .card-back::after { border-color: rgba(255,255,255,.1
 #peek-modal { max-width: 520px; }
 #peek-modal .peek-hand { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; justify-items: center; margin: 18px 0 4px; }
 #peek-modal .peek-count { text-align: center; font-size: 13px; color: rgba(255,255,255,.5); margin-bottom: 8px; }
-.peek-slot { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.peek-slot { display: flex; flex-direction: column; align-items: center; gap: 6px; transition: transform .2s; }
+.peek-slot.is-selected { transform: translateY(-6px); }
 /* Die Maße kommen inline aus buildCardInner – renderPeekModal rechnet sie
    passend zur Modalbreite aus. */
 .peek-slot .card { width: auto; height: auto; }
-/* Solange nur Rückseiten zu sehen sind (Auswahl / nach dem Merken) gibt es
-   nichts zu lesen – dann bleibt die kompakte Viererreihe. */
-#peek-modal .peek-hand.picking { display: flex; gap: 10px; justify-content: center; }
-#peek-modal .peek-hand.picking .peek-slot .card { width: 92px; height: 133px; }
 .peek-slot-lbl { font-size: 11px; color: rgba(255,255,255,.4); letter-spacing: .5px; }
 .peek-slot.is-peeked .peek-slot-lbl { color: var(--gold); font-weight: 700; }
+
+/* Flip-Container — der Auswahl-Screen wechselt nicht mehr das Layout, wenn
+   zwei Karten aufgedeckt werden. Stattdessen dreht sich jede einzelne Karte
+   an Ort und Stelle: Rückseite → Vorderseite (Reveal) und wieder zurück,
+   nachdem die 6 Sekunden vorbei sind. */
+.peek-flip { position: relative; perspective: 1400px; background: transparent; border: 0; box-shadow: none; }
+.peek-flip:hover { transform: none; box-shadow: none; }
+.peek-flip .flip-inner {
+  position: absolute; inset: 0;
+  transform-style: preserve-3d;
+  transition: transform 700ms cubic-bezier(.55, .05, .3, 1);
+  will-change: transform;
+}
+.peek-flip.is-flipped .flip-inner { transform: rotateY(180deg); }
+.peek-flip .flip-face {
+  position: absolute; inset: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.peek-flip .flip-face.flip-front { transform: rotateY(180deg); }
+.peek-slot.is-selected .peek-flip .flip-face.flip-back { box-shadow: 0 0 0 2px var(--brand-lift), 0 8px 24px rgba(115,123,196,.45); }
 /* buildCardInner rechnet das Info-Panel mit einer 24px-Kopfzeile – die ist real
    ~60px hoch, deshalb wurde der Flavor-Text abgeschnitten. Hier bekommt das
    Info-Panel seine natürliche Höhe und das Bild den Rest – so wird nie etwas
@@ -260,9 +280,6 @@ body[data-cardback="karo"] .card-back::after { border-color: rgba(255,255,255,.1
   #peek-modal > p { font-size: 13px; margin-bottom: 10px; }
   #peek-modal .reveal-timer { margin: 8px 0 4px; }
   #peek-modal .peek-hand { gap: 10px; margin: 12px 0 4px; }
-  /* Vier Rückseiten nebeneinander müssen in die Modalbreite passen. */
-  #peek-modal .peek-hand.picking { gap: 8px; }
-  #peek-modal .peek-hand.picking .peek-slot .card { width: 68px; height: 98px; }
   /* Kleinere Karte → weniger Platz für die Kopfzeile und das Info-Panel. */
   #peek-hand .tcg-card-header { padding: 5px 7px; }
   #peek-hand .tcg-card-value-hex { width: 29px; height: 34px; font-size: 15px; margin-right: 5px; }
@@ -431,7 +448,7 @@ body[data-cardback="karo"] .card-back::after { border-color: rgba(255,255,255,.1
 .swatch-dot { width: 100%; height: 34px; border-radius: 6px; margin-bottom: 6px; border: 1px solid rgba(255,255,255,.12); }
 .swatch-lbl { font-size: 11px; color: rgba(255,255,255,.75); }
 .back-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(88px, 1fr)); gap: 10px; }
-.back-preview { width: 100%; height: 96px; border-radius: 8px; margin-bottom: 6px; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; font-size: 26px; font-weight: 900; border: 1px solid var(--line); }
+.back-preview { width: 100%; height: 96px; border-radius: 8px; margin-bottom: 6px; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; font-size: 26px; font-weight: 900; border: 1px solid var(--line); background-size: cover; background-position: center; }
 .back-preview::after { content: ''; position: absolute; inset: 5px; border-radius: 5px; }
 
 /* ── KARMA CARD STYLES – Dunkles Deckblatt mit KARMA-Marke ── */
@@ -826,18 +843,11 @@ body[data-cardback="karo"] .card-back::after { border-color: rgba(255,255,255,.1
 
     <div style="margin-top:16px">
       <h3 style="font-size:15px;color:#737bc4;margin-bottom:8px">🎯 Kartenwerte & Punkte</h3>
-      <p style="font-size:13px;line-height:1.6;margin-bottom:8px">Jede Karte hat einen Wert (von 1 bis K). Deine Punkte in der Runde sind die <strong>Summe aller Kartenwerte</strong> auf deiner Hand:</p>
-      <ul style="font-size:13px;line-height:1.8;margin-left:20px">
-        <li><strong>2–10:</strong> Ihr Zahlenwert (2 Punkte, 10 Punkte, usw.)</li>
-        <li><strong>Bube (J):</strong> 11 Punkte</li>
-        <li><strong>Dame (Q):</strong> 12 Punkte</li>
-        <li><strong>König (K):</strong> 13 Punkte</li>
-        <li><strong>Ass (A):</strong> 1 Punkt oder 14 Punkte (je nach Kartenvariante)</li>
-      </ul>
+      <p style="font-size:13px;line-height:1.6;margin-bottom:8px">Jede Karte hat einen Wert von -1 bis 13. Je niedriger desto besser. Die Summe aller Werte entspricht deiner aktuellen Gesamtpunkte. Auch hier, je niedriger, desto besser. Also werde die hohen Karten los und beende als erster das Spiel!</p>
     </div>
 
     <div style="margin-top:16px;padding:12px;background:rgba(115,123,196,.1);border-left:3px solid #737bc4;border-radius:8px">
-      <p style="font-size:12px;color:rgba(255,255,255,.8);margin:0"><strong>💡 Tipp:</strong> Merke dir gut, welche Karten du ansehen darfst! Je besser du weißt, wo die niedrigen Karten sind, desto besser kannst du deine Hand verbessern.</p>
+      <p style="font-size:12px;color:rgba(255,255,255,.8);margin:0"><strong>⚠️ Obacht!</strong> Wenn du nicht die wenigsten Punkte nach dem Beenden hast, bekommst du eine Strafe von 30 Punkten.</p>
     </div>
 
     <div class="btn-row" style="margin-top:20px">
@@ -1102,18 +1112,20 @@ const BG_THEMES = [
   { id: 'wein',      label: () => t('BGThemes.wein'),      css: 'radial-gradient(circle at 50% 30%,#331424 0%,#080406 78%)' },
   { id: 'reinweiss', label: () => t('BGThemes.reinweiss'), css: 'linear-gradient(180deg,#101010,#000000)' },
 ];
-// Kartenrücken – der Mond-Emblem als SVG bleibt in .card-back::before; hier nur die Preview-Kacheln.
-const KARMA_MARK_URL = "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 104 100'%3E%3Cpath fill='%234b5080' fill-rule='evenodd' d='M24 54a38 38 0 1 0 76 0a38 38 0 1 0-76 0ZM15 54a33 33 0 1 0 66 0a33 33 0 1 0-66 0Z'/%3E%3Cpath fill='%23ffffff' fill-rule='evenodd' d='M2 48a40 40 0 1 0 80 0a40 40 0 1 0-80 0ZM21 48a35 35 0 1 0 70 0a35 35 0 1 0-70 0Z'/%3E%3C/svg%3E\")";
-const KARMA_MARK_MONO = "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 104 100'%3E%3Cpath fill='%23ffffff' fill-opacity='.55' fill-rule='evenodd' d='M24 54a38 38 0 1 0 76 0a38 38 0 1 0-76 0ZM15 54a33 33 0 1 0 66 0a33 33 0 1 0-66 0Z'/%3E%3Cpath fill='%23ffffff' fill-rule='evenodd' d='M2 48a40 40 0 1 0 80 0a40 40 0 1 0-80 0ZM21 48a35 35 0 1 0 70 0a35 35 0 1 0-70 0Z'/%3E%3C/svg%3E\")";
+// Kartenrücken-Designs mit Palmenblatt-Patterns
 const CARD_BACKS = [
   { id: 'classic', label: () => t('CardBacks.classic'),
-    css: `${KARMA_MARK_URL} center / 55% no-repeat, radial-gradient(120% 90% at 50% 50%,#232743 0%,#0b0d16 78%)`, ring: 'rgba(115,123,196,.35)' },
+    preview: 'linear-gradient(135deg, #232743 0%, #0b0d16 100%)',
+    ring: 'rgba(115,123,196,.35)' },
   { id: 'rauten',  label: () => t('CardBacks.rauten'),
-    css: `${KARMA_MARK_MONO} center / 58% no-repeat, radial-gradient(140% 100% at 50% 50%,#3a3f6e 0%,#14162a 88%)`, ring: 'rgba(115,123,196,.55)' },
+    preview: 'linear-gradient(115deg, #2d5a4a 0%, #0f1a1a 50%, #1a3a2e 100%)',
+    ring: 'rgba(100,180,140,.55)' },
   { id: 'wellen',  label: () => t('CardBacks.wellen'),
-    css: `${KARMA_MARK_URL} center / 44% no-repeat, repeating-radial-gradient(circle at 50% 50%,rgba(115,123,196,.16) 0 1px,transparent 1px 7px), radial-gradient(120% 90% at 50% 50%,#1c1f3a 0%,#060811 90%)`, ring: 'rgba(115,123,196,.4)' },
+    preview: 'linear-gradient(125deg, #1f3a3a 0%, #0d1a1f 50%, #1a2f35 100%)',
+    ring: 'rgba(80,150,140,.4)' },
   { id: 'karo',    label: () => t('CardBacks.karo'),
-    css: `${KARMA_MARK_MONO} center / 52% no-repeat, radial-gradient(rgba(255,255,255,.15) 1px, transparent 1.3px) 0 0 / 12px 12px, linear-gradient(180deg,#10132a,#04050b)`, ring: 'rgba(255,255,255,.25)' },
+    preview: 'linear-gradient(135deg, #4a6b5f 0%, #1a2a25 50%, #2a4a3f 100%)',
+    ring: 'rgba(120,200,160,.25)' },
 ];
 
 function loadSettings() {
@@ -1167,8 +1179,8 @@ function renderSettings() {
     </button>`).join('');
   document.getElementById('back-grid').innerHTML = CARD_BACKS.map(b => `
     <button class="swatch ${b.id === curBack ? 'active' : ''}" onclick="setCardBack('${b.id}')">
-      <div class="back-preview" style="background:${b.css}">
-        <span style="position:absolute;inset:5px;border:1px solid ${b.ring};border-radius:5px"></span>
+      <div class="back-preview" style="background:${b.preview || 'linear-gradient(135deg, #1a1d2e 0%, #0d0f1e 100%)'};border:1px solid ${b.ring || 'rgba(255,255,255,.12)'}">
+        <span style="position:absolute;inset:5px;border:1px solid ${b.ring || 'rgba(255,255,255,.12)'};border-radius:5px"></span>
       </div>
       <div class="swatch-lbl">${typeof b.label === 'function' ? b.label() : b.label}</div>
     </button>`).join('');
@@ -1245,7 +1257,15 @@ function render() {
   runTableFlip(beforeRects);
 
   if (state.phase === 'peek') renderPeekModal();
-  else document.getElementById('peek-overlay').classList.add('hidden');
+  else {
+    document.getElementById('peek-overlay').classList.add('hidden');
+    // Cache und Signatur zurücksetzen, damit die nächste Peek-Phase (neue
+    // Runde) frisch startet und die Vorderseiten nicht aus der letzten Runde
+    // wiederkommen.
+    peekFaceCache.clear();
+    peekLastHandSig = '';
+    document.getElementById('peek-hand').innerHTML = '';
+  }
 
   if (state.phase === 'scoring' || state.phase === 'done') renderScoringModal();
   else document.getElementById('scoring-overlay').classList.add('hidden');
@@ -1472,6 +1492,14 @@ function renderEndBanner() {
 
 // ── Peek Modal ────────────────────────────────────────────────────────────────
 // Ablauf: 2 Karten auswählen → 6 Sekunden ansehen → wieder verdeckt.
+// Zwischenspeicher für die zuletzt bekannte Vorderseite je Kartenposition –
+// wenn die 6 Sekunden abgelaufen sind, verdeckt der Server die Karte wieder
+// (keine Feld-Daten mehr im State), aber die Karte muss sich sichtbar
+// zurückdrehen. Aus dem Cache rendern wir die Vorderseite weiter, während
+// die Karte rotiert, damit sie nicht mitten in der Animation leer wird.
+const peekFaceCache = new Map();
+let peekLastHandSig = '';
+
 function renderPeekModal() {
   const overlay = document.getElementById('peek-overlay');
   const me = state.players.find(p => p.isMe);
@@ -1509,23 +1537,25 @@ function renderPeekModal() {
   }
 
   const handEl = document.getElementById('peek-hand');
-  const anyRevealed = me.hand.some(c => c && !c.hidden);
-  handEl.className = 'peek-hand' + (anyRevealed ? '' : ' picking');
-  handEl.innerHTML = '';
+  handEl.className = 'peek-hand';
 
   // Karten so groß wie möglich, aber so, dass das 2×2-Grid komplett sichtbar
   // bleibt – während der 6 Sekunden will niemand scrollen. Begrenzt wird
-  // sowohl durch die Modalbreite als auch durch die Viewport-Höhe.
+  // sowohl durch die Modalbreite als auch durch die Viewport-Höhe. Beim
+  // ersten Aufbau nutzen wir die Modalbreite als Fallback, weil das Grid dann
+  // noch keine gemessene Breite hat.
   const modalEl = document.getElementById('peek-modal');
   const gap = parseFloat(getComputedStyle(handEl).columnGap) || 14;
-  const avail = handEl.clientWidth || 434;
+  const modalCs = getComputedStyle(modalEl);
+  const modalInner = modalEl.clientWidth
+    - parseFloat(modalCs.paddingLeft) - parseFloat(modalCs.paddingRight);
+  const avail = handEl.clientWidth || modalInner || 434;
   let cardW = Math.min(210, Math.floor((avail - gap) / 2));
 
-  const mcs = getComputedStyle(modalEl);
   const hcs = getComputedStyle(handEl);
   // Alles außer dem Kartengrid: Padding, Titel, Text, Timer, plus die
   // Positionslabels unter den Karten (~24px inkl. Slot-Gap).
-  let chrome = parseFloat(mcs.paddingTop) + parseFloat(mcs.paddingBottom)
+  let chrome = parseFloat(modalCs.paddingTop) + parseFloat(modalCs.paddingBottom)
              + parseFloat(hcs.marginTop) + parseFloat(hcs.marginBottom)
              + 2 * 24 + gap;
   for (const el of modalEl.children) {
@@ -1537,33 +1567,79 @@ function renderPeekModal() {
   const cardH = Math.max(250, Math.min(Math.round(cardW * 322 / 210), maxH));
   cardW = Math.min(cardW, Math.round(cardH * 210 / 322));
 
+  // DOM nur neu aufbauen, wenn sich die Hand-Signatur ändert (Spielerwechsel,
+  // neue Runde) – sonst nur Klassen und Vorderseiten aktualisieren, damit die
+  // 3D-Flip-Animation nicht durch ein innerHTML='' unterbrochen wird.
+  const handSig = me.hand.map(c => (c && c.uid) || '_').join('|') + `#${me.hand.length}`;
+  let rebuild = handSig !== peekLastHandSig || handEl.children.length !== me.hand.length;
+  peekLastHandSig = handSig;
+  if (rebuild) {
+    handEl.innerHTML = '';
+    for (let i = 0; i < me.hand.length; i++) {
+      const wrap = document.createElement('div');
+      wrap.className = 'peek-slot';
+      wrap.dataset.idx = String(i);
+      const card = document.createElement('div');
+      card.className = 'card peek-flip';
+      const inner = document.createElement('div');
+      inner.className = 'flip-inner';
+      const back = document.createElement('div');
+      back.className = 'flip-face flip-back';
+      back.innerHTML = '<div class="card-back"></div>';
+      const front = document.createElement('div');
+      front.className = 'flip-face flip-front';
+      inner.appendChild(back);
+      inner.appendChild(front);
+      card.appendChild(inner);
+      const lbl = document.createElement('div');
+      lbl.className = 'peek-slot-lbl';
+      lbl.textContent = `Karte ${i+1}`;
+      wrap.appendChild(card);
+      wrap.appendChild(lbl);
+      handEl.appendChild(wrap);
+    }
+  }
+
   for (let i = 0; i < me.hand.length; i++) {
     const c = me.hand[i];
+    const wrap = handEl.children[i];
+    const card = wrap.firstElementChild;
+    const front = card.querySelector('.flip-front');
+    const back = card.querySelector('.flip-back');
     const isSel = sel.includes(i);
-    const revealed = c && !c.hidden;
-    const wrap = document.createElement('div');
-    wrap.className = 'peek-slot' + (isSel || revealed ? ' is-peeked' : '');
-    const card = document.createElement('div');
-    card.className = 'card' + (isSel ? ' selected' : '');
-    if (anyRevealed) {
-      // Im Grid trägt der Wrapper die Maße – sonst kollabieren die Rückseiten,
-      // die ihre Größe vom Elternelement beziehen.
-      card.style.width = cardW + 'px';
-      card.style.height = cardH + 'px';
-    }
+    const revealed = !!(c && !c.hidden);
+
+    card.style.width = cardW + 'px';
+    card.style.height = cardH + 'px';
+
+    wrap.classList.toggle('is-selected', isSel && !revealed);
+    wrap.classList.toggle('is-peeked', isSel || revealed);
+
+    // Vorderseite füllen – während sie sichtbar ist mit frischen Server-Daten,
+    // beim Zurückdrehen aus dem Cache, damit die Animation nicht ins Leere läuft.
     if (revealed) {
-      card.innerHTML = buildCardInner(c, cardW, cardH);
-    } else {
-      card.innerHTML = '<div class="card-back"></div>';
-      if (!revealing && !done) card.onclick = () => send({ type: 'peek', cardIndex: i });
+      peekFaceCache.set(i, c);
+      front.innerHTML = buildCardInner(c, cardW, cardH);
+    } else if (peekFaceCache.has(i)) {
+      const cached = peekFaceCache.get(i);
+      front.innerHTML = buildCardInner(cached, cardW, cardH);
     }
-    const lbl = document.createElement('div');
-    lbl.className = 'peek-slot-lbl';
-    lbl.textContent = `Karte ${i+1}`;
-    wrap.appendChild(card);
-    wrap.appendChild(lbl);
-    handEl.appendChild(wrap);
+
+    // Klick nur auf die Rückseite während der Auswahl. Rebuild = kein Anim-Start,
+    // sonst per rAF, damit der Browser vor dem Setzen von .is-flipped einen
+    // Frame ohne die Klasse sieht.
+    const clickable = !revealing && !done;
+    back.onclick = clickable ? (() => send({ type: 'peek', cardIndex: i })) : null;
+    back.style.cursor = clickable ? 'pointer' : 'default';
+
+    const shouldFlip = revealed;
+    if (rebuild) {
+      card.classList.toggle('is-flipped', shouldFlip);
+    } else if (shouldFlip !== card.classList.contains('is-flipped')) {
+      requestAnimationFrame(() => card.classList.toggle('is-flipped', shouldFlip));
+    }
   }
+
   tickReveal();
 }
 
@@ -1757,7 +1833,7 @@ function renderAbilityModal() {
   // Show drawn card
   const drawnArea = document.getElementById('ability-drawn');
   if (state.drawnCard) {
-    drawnArea.innerHTML = `<div class="card" style="width:80px;height:115px">${buildCardInner(state.drawnCard, 80, 115)}</div>`;
+    drawnArea.innerHTML = `<div class="card" style="width:120px;height:174px">${buildCardInner(state.drawnCard, 120, 174)}</div>`;
   } else {
     drawnArea.innerHTML = '';
   }
@@ -1777,7 +1853,7 @@ function renderAbilityModal() {
     } else {
       desc.innerHTML = 'Du siehst sie <strong>6 Sekunden</strong> – danach wird sie wieder verdeckt:';
       body.innerHTML = revealTimerHtml() + (as.revealedCard
-        ? `<div style="display:flex;justify-content:center;margin:12px 0"><div class="card" style="width:90px;height:130px">${buildCardInner(as.revealedCard, 90, 130)}</div></div>`
+        ? `<div style="display:flex;justify-content:center;margin:12px 0"><div class="card" style="width:120px;height:174px">${buildCardInner(as.revealedCard, 120, 174)}</div></div>`
         : '<div style="text-align:center;color:rgba(255,255,255,.4);margin:20px 0">Karte ist wieder verdeckt.</div>');
       addBtn(actions, 'Fertig', '#22c55e', () => send({ type: 'ability', done: true }));
     }
@@ -1791,7 +1867,7 @@ function renderAbilityModal() {
     } else {
       desc.innerHTML = 'Du siehst sie <strong>6 Sekunden</strong> – danach wird sie wieder verdeckt:';
       body.innerHTML = revealTimerHtml() + (as.revealedCard
-        ? `<div style="display:flex;justify-content:center;margin:12px 0"><div class="card" style="width:90px;height:130px">${buildCardInner(as.revealedCard, 90, 130)}</div></div>`
+        ? `<div style="display:flex;justify-content:center;margin:12px 0"><div class="card" style="width:120px;height:174px">${buildCardInner(as.revealedCard, 120, 174)}</div></div>`
         : '<div style="text-align:center;color:rgba(255,255,255,.4);margin:20px 0">Karte ist wieder verdeckt.</div>');
       addBtn(actions, 'Fertig', '#22c55e', () => send({ type: 'ability', done: true }));
     }
@@ -1822,14 +1898,14 @@ function renderAbilityModal() {
         body.innerHTML = revealTimerHtml() + `<div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin:12px 0">` +
           as.revealedCards.map(r => {
             const p = state.players.find(x => x.id === r.playerId);
-            return `<div style="text-align:center"><div style="font-size:11px;color:rgba(255,255,255,.5);margin-bottom:4px">${esc(p?.name||'?')} #${r.cardIndex+1}</div><div class="card" style="width:80px;height:115px">${buildCardInner(r.card, 80, 115)}</div></div>`;
+            return `<div style="text-align:center"><div style="font-size:11px;color:rgba(255,255,255,.5);margin-bottom:4px">${esc(p?.name||'?')} #${r.cardIndex+1}</div><div class="card" style="width:120px;height:174px">${buildCardInner(r.card, 120, 174)}</div></div>`;
           }).join('') + '</div>';
       } else {
         desc.textContent = 'Die Karten sind wieder verdeckt. Tauschen – aus dem Gedächtnis?';
         body.innerHTML = `<div style="display:flex;gap:16px;justify-content:center;margin:12px 0">` +
           (as.selectedCards || []).map(sc => {
             const p = state.players.find(x => x.id === sc.playerId);
-            return `<div style="text-align:center"><div style="font-size:11px;color:rgba(255,255,255,.5);margin-bottom:4px">${esc(p?.name||'?')} #${sc.cardIndex+1}</div><div class="card" style="width:80px;height:115px"><div class="card-back"></div></div></div>`;
+            return `<div style="text-align:center"><div style="font-size:11px;color:rgba(255,255,255,.5);margin-bottom:4px">${esc(p?.name||'?')} #${sc.cardIndex+1}</div><div class="card" style="width:120px;height:174px"><div class="card-back"></div></div></div>`;
           }).join('') + '</div>';
       }
       addBtn(actions, 'Tauschen', '#9C27B0', () => send({ type: 'ability', doSwap: true }));
@@ -1853,7 +1929,7 @@ function buildMyHandForAbility(selected, mode) {
   for (let i = 0; i < me.hand.length; i++) {
     const c = me.hand[i];
     const sel = selected && selected.some(s => s.playerId === state.myId && s.cardIndex === i);
-    html += `<div class="card ${sel?'selected':''}" style="width:75px;height:108px" onclick="abilitySelectCard('${state.myId}',${i})">${c && !c.hidden ? buildCardInner(c,75,108) : '<div class="card-back"></div>'}</div>`;
+    html += `<div class="card ${sel?'selected':''}" style="width:100px;height:145px" onclick="abilitySelectCard('${state.myId}',${i})">${c && !c.hidden ? buildCardInner(c,100,145) : '<div class="card-back"></div>'}</div>`;
   }
   html += '</div>';
   return html;
@@ -1865,7 +1941,7 @@ function buildOpponentsForAbility() {
     if (p.isMe) continue;
     html += `<div><div style="font-size:12px;color:rgba(255,255,255,.5);margin-bottom:4px">${esc(p.name)}</div><div style="display:flex;gap:6px;flex-wrap:wrap">`;
     for (let i = 0; i < p.hand.length; i++) {
-      html += `<div class="card" style="width:65px;height:94px" onclick="abilitySelectOther('${p.id}',${i})"><div class="card-back"></div></div>`;
+      html += `<div class="card" style="width:100px;height:145px" onclick="abilitySelectOther('${p.id}',${i})"><div class="card-back"></div></div>`;
     }
     html += '</div></div>';
   }
@@ -1881,7 +1957,7 @@ function buildAllCardsForAbility(selected) {
       const c = p.hand[i];
       const sel = selected.some(s => s.playerId === p.id && s.cardIndex === i);
       const fn = `abilitySelectCard('${p.id}',${i})`;
-      html += `<div class="card ${sel?'selected':''}" style="width:65px;height:94px" onclick="${fn}">${c && !c.hidden ? buildCardInner(c,65,94) : '<div class="card-back"></div>'}</div>`;
+      html += `<div class="card ${sel?'selected':''}" style="width:100px;height:145px" onclick="${fn}">${c && !c.hidden ? buildCardInner(c,100,145) : '<div class="card-back"></div>'}</div>`;
     }
     html += '</div></div>';
   }
