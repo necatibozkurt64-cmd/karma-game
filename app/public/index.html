@@ -159,40 +159,40 @@ body[data-cardback="classic"] .card-back::before {
 }
 body[data-cardback="classic"] .card-back::after { border-color: rgba(115,123,196,.25); }
 
-/* 2 · Indigo – volle Markenfarbe, Sichel monoton */
+/* 2 · Indigo – grünes Palmenblatt-Design */
 body[data-cardback="rauten"] .card-back {
   background:
-    radial-gradient(140% 100% at 50% 50%, #3a3f6e 0%, #14162a 88%);
-  border-color: rgba(115,123,196,.45);
+    radial-gradient(140% 100% at 50% 50%, #2d5a4a 0%, #0f1a1a 88%);
+  border-color: rgba(100,180,140,.45);
 }
 body[data-cardback="rauten"] .card-back::before {
-  content: ''; background: var(--mark-mono) center / 58% no-repeat; opacity: .85;
+  content: ''; background: var(--mark-mono) center / 58% no-repeat; opacity: .55;
 }
-body[data-cardback="rauten"] .card-back::after { border-color: rgba(255,255,255,.18); }
+body[data-cardback="rauten"] .card-back::after { border-color: rgba(100,180,140,.55); }
 
-/* 3 · Guilloche – konzentrische Linien + Sichel */
+/* 3 · Guilloche – grünes Palmenblatt-Design mit Mustern */
 body[data-cardback="wellen"] .card-back {
   background:
-    repeating-radial-gradient(circle at 50% 50%, rgba(115,123,196,.16) 0 1px, transparent 1px 7px),
-    radial-gradient(120% 90% at 50% 50%, #1c1f3a 0%, #060811 90%);
-  border-color: rgba(115,123,196,.32);
+    repeating-radial-gradient(circle at 50% 50%, rgba(100,180,140,.12) 0 1px, transparent 1px 7px),
+    radial-gradient(120% 90% at 50% 50%, #1f3a3a 0%, #0d1a1f 90%);
+  border-color: rgba(100,180,140,.32);
 }
 body[data-cardback="wellen"] .card-back::before {
-  content: ''; background: var(--mark) center / 44% no-repeat; opacity: .95;
+  content: ''; background: var(--mark-mono) center / 44% no-repeat; opacity: .45;
 }
-body[data-cardback="wellen"] .card-back::after { border-color: rgba(115,123,196,.30); }
+body[data-cardback="wellen"] .card-back::after { border-color: rgba(100,180,140,.4); }
 
-/* 4 · Sternen – Punktraster + Sichel */
+/* 4 · Sternen – grünes Palmenblatt-Design mit Sternenmuster */
 body[data-cardback="karo"] .card-back {
   background:
-    radial-gradient(rgba(255,255,255,.15) 1px, transparent 1.3px) 0 0 / 12px 12px,
-    linear-gradient(180deg, #10132a, #04050b);
-  border-color: rgba(255,255,255,.18);
+    radial-gradient(rgba(100,180,140,.12) 1px, transparent 1.3px) 0 0 / 12px 12px,
+    linear-gradient(180deg, #4a6b5f, #1a2a25);
+  border-color: rgba(120,200,160,.18);
 }
 body[data-cardback="karo"] .card-back::before {
-  content: ''; background: var(--mark-mono) center / 52% no-repeat; opacity: .55;
+  content: ''; background: var(--mark-mono) center / 52% no-repeat; opacity: .4;
 }
-body[data-cardback="karo"] .card-back::after { border-color: rgba(255,255,255,.18); }
+body[data-cardback="karo"] .card-back::after { border-color: rgba(120,200,160,.25); }
 
 /* Deck pile */
 .deck-pile { width: 190px; height: 280px; position: relative; cursor: pointer; }
@@ -730,7 +730,7 @@ body[data-cardback="karo"] .card-back::after { border-color: rgba(255,255,255,.1
   <div class="drawn-label">Gezogene Karte</div>
   <div id="drawn-card-display"></div>
   <div id="drawn-decision">
-    <div class="drawn-hint">Tippe eine deiner Karten, um sie zu <strong>ersetzen</strong> – oder lege die gezogene Karte ab.</div>
+    <div class="drawn-hint" id="drawn-hint">Tippe eine deiner Karten, um sie zu <strong>ersetzen</strong> – oder lege die gezogene Karte ab.</div>
     <div id="drawn-hand"></div>
     <button class="btn btn-outline" id="drawn-discard-btn" onclick="discardDrawn()">Ablegen</button>
   </div>
@@ -954,6 +954,10 @@ function handleMessage(msg) {
   if (msg.type === 'swap_anim') { noteSwapAnim(msg); return; }
   if (msg.type === 'state') {
     state = msg;
+    // Jeder frische Server-State entriegelt die Sperren – der Server hat unsere
+    // letzte Aktion verarbeitet, weitere Klicks dürfen wieder raus.
+    abilityPendingSend = false;
+    drawnActionPending = false;
     syncRevealCountdown();
     render();
   }
@@ -1350,6 +1354,21 @@ function renderCenter() {
     drawnArea.style.display = 'flex';
     drawnDisp.innerHTML = `<div class="card tcg-pop">${buildCardInner(state.drawnCard, 190, 278)}</div>`;
     renderDrawnHand();
+    // Button und Hinweis machen den Flow explizit: Handkarte antippen = tauschen
+    // (Fähigkeit wird verworfen). Ablegen = Karte auf den Stapel und Fähigkeit
+    // ausführen. Das war vorher hinter dem generischen "Ablegen" versteckt.
+    const hasAbility = state.drawnCard.ability && state.drawnCard.ability !== 'none';
+    const btn = document.getElementById('drawn-discard-btn');
+    const hint = document.getElementById('drawn-hint');
+    if (hasAbility) {
+      btn.textContent = 'Ablegen & Fähigkeit nutzen';
+      btn.className = 'btn btn-purple';
+      hint.innerHTML = 'Tippe eine Handkarte, um sie zu <strong>tauschen</strong> (Fähigkeit verfällt) – oder <strong>lege ab</strong>, um die Fähigkeit zu nutzen.';
+    } else {
+      btn.textContent = 'Ablegen';
+      btn.className = 'btn btn-outline';
+      hint.innerHTML = 'Tippe eine deiner Karten, um sie zu <strong>ersetzen</strong> – oder lege die gezogene Karte ab.';
+    }
   } else {
     drawnArea.style.display = 'none';
   }
@@ -1378,14 +1397,24 @@ function renderDrawnHand() {
   }
 }
 
+// Sperre gegen versehentliches Doppel-Antippen der Ablegen/Ersetzen-Aktion:
+// jeder neue State-Update entriegelt sie wieder (siehe handleMessage).
+let drawnActionPending = false;
+
 function keepDrawn(idx) {
+  if (drawnActionPending) return;
   if (state?.phase !== 'playing' || !state.drawnCard || state.currentPlayerId !== state.myId) return;
+  drawnActionPending = true;
   send({ type: 'keep', handIndex: idx });
+  setTimeout(() => { drawnActionPending = false; }, 800);
 }
 
 function discardDrawn() {
+  if (drawnActionPending) return;
   if (state?.phase !== 'playing' || !state.drawnCard || state.currentPlayerId !== state.myId) return;
+  drawnActionPending = true;
   send({ type: 'discard_drawn' });
+  setTimeout(() => { drawnActionPending = false; }, 800);
 }
 
 function renderMyZone() {
@@ -1855,7 +1884,7 @@ function renderAbilityModal() {
       body.innerHTML = revealTimerHtml() + (as.revealedCard
         ? `<div style="display:flex;justify-content:center;margin:12px 0"><div class="card" style="width:120px;height:174px">${buildCardInner(as.revealedCard, 120, 174)}</div></div>`
         : '<div style="text-align:center;color:rgba(255,255,255,.4);margin:20px 0">Karte ist wieder verdeckt.</div>');
-      addBtn(actions, 'Fertig', '#22c55e', () => send({ type: 'ability', done: true }));
+      addBtn(actions, 'Fertig', '#22c55e', () => _sendAbility({ type: 'ability', done: true }));
     }
   }
 
@@ -1869,7 +1898,7 @@ function renderAbilityModal() {
       body.innerHTML = revealTimerHtml() + (as.revealedCard
         ? `<div style="display:flex;justify-content:center;margin:12px 0"><div class="card" style="width:120px;height:174px">${buildCardInner(as.revealedCard, 120, 174)}</div></div>`
         : '<div style="text-align:center;color:rgba(255,255,255,.4);margin:20px 0">Karte ist wieder verdeckt.</div>');
-      addBtn(actions, 'Fertig', '#22c55e', () => send({ type: 'ability', done: true }));
+      addBtn(actions, 'Fertig', '#22c55e', () => _sendAbility({ type: 'ability', done: true }));
     }
   }
 
@@ -1908,8 +1937,8 @@ function renderAbilityModal() {
             return `<div style="text-align:center"><div style="font-size:11px;color:rgba(255,255,255,.5);margin-bottom:4px">${esc(p?.name||'?')} #${sc.cardIndex+1}</div><div class="card" style="width:120px;height:174px"><div class="card-back"></div></div></div>`;
           }).join('') + '</div>';
       }
-      addBtn(actions, 'Tauschen', '#9C27B0', () => send({ type: 'ability', doSwap: true }));
-      addBtn(actions, 'Nicht tauschen', '#64748b', () => send({ type: 'ability', doSwap: false }));
+      addBtn(actions, 'Tauschen', '#9C27B0', () => _sendAbility({ type: 'ability', doSwap: true }));
+      addBtn(actions, 'Nicht tauschen', '#64748b', () => _sendAbility({ type: 'ability', doSwap: false }));
     }
   }
   tickReveal();
@@ -1965,29 +1994,42 @@ function buildAllCardsForAbility(selected) {
   return html;
 }
 
+// Verhindert, dass ein zweiter Klick auf eine Karte losgeht, bevor der Server
+// den Reveal-Zustand zurückspiegelt. Ohne diese Sperre landete der zweite Klick
+// beim alten Server-Code im "Fertig"-Zweig und beendete die Fähigkeit sofort.
+let abilityPendingSend = false;
+function _sendAbility(msg) {
+  if (abilityPendingSend) return;
+  abilityPendingSend = true;
+  send(msg);
+  // Freigabe kommt aus dem nächsten State-Update (siehe handleMessage). Als
+  // Sicherheitsnetz nach 800 ms lösen wir automatisch, falls kein State kommt.
+  setTimeout(() => { abilityPendingSend = false; }, 800);
+}
+
 function abilitySelectCard(playerId, cardIndex) {
   const as = state.abilityState;
   if (!as || as.activatedBy !== state.myId) return;
 
   if (as.type === 'see_own') {
     if (playerId === state.myId && as.waitingForSelection) {
-      send({ type: 'ability', cardIndex });
+      _sendAbility({ type: 'ability', cardIndex });
     }
     return;
   }
   if (as.type === 'see_others') {
     if (playerId !== state.myId && as.waitingForSelection) {
-      send({ type: 'ability', targetPlayerId: playerId, cardIndex });
+      _sendAbility({ type: 'ability', targetPlayerId: playerId, cardIndex });
     }
     return;
   }
   if (as.type === 'swap' || as.type === 'see_swap') {
     if (as.step === 'select1') {
-      send({ type: 'ability', card1: { playerId, cardIndex } });
+      _sendAbility({ type: 'ability', card1: { playerId, cardIndex } });
     } else if (as.step === 'select2') {
       const c1 = as.selectedCards?.[0];
       if (c1 && !(c1.playerId === playerId && c1.cardIndex === cardIndex)) {
-        send({ type: 'ability', card2: { playerId, cardIndex } });
+        _sendAbility({ type: 'ability', card2: { playerId, cardIndex } });
       }
     }
   }

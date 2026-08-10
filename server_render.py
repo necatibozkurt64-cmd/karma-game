@@ -143,15 +143,14 @@ async def _expire_ability_reveal(s, a, seconds):
     except asyncio.CancelledError:
         return
     s['ability_reveal_task'] = None
-    if s.get('ability_state') is not a:
+    if s.get('ability_state') is not a or a.get('resolved'):
         return
     a['reveal_until'] = 0.0
     if a['type'] in ('see_own', 'see_others'):
-        s['discard_pile'].append(a['drawn_card'])
-        s['drawn_card'] = None
-        s['ability_state'] = None
-        await start_racing(s)
+        await _finish_peek_ability(s, a)
     else:
+        # see_swap: nach 6 s verschwinden die Karten wieder, die Entscheidung
+        # bleibt aber offen. Der Spieler tippt anschließend Tauschen/Nicht.
         a['revealed_cards'] = None
         await send_state(s)
 
@@ -406,6 +405,7 @@ async def handle_discard_drawn(s, pid):
             type=card['ability'], activated_by=pid, drawn_card=card,
             step='select1', waiting_for_selection=True,
             selected_cards=[], revealed_card=None, revealed_cards=None,
+            resolved=False,
         )
         await send_state(s)
     else:
@@ -463,14 +463,33 @@ async def handle_race(s, pid, card_index):
         await send(p['ws'], dict(type='toast', msg='Falsche Karte! Strafkarte erhalten.', color='#f44336'))
         await send_state(s)
 
+async def _finish_peek_ability(s, a):
+    # Gemeinsame Schlusssequenz für see_own/see_others: gezogene Karte auf den
+    # Ablagestapel, State auf None, Racing starten. `resolved` verhindert, dass
+    # der Timer und ein "Fertig" gleichzeitig doppelt aufräumen.
+    if a.get('resolved'):
+        return
+    a['resolved'] = True
+    _cancel_ability_reveal(s)
+    if s.get('ability_state') is a:
+        s['discard_pile'].append(a['drawn_card'])
+        s['drawn_card'] = None
+        s['ability_state'] = None
+    await start_racing(s)
+
 async def handle_ability(s, pid, data):
     if s['phase'] != 'ability':
         return
     a = s['ability_state']
-    if not a or a['activated_by'] != pid:
+    if not a or a['activated_by'] != pid or a.get('resolved'):
         return
 
     t = a['type']
+    # Für see_own/see_others: nur ein explizites `done` beendet die Fähigkeit.
+    # Ohne diesen Marker wurde jede zweite Nachricht (z. B. ein Doppelklick auf
+    # eine zweite Karte) fälschlich als Abschluss interpretiert und die Fähigkeit
+    # damit direkt nach dem ersten Reveal geschlossen.
+    done_flag = bool(data.get('done', data.get('done_ability')))
 
     def norm_card_ref(ref):
         if not ref:
@@ -479,9 +498,13 @@ async def handle_ability(s, pid, data):
 
     if t == 'see_own':
         if a['waiting_for_selection']:
+            if done_flag:
+                # Vorzeitig überspringen ohne Karte anzuschauen: direkt aufräumen.
+                await _finish_peek_ability(s, a)
+                return
             p = next(x for x in s['players'] if x['id'] == pid)
             idx = data.get('cardIndex', data.get('card_index', -1))
-            if idx < 0 or idx >= len(p['hand']):
+            if idx is None or idx < 0 or idx >= len(p['hand']):
                 return
             a['revealed_card'] = p['hand'][idx]
             a['selected_cards'] = [{'player_id': pid, 'card_index': idx}]
@@ -489,20 +512,22 @@ async def handle_ability(s, pid, data):
             start_ability_reveal(s, a)
             await send_state(s)
         else:
-            _cancel_ability_reveal(s)
-            s['discard_pile'].append(a['drawn_card'])
-            s['drawn_card'] = None
-            s['ability_state'] = None
-            await start_racing(s)
+            # Reveal läuft: nur explizites Fertig beendet vorzeitig, alles andere
+            # (weitere Kartenklicks während der 6 s) wird ignoriert.
+            if done_flag:
+                await _finish_peek_ability(s, a)
 
     elif t == 'see_others':
         if a['waiting_for_selection']:
+            if done_flag:
+                await _finish_peek_ability(s, a)
+                return
             tpid = data.get('targetPlayerId', data.get('target_player_id'))
             tp = next((x for x in s['players'] if x['id'] == tpid), None)
             if not tp or tp['id'] == pid:
                 return
             idx = data.get('cardIndex', data.get('card_index', -1))
-            if idx < 0 or idx >= len(tp['hand']):
+            if idx is None or idx < 0 or idx >= len(tp['hand']):
                 return
             a['revealed_card'] = tp['hand'][idx]
             a['selected_cards'] = [{'player_id': tp['id'], 'card_index': idx}]
@@ -510,11 +535,8 @@ async def handle_ability(s, pid, data):
             start_ability_reveal(s, a)
             await send_state(s)
         else:
-            _cancel_ability_reveal(s)
-            s['discard_pile'].append(a['drawn_card'])
-            s['drawn_card'] = None
-            s['ability_state'] = None
-            await start_racing(s)
+            if done_flag:
+                await _finish_peek_ability(s, a)
 
     elif t == 'swap':
         if a['step'] == 'select1':
@@ -527,9 +549,13 @@ async def handle_ability(s, pid, data):
             c2 = norm_card_ref(data.get('card2'))
             if c2:
                 c1, = a['selected_cards']
+                # Zweite Karte darf nicht die gleiche wie die erste sein.
+                if c1['player_id'] == c2['player_id'] and c1['card_index'] == c2['card_index']:
+                    return
                 flight = _flight_cards(s, c1, c2)
                 if not flight:
                     return
+                a['resolved'] = True
                 _do_swap(s, c1, c2)
                 s['discard_pile'].append(a['drawn_card'])
                 s['drawn_card'] = None
@@ -549,6 +575,8 @@ async def handle_ability(s, pid, data):
             c2 = norm_card_ref(data.get('card2'))
             if c2:
                 c1, = a['selected_cards']
+                if c1['player_id'] == c2['player_id'] and c1['card_index'] == c2['card_index']:
+                    return
                 p1 = next(x for x in s['players'] if x['id'] == c1['player_id'])
                 p2 = next(x for x in s['players'] if x['id'] == c2['player_id'])
                 a['revealed_cards'] = [
@@ -561,6 +589,11 @@ async def handle_ability(s, pid, data):
                 start_ability_reveal(s, a)
                 await send_state(s)
         elif a['step'] == 'decide_swap':
+            # Nur der Tauschen/Nicht-tauschen-Marker beendet diesen Schritt –
+            # Klicks auf Karten während des Reveals sind kein Auslöser mehr.
+            if 'doSwap' not in data and 'do_swap' not in data:
+                return
+            a['resolved'] = True
             c1, c2 = a['selected_cards']
             do_swap = bool(data.get('doSwap', data.get('do_swap')))
             flight = _flight_cards(s, c1, c2)
