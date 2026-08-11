@@ -90,10 +90,16 @@ def new_session(host_id, host_name, host_ws, game_mode):
     return s
 
 def _add_player(s, pid, name, ws):
+    # known_cards: uid → {value,nr,name,ability,quote,image,color}. Persistent per-player
+    # knowledge of specific card identities (by uid). Populated when the player observes
+    # a card (initial peek, see_own, see_others, see_swap, own drawn card kept). Cleared
+    # for a uid when the card enters the discard pile (a re-shuffled draw is a fresh unknown).
+    # Since uid is stable across slot swaps, knowledge naturally follows the card as it moves.
     s['players'].append(dict(
         id=pid, name=name, ws=ws, hand=[], connected=True,
         revealed={}, reveal_until=0.0, reveal_task=None,
         peek_selection=[], peek_revealing=False, peek_done=False,
+        known_cards={},
     ))
     s['match_scores'][pid] = 0
     s['round_scores'][pid] = 0
@@ -143,15 +149,14 @@ async def _expire_ability_reveal(s, a, seconds):
     except asyncio.CancelledError:
         return
     s['ability_reveal_task'] = None
-    if s.get('ability_state') is not a:
+    if s.get('ability_state') is not a or a.get('resolved'):
         return
     a['reveal_until'] = 0.0
     if a['type'] in ('see_own', 'see_others'):
-        s['discard_pile'].append(a['drawn_card'])
-        s['drawn_card'] = None
-        s['ability_state'] = None
-        await start_racing(s)
+        await _finish_peek_ability(s, a)
     else:
+        # see_swap: nach 6 s verschwinden die Karten wieder, die Entscheidung
+        # bleibt aber offen. Der Spieler tippt anschließend Tauschen/Nicht.
         a['revealed_cards'] = None
         await send_state(s)
 
@@ -221,6 +226,40 @@ def card_view(card, hidden):
         return {'hidden': True, 'uid': card['uid']}
     return {k: card[k] for k in ('hidden','nr','name','value','ability','quote','image','color','uid') if k != 'hidden'} | {'hidden': False}
 
+# ── Knowledge tracking (per-player uid → card identity) ───────────────────────
+# Enables the "reaction swap" mechanic: a player may play an opponent's card only
+# for uids they already learned about (via peek/see_* abilities or by keeping a
+# drawn card into a slot). Knowledge is keyed by uid, so slot swaps preserve it
+# automatically. Discarding a card wipes that uid from all players' memory so a
+# later reshuffle back into a hand does not leak.
+
+def _note_seen(p, card):
+    if not card or not p:
+        return
+    uid = card.get('uid')
+    if not uid:
+        return
+    p['known_cards'][uid] = {
+        k: card[k] for k in ('nr', 'name', 'value', 'ability', 'quote', 'image', 'color')
+    }
+
+def _forget_uid(s, uid):
+    if not uid:
+        return
+    for p in s['players']:
+        p['known_cards'].pop(uid, None)
+
+def _find_card_slot(s, uid):
+    """Return (player, hand_index) for the given uid, or (None, None). Small linear
+    scan — hands are at most ~4×4 slots — is simpler than maintaining a side index."""
+    if not uid:
+        return None, None
+    for p in s['players']:
+        for i, c in enumerate(p['hand']):
+            if c and c.get('uid') == uid:
+                return p, i
+    return None, None
+
 async def send_state(s):
     now = _now()
     for viewer in s['players']:
@@ -230,7 +269,14 @@ async def send_state(s):
             hand_view = []
             for i, card in enumerate(p['hand']):
                 shown = s.get('reveal_all') or (p['id'] == viewer['id'] and viewer['revealed'].get(str(i)))
-                hand_view.append(card_view(card, not shown))
+                view = card_view(card, not shown)
+                # knownByViewer lets the client mark cards the viewer has learned about
+                # (via peek / see_* abilities / keeping a drawn card). It flags which
+                # opponent slots are targetable in the upcoming reaction_swap flow
+                # without revealing the actual value here.
+                if view and card and card.get('uid') in viewer.get('known_cards', {}):
+                    view['knownByViewer'] = True
+                hand_view.append(view)
             players_view.append(dict(
                 id=p['id'], name=p['name'], connected=p['connected'],
                 peekDone=p['peek_done'], isMe=(p['id'] == viewer['id']),
@@ -313,6 +359,7 @@ async def start_game(s):
         p['peek_selection'] = []
         p['peek_revealing'] = False
         p['peek_done'] = False
+        p['known_cards'] = {}
         s['round_scores'][p['id']] = 0
     await send_state(s)
 
@@ -336,6 +383,8 @@ async def handle_peek(s, pid, card_index):
         sel.append(card_index)
     if len(sel) == 2:
         p['peek_revealing'] = True
+        for i in sel:
+            _note_seen(p, p['hand'][i])
         await reveal_to_player(s, p, sel, REVEAL_SECONDS, on_expire=_finish_peek)
     await send_state(s)
 
@@ -347,6 +396,8 @@ async def handle_peek_done(s, pid):
         return
     if p['peek_selection']:
         p['peek_revealing'] = True
+        for i in p['peek_selection']:
+            _note_seen(p, p['hand'][i])
         await reveal_to_player(s, p, p['peek_selection'], REVEAL_SECONDS, on_expire=_finish_peek)
     else:
         p['peek_done'] = True
@@ -379,6 +430,7 @@ async def handle_draw(s, pid):
         return
     card = s['deck'].pop()
     s['drawn_card'] = card
+    await broadcast(s, dict(type='toast', msg=f"{cp['name']} zieht eine Karte", color='#60a5fa'))
     await send_state(s)
 
 async def handle_keep(s, pid, hand_index):
@@ -388,10 +440,16 @@ async def handle_keep(s, pid, hand_index):
     if cp['id'] != pid or hand_index < 0 or hand_index >= len(cp['hand']):
         return
     replaced = cp['hand'][hand_index]
+    # The drawer saw the drawn card in their preview; keeping it moves that
+    # known identity into a slot. The replaced card goes public on discard,
+    # so any per-player memory of that uid is cleared.
+    _note_seen(cp, s['drawn_card'])
+    _forget_uid(s, replaced['uid'])
     cp['hand'][hand_index] = s['drawn_card']
     cp['revealed'].pop(str(hand_index), None)
     s['drawn_card'] = None
     s['discard_pile'].append(replaced)
+    await broadcast(s, dict(type='toast', msg=f"{cp['name']} ersetzt Karte {hand_index + 1}", color='#a78bfa'))
     await start_racing(s)
 
 async def handle_discard_drawn(s, pid):
@@ -406,11 +464,15 @@ async def handle_discard_drawn(s, pid):
             type=card['ability'], activated_by=pid, drawn_card=card,
             step='select1', waiting_for_selection=True,
             selected_cards=[], revealed_card=None, revealed_cards=None,
+            resolved=False,
         )
         await send_state(s)
     else:
+        _forget_uid(s, card['uid'])
         s['drawn_card'] = None
         s['discard_pile'].append(card)
+        cp = s['players'][s['current_player_index']]
+        await broadcast(s, dict(type='toast', msg=f"{cp['name']} legt eine Karte ab", color='#60a5fa'))
         await start_racing(s)
 
 async def start_racing(s):
@@ -441,6 +503,7 @@ async def handle_race(s, pid, card_index):
             s['racing_task'].cancel()
             s['racing_task'] = None
         removed = p['hand'].pop(card_index)
+        _forget_uid(s, removed['uid'])
         new_revealed = {}
         for k, v in p['revealed'].items():
             ki = int(k)
@@ -453,24 +516,125 @@ async def handle_race(s, pid, card_index):
         s['racing_card'] = None
         s['current_player_index'] = s['players'].index(p)
         s['phase'] = 'playing'
-        await broadcast(s, dict(type='toast', msg=f"{p['name']} schnappt sich die Karte!", color='#4CAF50'))
+        await broadcast(s, dict(type='toast', msg=f"{p['name']} wirft Karte {card_index + 1} ab (gleicher Wert)", color='#4CAF50'))
         await send_state(s)
     else:
         refill_deck(s)
         if s['deck']:
             penalty = s['deck'].pop()
             p['hand'].append(penalty)
-        await send(p['ws'], dict(type='toast', msg='Falsche Karte! Strafkarte erhalten.', color='#f44336'))
+        await broadcast(s, dict(type='toast', msg=f"{p['name']} greift daneben – Strafkarte", color='#f44336'))
         await send_state(s)
+
+async def handle_reaction_swap(s, pid, target_pid, target_index, my_replacement_index):
+    """Reaction variant: during racing, a player who has previously seen an opponent's
+    card (its uid is in known_cards) may play THAT card onto the discard and hand one
+    of their own cards to the opponent as replacement. Net effect: opponent hand size
+    unchanged (one card swapped), requester hand -1, requester takes the next turn.
+
+    Server is authoritative — the requester's knowledge is validated against
+    known_cards, not trusted from the client."""
+    if s['phase'] != 'racing' or not s['racing_card']:
+        return
+    p = next((x for x in s['players'] if x['id'] == pid), None)
+    tp = next((x for x in s['players'] if x['id'] == target_pid), None)
+    if not p or not tp or p is tp:
+        return
+    if target_index < 0 or target_index >= len(tp['hand']):
+        return
+    if my_replacement_index < 0 or my_replacement_index >= len(p['hand']):
+        return
+    taken = tp['hand'][target_index]
+    replacement = p['hand'][my_replacement_index]
+    if not taken or not replacement:
+        return
+    if taken['value'] != s['racing_card']['value']:
+        return
+    # Knowledge check: requester must have observed this specific uid.
+    if taken['uid'] not in p.get('known_cards', {}):
+        return
+
+    if s['racing_task']:
+        s['racing_task'].cancel()
+        s['racing_task'] = None
+
+    # Snapshot movement for animation BEFORE mutating hands, otherwise the client
+    # would compute stale source coordinates.
+    anim = dict(
+        type='reaction_swap_anim',
+        playedCard={
+            'playerId': target_pid, 'cardIndex': target_index,
+            'uid': taken['uid'], 'dest': 'discard',
+        },
+        replacementCard={
+            'playerId': pid, 'cardIndex': my_replacement_index,
+            'uid': replacement['uid'],
+            'destPlayerId': target_pid, 'destCardIndex': target_index,
+        },
+    )
+
+    # Target loses the played card, gains the replacement in the SAME slot. Their
+    # reveal for that slot is invalidated (new card, not the same identity).
+    tp['hand'][target_index] = replacement
+    tp['revealed'].pop(str(target_index), None)
+
+    # Requester's hand shrinks by one. Reindex the reveal map like handle_race does.
+    p['hand'].pop(my_replacement_index)
+    new_revealed = {}
+    for k, v in p['revealed'].items():
+        ki = int(k)
+        if ki < my_replacement_index:
+            new_revealed[str(ki)] = v
+        elif ki > my_replacement_index:
+            new_revealed[str(ki - 1)] = v
+    p['revealed'] = new_revealed
+
+    # The taken card is now public on discard; forget its uid across the table.
+    # The replacement card's uid stays in known_cards for whoever already knew it
+    # (typically the requester) — knowledge follows the card automatically.
+    _forget_uid(s, taken['uid'])
+    s['discard_pile'].append(taken)
+
+    s['racing_card'] = None
+    s['current_player_index'] = s['players'].index(p)
+    s['phase'] = 'playing'
+
+    await broadcast(s, anim)
+    await broadcast(s, dict(
+        type='toast',
+        msg=f"{p['name']} schnappt sich Karte {target_index + 1} von {tp['name']}",
+        color='#9C27B0',
+    ))
+    await send_state(s)
+
+async def _finish_peek_ability(s, a):
+    # Gemeinsame Schlusssequenz für see_own/see_others: gezogene Karte auf den
+    # Ablagestapel, State auf None, Racing starten. `resolved` verhindert, dass
+    # der Timer und ein "Fertig" gleichzeitig doppelt aufräumen.
+    if a.get('resolved'):
+        return
+    a['resolved'] = True
+    _cancel_ability_reveal(s)
+    if s.get('ability_state') is a:
+        _forget_uid(s, a['drawn_card']['uid'])
+        s['discard_pile'].append(a['drawn_card'])
+        s['drawn_card'] = None
+        s['ability_state'] = None
+    await start_racing(s)
 
 async def handle_ability(s, pid, data):
     if s['phase'] != 'ability':
         return
     a = s['ability_state']
-    if not a or a['activated_by'] != pid:
+    if not a or a['activated_by'] != pid or a.get('resolved'):
         return
 
     t = a['type']
+    # Für see_own/see_others: nur ein explizites `done` beendet die Fähigkeit.
+    # Ohne diesen Marker wurde jede zweite Nachricht (z. B. ein Doppelklick auf
+    # eine zweite Karte) fälschlich als Abschluss interpretiert und die Fähigkeit
+    # damit direkt nach dem ersten Reveal geschlossen.
+    done_flag = bool(data.get('done', data.get('done_ability')))
 
     def norm_card_ref(ref):
         if not ref:
@@ -479,42 +643,50 @@ async def handle_ability(s, pid, data):
 
     if t == 'see_own':
         if a['waiting_for_selection']:
+            if done_flag:
+                # Vorzeitig überspringen ohne Karte anzuschauen: direkt aufräumen.
+                await _finish_peek_ability(s, a)
+                return
             p = next(x for x in s['players'] if x['id'] == pid)
             idx = data.get('cardIndex', data.get('card_index', -1))
-            if idx < 0 or idx >= len(p['hand']):
+            if idx is None or idx < 0 or idx >= len(p['hand']):
                 return
             a['revealed_card'] = p['hand'][idx]
+            _note_seen(p, p['hand'][idx])
             a['selected_cards'] = [{'player_id': pid, 'card_index': idx}]
             a['waiting_for_selection'] = False
             start_ability_reveal(s, a)
+            await broadcast(s, dict(type='toast', msg=f"{p['name']} sieht Karte {idx + 1}", color='#f472b6'))
             await send_state(s)
         else:
-            _cancel_ability_reveal(s)
-            s['discard_pile'].append(a['drawn_card'])
-            s['drawn_card'] = None
-            s['ability_state'] = None
-            await start_racing(s)
+            # Reveal läuft: nur explizites Fertig beendet vorzeitig, alles andere
+            # (weitere Kartenklicks während der 6 s) wird ignoriert.
+            if done_flag:
+                await _finish_peek_ability(s, a)
 
     elif t == 'see_others':
         if a['waiting_for_selection']:
+            if done_flag:
+                await _finish_peek_ability(s, a)
+                return
             tpid = data.get('targetPlayerId', data.get('target_player_id'))
             tp = next((x for x in s['players'] if x['id'] == tpid), None)
             if not tp or tp['id'] == pid:
                 return
             idx = data.get('cardIndex', data.get('card_index', -1))
-            if idx < 0 or idx >= len(tp['hand']):
+            if idx is None or idx < 0 or idx >= len(tp['hand']):
                 return
             a['revealed_card'] = tp['hand'][idx]
+            activator = next(x for x in s['players'] if x['id'] == pid)
+            _note_seen(activator, tp['hand'][idx])
             a['selected_cards'] = [{'player_id': tp['id'], 'card_index': idx}]
             a['waiting_for_selection'] = False
             start_ability_reveal(s, a)
+            await broadcast(s, dict(type='toast', msg=f"{activator['name']} sieht Karte {idx + 1} von {tp['name']}", color='#f472b6'))
             await send_state(s)
         else:
-            _cancel_ability_reveal(s)
-            s['discard_pile'].append(a['drawn_card'])
-            s['drawn_card'] = None
-            s['ability_state'] = None
-            await start_racing(s)
+            if done_flag:
+                await _finish_peek_ability(s, a)
 
     elif t == 'swap':
         if a['step'] == 'select1':
@@ -527,15 +699,27 @@ async def handle_ability(s, pid, data):
             c2 = norm_card_ref(data.get('card2'))
             if c2:
                 c1, = a['selected_cards']
+                # Zweite Karte darf nicht die gleiche wie die erste sein.
+                if c1['player_id'] == c2['player_id'] and c1['card_index'] == c2['card_index']:
+                    return
                 flight = _flight_cards(s, c1, c2)
                 if not flight:
                     return
+                a['resolved'] = True
                 _do_swap(s, c1, c2)
+                _forget_uid(s, a['drawn_card']['uid'])
                 s['discard_pile'].append(a['drawn_card'])
                 s['drawn_card'] = None
                 _cancel_ability_reveal(s)
                 s['ability_state'] = None
-                await broadcast(s, dict(type='toast', msg='Karten getauscht!', color='#9C27B0'))
+                activator = next(x for x in s['players'] if x['id'] == pid)
+                p1n = next(x for x in s['players'] if x['id'] == c1['player_id'])['name']
+                p2n = next(x for x in s['players'] if x['id'] == c2['player_id'])['name']
+                await broadcast(s, dict(
+                    type='toast',
+                    msg=f"{activator['name']} tauscht Karte {c1['card_index']+1} von {p1n} mit Karte {c2['card_index']+1} von {p2n}",
+                    color='#9C27B0',
+                ))
                 await start_swap_flight(s, flight, 'swap')
 
     elif t == 'see_swap':
@@ -549,28 +733,53 @@ async def handle_ability(s, pid, data):
             c2 = norm_card_ref(data.get('card2'))
             if c2:
                 c1, = a['selected_cards']
+                if c1['player_id'] == c2['player_id'] and c1['card_index'] == c2['card_index']:
+                    return
                 p1 = next(x for x in s['players'] if x['id'] == c1['player_id'])
                 p2 = next(x for x in s['players'] if x['id'] == c2['player_id'])
                 a['revealed_cards'] = [
                     {'player_id': c1['player_id'], 'card_index': c1['card_index'], 'card': p1['hand'][c1['card_index']]},
                     {'player_id': c2['player_id'], 'card_index': c2['card_index'], 'card': p2['hand'][c2['card_index']]},
                 ]
+                activator = next(x for x in s['players'] if x['id'] == pid)
+                _note_seen(activator, p1['hand'][c1['card_index']])
+                _note_seen(activator, p2['hand'][c2['card_index']])
                 a['selected_cards'] = [c1, c2]
                 a['step'] = 'decide_swap'
                 a['waiting_for_selection'] = False
                 start_ability_reveal(s, a)
+                p1n = next(x for x in s['players'] if x['id'] == c1['player_id'])['name']
+                p2n = next(x for x in s['players'] if x['id'] == c2['player_id'])['name']
+                await broadcast(s, dict(
+                    type='toast',
+                    msg=f"{activator['name']} sieht Karte {c1['card_index']+1} von {p1n} und Karte {c2['card_index']+1} von {p2n}",
+                    color='#f472b6',
+                ))
                 await send_state(s)
         elif a['step'] == 'decide_swap':
+            # Nur der Tauschen/Nicht-tauschen-Marker beendet diesen Schritt –
+            # Klicks auf Karten während des Reveals sind kein Auslöser mehr.
+            if 'doSwap' not in data and 'do_swap' not in data:
+                return
+            a['resolved'] = True
             c1, c2 = a['selected_cards']
             do_swap = bool(data.get('doSwap', data.get('do_swap')))
             flight = _flight_cards(s, c1, c2)
+            activator = next(x for x in s['players'] if x['id'] == pid)
+            p1n = next(x for x in s['players'] if x['id'] == c1['player_id'])['name']
+            p2n = next(x for x in s['players'] if x['id'] == c2['player_id'])['name']
             if do_swap and flight:
                 _do_swap(s, c1, c2)
-                await broadcast(s, dict(type='toast', msg='Karten gesehen & getauscht!', color='#9C27B0'))
+                await broadcast(s, dict(
+                    type='toast',
+                    msg=f"{activator['name']} tauscht Karte {c1['card_index']+1} von {p1n} mit Karte {c2['card_index']+1} von {p2n}",
+                    color='#9C27B0',
+                ))
             else:
                 # Auch "nicht getauscht" ist öffentliche Information – sonst wüssten
                 # die anderen nicht, ob sich etwas verändert hat.
-                await broadcast(s, dict(type='toast', msg='Nicht getauscht – die Karten bleiben liegen.', color='#64748b'))
+                await broadcast(s, dict(type='toast', msg=f"{activator['name']} tauscht nicht", color='#64748b'))
+            _forget_uid(s, a['drawn_card']['uid'])
             s['discard_pile'].append(a['drawn_card'])
             s['drawn_card'] = None
             _cancel_ability_reveal(s)
@@ -745,6 +954,11 @@ async def dispatch(ws, msg):
         await handle_discard_drawn(s, pid)
     elif t == 'race':
         await handle_race(s, pid, gi('cardIndex'))
+    elif t == 'reaction_swap':
+        target_pid = g('targetPlayerId', 'target_player_id')
+        target_idx = gi('targetCardIndex')
+        my_idx = gi('myReplacementIndex')
+        await handle_reaction_swap(s, pid, target_pid, target_idx, my_idx)
     elif t == 'ability':
         await handle_ability(s, pid, msg)
     elif t == 'next_round':

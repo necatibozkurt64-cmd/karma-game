@@ -96,10 +96,10 @@ select option { background: #0b0d14; }
 #game { display: none; flex-direction: column; height: 100vh; overflow: hidden; }
 
 /* Top bar */
-#topbar { display: flex; align-items: center; gap: 12px; padding: 8px 16px; background: rgba(0,0,0,.4); border-bottom: 1px solid rgba(255,255,255,.08); flex-shrink: 0; }
-.tb-brand { display: flex; align-items: center; gap: 9px; flex-shrink: 0; }
-.tb-brand .brand-mark { width: 22px; filter: none; }
-.tb-brand .brand-word { width: 78px; }
+#topbar { display: flex; align-items: center; gap: 14px; padding: 10px 20px; background: rgba(5,5,7,.65); border-bottom: 1px solid var(--line); backdrop-filter: blur(8px); flex-shrink: 0; }
+.tb-brand { display: flex; align-items: center; gap: 12px; flex-shrink: 0; padding-right: 4px; }
+.tb-brand .brand-mark { width: 26px; filter: none; }
+.tb-brand .brand-word { width: 84px; }
 .tb-info { color: var(--ink-3); font-size: 11px; letter-spacing: .1em; }
 .tb-phase { margin-left: auto; background: rgba(255,255,255,.06); border: 1px solid var(--line); border-radius: 999px; padding: 4px 14px; font-size: 10px; font-weight: 400; text-transform: uppercase; letter-spacing: .18em; }
 .tb-scores { display: flex; gap: 8px; }
@@ -159,47 +159,47 @@ body[data-cardback="classic"] .card-back::before {
 }
 body[data-cardback="classic"] .card-back::after { border-color: rgba(115,123,196,.25); }
 
-/* 2 · Indigo – volle Markenfarbe, Sichel monoton */
+/* 2 · Indigo – grünes Palmenblatt-Design */
 body[data-cardback="rauten"] .card-back {
   background:
-    radial-gradient(140% 100% at 50% 50%, #3a3f6e 0%, #14162a 88%);
-  border-color: rgba(115,123,196,.45);
+    radial-gradient(140% 100% at 50% 50%, #2d5a4a 0%, #0f1a1a 88%);
+  border-color: rgba(100,180,140,.45);
 }
 body[data-cardback="rauten"] .card-back::before {
-  content: ''; background: var(--mark-mono) center / 58% no-repeat; opacity: .85;
+  content: ''; background: var(--mark-mono) center / 58% no-repeat; opacity: .55;
 }
-body[data-cardback="rauten"] .card-back::after { border-color: rgba(255,255,255,.18); }
+body[data-cardback="rauten"] .card-back::after { border-color: rgba(100,180,140,.55); }
 
-/* 3 · Guilloche – konzentrische Linien + Sichel */
+/* 3 · Guilloche – grünes Palmenblatt-Design mit Mustern */
 body[data-cardback="wellen"] .card-back {
   background:
-    repeating-radial-gradient(circle at 50% 50%, rgba(115,123,196,.16) 0 1px, transparent 1px 7px),
-    radial-gradient(120% 90% at 50% 50%, #1c1f3a 0%, #060811 90%);
-  border-color: rgba(115,123,196,.32);
+    repeating-radial-gradient(circle at 50% 50%, rgba(100,180,140,.12) 0 1px, transparent 1px 7px),
+    radial-gradient(120% 90% at 50% 50%, #1f3a3a 0%, #0d1a1f 90%);
+  border-color: rgba(100,180,140,.32);
 }
 body[data-cardback="wellen"] .card-back::before {
-  content: ''; background: var(--mark) center / 44% no-repeat; opacity: .95;
+  content: ''; background: var(--mark-mono) center / 44% no-repeat; opacity: .45;
 }
-body[data-cardback="wellen"] .card-back::after { border-color: rgba(115,123,196,.30); }
+body[data-cardback="wellen"] .card-back::after { border-color: rgba(100,180,140,.4); }
 
-/* 4 · Sternen – Punktraster + Sichel */
+/* 4 · Sternen – grünes Palmenblatt-Design mit Sternenmuster */
 body[data-cardback="karo"] .card-back {
   background:
-    radial-gradient(rgba(255,255,255,.15) 1px, transparent 1.3px) 0 0 / 12px 12px,
-    linear-gradient(180deg, #10132a, #04050b);
-  border-color: rgba(255,255,255,.18);
+    radial-gradient(rgba(100,180,140,.12) 1px, transparent 1.3px) 0 0 / 12px 12px,
+    linear-gradient(180deg, #4a6b5f, #1a2a25);
+  border-color: rgba(120,200,160,.18);
 }
 body[data-cardback="karo"] .card-back::before {
-  content: ''; background: var(--mark-mono) center / 52% no-repeat; opacity: .55;
+  content: ''; background: var(--mark-mono) center / 52% no-repeat; opacity: .4;
 }
-body[data-cardback="karo"] .card-back::after { border-color: rgba(255,255,255,.18); }
+body[data-cardback="karo"] .card-back::after { border-color: rgba(120,200,160,.25); }
 
 /* Deck pile */
 .deck-pile { width: 190px; height: 280px; position: relative; cursor: pointer; }
 .deck-pile .card-back { transition: transform .15s; }
 .deck-pile:hover .card-back { transform: translateY(-3px); }
 .deck-count { position: absolute; bottom: -20px; left: 50%; transform: translateX(-50%); font-size: 11px; color: rgba(255,255,255,.5); white-space: nowrap; }
-.discard-pile { width: 160px; height: 235px; border-radius: var(--radius); border: 2px dashed rgba(255,255,255,.15); position: relative; transition: transform .2s; }
+.discard-pile { width: 190px; height: 280px; border-radius: var(--radius); border: 2px dashed rgba(255,255,255,.15); position: relative; transition: transform .2s; }
 .discard-pile:hover { transform: scale(1.05); }
 .discard-empty { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: rgba(255,255,255,.2); font-size: 11px; }
 
@@ -231,16 +231,36 @@ body[data-cardback="karo"] .card-back::after { border-color: rgba(255,255,255,.1
 #peek-modal { max-width: 520px; }
 #peek-modal .peek-hand { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; justify-items: center; margin: 18px 0 4px; }
 #peek-modal .peek-count { text-align: center; font-size: 13px; color: rgba(255,255,255,.5); margin-bottom: 8px; }
-.peek-slot { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.peek-slot { display: flex; flex-direction: column; align-items: center; gap: 6px; transition: transform .2s; }
+.peek-slot.is-selected { transform: translateY(-6px); }
 /* Die Maße kommen inline aus buildCardInner – renderPeekModal rechnet sie
    passend zur Modalbreite aus. */
 .peek-slot .card { width: auto; height: auto; }
-/* Solange nur Rückseiten zu sehen sind (Auswahl / nach dem Merken) gibt es
-   nichts zu lesen – dann bleibt die kompakte Viererreihe. */
-#peek-modal .peek-hand.picking { display: flex; gap: 10px; justify-content: center; }
-#peek-modal .peek-hand.picking .peek-slot .card { width: 92px; height: 133px; }
 .peek-slot-lbl { font-size: 11px; color: rgba(255,255,255,.4); letter-spacing: .5px; }
 .peek-slot.is-peeked .peek-slot-lbl { color: var(--gold); font-weight: 700; }
+
+/* Flip-Container — der Auswahl-Screen wechselt nicht mehr das Layout, wenn
+   zwei Karten aufgedeckt werden. Stattdessen dreht sich jede einzelne Karte
+   an Ort und Stelle: Rückseite → Vorderseite (Reveal) und wieder zurück,
+   nachdem die 6 Sekunden vorbei sind. */
+.peek-flip { position: relative; perspective: 1400px; background: transparent; border: 0; box-shadow: none; }
+.peek-flip:hover { transform: none; box-shadow: none; }
+.peek-flip .flip-inner {
+  position: absolute; inset: 0;
+  transform-style: preserve-3d;
+  transition: transform 700ms cubic-bezier(.55, .05, .3, 1);
+  will-change: transform;
+}
+.peek-flip.is-flipped .flip-inner { transform: rotateY(180deg); }
+.peek-flip .flip-face {
+  position: absolute; inset: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.peek-flip .flip-face.flip-front { transform: rotateY(180deg); }
+.peek-slot.is-selected .peek-flip .flip-face.flip-back { box-shadow: 0 0 0 2px var(--brand-lift), 0 8px 24px rgba(115,123,196,.45); }
 /* buildCardInner rechnet das Info-Panel mit einer 24px-Kopfzeile – die ist real
    ~60px hoch, deshalb wurde der Flavor-Text abgeschnitten. Hier bekommt das
    Info-Panel seine natürliche Höhe und das Bild den Rest – so wird nie etwas
@@ -260,9 +280,6 @@ body[data-cardback="karo"] .card-back::after { border-color: rgba(255,255,255,.1
   #peek-modal > p { font-size: 13px; margin-bottom: 10px; }
   #peek-modal .reveal-timer { margin: 8px 0 4px; }
   #peek-modal .peek-hand { gap: 10px; margin: 12px 0 4px; }
-  /* Vier Rückseiten nebeneinander müssen in die Modalbreite passen. */
-  #peek-modal .peek-hand.picking { gap: 8px; }
-  #peek-modal .peek-hand.picking .peek-slot .card { width: 68px; height: 98px; }
   /* Kleinere Karte → weniger Platz für die Kopfzeile und das Info-Panel. */
   #peek-hand .tcg-card-header { padding: 5px 7px; }
   #peek-hand .tcg-card-value-hex { width: 29px; height: 34px; font-size: 15px; margin-right: 5px; }
@@ -366,13 +383,28 @@ body[data-cardback="karo"] .card-back::after { border-color: rgba(255,255,255,.1
 }
 
 /* Racing */
-#racing-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.85); display: none; align-items: center; justify-content: center; z-index: 90; flex-direction: column; gap: 20px; }
-#racing-overlay h2 { font-size: 28px; font-weight: 900; color: #fff; text-align: center; }
+#racing-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.9); display: none; align-items: center; justify-content: flex-start; z-index: 90; flex-direction: column; gap: 12px; padding: 24px 20px; overflow-y: auto; }
+#racing-overlay h2 { font-size: 24px; font-weight: 900; color: #fff; text-align: center; }
 #racing-card-display { display: flex; justify-content: center; }
 #racing-timer-bar { width: 300px; height: 8px; background: rgba(255,255,255,.2); border-radius: 4px; overflow: hidden; }
 #racing-timer-fill { height: 100%; background: linear-gradient(90deg, #22c55e, #84cc16); border-radius: 4px; transition: width linear; }
-#my-racing-hand { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
-#racing-overlay p { color: rgba(255,255,255,.65); text-align: center; font-size: 14px; }
+.racing-hand-label, .racing-known-label { font-size: 11px; color: rgba(255,255,255,.55); text-transform: uppercase; letter-spacing: .22em; text-align: center; margin-top: 6px; }
+#my-racing-hand { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+.racing-my-slot { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.racing-my-slot .slot-lbl { font-size: 11px; color: rgba(255,255,255,.5); text-transform: uppercase; letter-spacing: .18em; }
+.racing-my-card { cursor: pointer; transition: transform .15s ease, box-shadow .15s ease; border-radius: var(--radius); }
+.racing-my-card:hover { transform: translateY(-4px); box-shadow: 0 8px 20px rgba(115,123,196,.45); }
+#racing-known-section { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+#racing-known-section.hidden { display: none; }
+#racing-known-cards { display: flex; gap: 22px; justify-content: center; flex-wrap: wrap; }
+.racing-known-owner { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.racing-known-owner .owner-name { font-size: 13px; font-weight: 700; color: #ce93d8; text-transform: uppercase; letter-spacing: .14em; }
+.racing-known-owner .owner-cards { display: flex; gap: 14px; }
+.racing-known-card { cursor: pointer; transition: transform .15s ease, box-shadow .15s ease; border-radius: var(--radius); outline: 2px solid #9C27B0; outline-offset: 3px; }
+.racing-known-card:hover { transform: translateY(-4px); box-shadow: 0 8px 22px rgba(156,39,176,.55); }
+.racing-known-card.selected { outline: 3px solid #f0abfc; box-shadow: 0 0 24px rgba(240,171,252,.7); }
+#racing-overlay p { color: rgba(255,255,255,.65); text-align: center; font-size: 14px; max-width: 620px; }
+#racing-overlay p.reaction-hint { color: #f0abfc; font-weight: 600; }
 
 /* Scoring */
 #scoring-modal .score-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,.08); }
@@ -383,11 +415,46 @@ body[data-cardback="karo"] .card-back::after { border-color: rgba(255,255,255,.1
 #scoring-modal .match-total { font-size: 12px; color: rgba(255,255,255,.5); }
 #scoring-modal .hand-reveal { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
 
-/* Toast */
+/* Toast (Fallback für Lobby/Verbindungsfehler – im Spiel läuft alles über #log-panel) */
 #toast-container { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; gap: 8px; z-index: 200; align-items: center; pointer-events: none; }
 .toast { background: rgba(0,0,0,.9); border-radius: 20px; padding: 8px 18px; font-size: 13px; font-weight: 600; border: 1px solid rgba(255,255,255,.15); animation: toastin .3s ease, toastout .3s ease 2.7s forwards; }
 @keyframes toastin { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:none; } }
 @keyframes toastout { from { opacity:1; } to { opacity:0; } }
+
+/* Log-Panel: persistente Ereignisliste zwischen Gegnern und Stapeln.
+   Ersetzt die kurzen Toasts während des Spiels – 5 Zeilen sichtbar, Rest scrollbar,
+   damit man Aktionen der Mitspieler nachlesen kann, auch wenn man kurz weggeschaut hat. */
+#log-panel {
+  --log-line-h: 26px;
+  width: min(560px, calc(100% - 32px));
+  height: calc(var(--log-line-h) * 5 + 20px);
+  margin: 4px auto 8px;
+  padding: 10px 12px;
+  flex-shrink: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: rgba(0,0,0,.42);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.05), 0 4px 14px rgba(0,0,0,.35);
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,.25) transparent;
+}
+#log-panel::-webkit-scrollbar { width: 6px; }
+#log-panel::-webkit-scrollbar-thumb { background: rgba(255,255,255,.22); border-radius: 3px; }
+.log-line {
+  display: flex; align-items: baseline; gap: 8px;
+  min-height: var(--log-line-h); line-height: var(--log-line-h);
+  font-size: 14px; font-weight: 400;
+  padding-left: 8px;
+  border-left: 3px solid transparent;
+  animation: logIn .25s ease;
+}
+.log-line .log-time { font-size: 12px; font-weight: 400; color: var(--ink-3); flex-shrink: 0; font-variant-numeric: tabular-nums; }
+.log-line .log-msg  { color: rgba(255,255,255,.92); }
+.log-line.is-new { background: linear-gradient(90deg, rgba(255,255,255,.07), transparent 70%); }
+@keyframes logIn { from { opacity:0; transform: translateY(-4px); } to { opacity:1; transform:none; } }
+.log-empty { color: var(--ink-3); font-size: 13px; line-height: 26px; padding-left: 8px; font-style: italic; }
 
 /* Status dots */
 .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
@@ -431,16 +498,16 @@ body[data-cardback="karo"] .card-back::after { border-color: rgba(255,255,255,.1
 .swatch-dot { width: 100%; height: 34px; border-radius: 6px; margin-bottom: 6px; border: 1px solid rgba(255,255,255,.12); }
 .swatch-lbl { font-size: 11px; color: rgba(255,255,255,.75); }
 .back-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(88px, 1fr)); gap: 10px; }
-.back-preview { width: 100%; height: 70px; border-radius: 8px; margin-bottom: 6px; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; font-size: 26px; font-weight: 900; }
+.back-preview { width: 100%; height: 96px; border-radius: 8px; margin-bottom: 6px; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; font-size: 26px; font-weight: 900; border: 1px solid var(--line); background-size: cover; background-position: center; }
 .back-preview::after { content: ''; position: absolute; inset: 5px; border-radius: 5px; }
 
-/* ── TCG CARD STYLES ── */
+/* ── KARMA CARD STYLES – Dunkles Deckblatt mit KARMA-Marke ── */
 .tcg-card-container {
   position: relative;
   border-radius: 12px;
   overflow: hidden;
-  background: #1a1a1a;
-  box-shadow: 0 4px 12px rgba(0,0,0,.6);
+  background: #0b0d16;
+  box-shadow: 0 4px 14px rgba(0,0,0,.7);
 }
 
 .tcg-card-border {
@@ -453,8 +520,8 @@ body[data-cardback="karo"] .card-back::after { border-color: rgba(255,255,255,.1
 .tcg-card-header {
   position: relative;
   padding: 8px 10px;
-  background: rgba(0,0,0,.3);
-  border-bottom: 2px solid rgba(115,123,196,.4);
+  background: rgba(0,0,0,.35);
+  border-bottom: 1px solid rgba(115,123,196,.32);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -463,42 +530,42 @@ body[data-cardback="karo"] .card-back::after { border-color: rgba(255,255,255,.1
 }
 
 .tcg-card-name {
-  font-weight: 700;
-  color: #737bc4;
+  font-weight: 400;
+  color: #fff;
   text-transform: uppercase;
-  letter-spacing: 0.8px;
+  letter-spacing: 0.16em;
   flex: 1;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  font-size: 11px;
+  font-size: 10.5px;
 }
 
 .tcg-card-star {
-  color: #737bc4;
-  font-size: 12px;
+  color: var(--brand-lift);
+  font-size: 11px;
   margin-left: 6px;
 }
 
 .tcg-card-value-hex {
   width: 38px;
   height: 44px;
-  background: rgba(255, 215, 0, 0.95);
+  background: linear-gradient(160deg, #737bc4 0%, #4b5080 100%);
   clip-path: polygon(30% 0%, 70% 0%, 100% 50%, 70% 100%, 30% 100%, 0% 50%);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 20px;
-  font-weight: 900;
-  color: #000;
-  box-shadow: 0 4px 14px rgba(255, 215, 0, 0.6);
+  font-weight: 500;
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(115,123,196,.5);
   flex-shrink: 0;
   margin-right: 6px;
 }
 
 .tcg-card-image {
   width: 100%;
-  background: linear-gradient(135deg, #2a3f5f 0%, #1a2a4f 100%);
+  background: linear-gradient(135deg, #1a1d2e 0%, #0d0f1e 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -515,7 +582,7 @@ body[data-cardback="karo"] .card-back::after { border-color: rgba(255,255,255,.1
 }
 
 .tcg-card-info {
-  background: linear-gradient(to bottom, #d4c5a9 0%, #c4b599 100%);
+  background: linear-gradient(180deg, #14172a 0%, #0a0c18 100%);
   padding: 8px 10px;
   display: flex;
   flex-direction: column;
@@ -523,42 +590,44 @@ body[data-cardback="karo"] .card-back::after { border-color: rgba(255,255,255,.1
   position: relative;
   flex-grow: 1;
   gap: 4px;
+  color: rgba(255,255,255,.85);
 }
 
 .tcg-ability-label {
   display: inline-block;
   font-size: 9px;
-  font-weight: 700;
+  font-weight: 500;
   color: #fff;
   padding: 3px 8px;
-  border-radius: 4px;
+  border-radius: 999px;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.14em;
   width: fit-content;
   margin-bottom: 4px;
 }
 
 .tcg-ability-name {
-  font-size: 10px;
-  font-weight: 700;
-  color: #000;
+  font-size: 10.5px;
+  font-weight: 500;
+  color: #fff;
   margin-bottom: 2px;
   line-height: 1.3;
+  letter-spacing: .04em;
 }
 
 .tcg-ability-desc {
-  font-size: 8px;
-  color: #2a2a2a;
-  line-height: 1.35;
+  font-size: 8.5px;
+  color: rgba(255,255,255,.72);
+  line-height: 1.4;
   margin-bottom: 4px;
   flex-grow: 1;
 }
 
 .tcg-flavor-text {
   font-size: 8px;
-  color: #5a5a4a;
+  color: rgba(255,255,255,.45);
   font-style: italic;
-  border-top: 1px solid rgba(0,0,0,.2);
+  border-top: 1px solid rgba(255,255,255,.12);
   padding-top: 3px;
   line-height: 1.3;
 }
@@ -596,8 +665,8 @@ body[data-cardback="karo"] .card-back::after { border-color: rgba(255,255,255,.1
 
 .tcg-gold { border: 2px solid #737bc4; }
 .tcg-gold .tcg-card-header { border-bottom-color: #737bc4; }
-.tcg-gold .tcg-ability-label { background: #737bc4; color: #000; }
-.tcg-gold .tcg-card-border { box-shadow: inset 0 0 20px rgba(255, 215, 0, 0.5); }
+.tcg-gold .tcg-ability-label { background: linear-gradient(135deg,#737bc4,#4b5080); color: #fff; }
+.tcg-gold .tcg-card-border { box-shadow: inset 0 0 22px rgba(115,123,196,.55); }
 
 /* Pop-In Animation */
 @keyframes tcgPopIn {
@@ -622,10 +691,13 @@ body[data-cardback="karo"] .card-back::after { border-color: rgba(255,255,255,.1
 <!-- LOBBY -->
 <div id="lobby">
   <div style="position:fixed;top:16px;left:16px;display:flex;gap:8px;z-index:70">
-    <button id="lobby-help" class="gear-btn" onclick="openHelp()" title="Spielregeln">❓</button>
+    <button id="lobby-help" class="gear-btn" onclick="openHelp()" title="Spielregeln">?</button>
     <button id="lobby-gear" class="gear-btn" onclick="openSettings()" title="Einstellungen">⚙</button>
   </div>
-  <svg class="brand-mark" viewBox="0 0 104 100"><rect width="104" height="100" fill="transparent"/><path fill="#4b5080" fill-rule="evenodd" d="M24 54a38 38 0 1 0 76 0a38 38 0 1 0-76 0ZM15 54a33 33 0 1 0 66 0a33 33 0 1 0-66 0Z"/><path fill="#ffffff" fill-rule="evenodd" d="M2 48a40 40 0 1 0 80 0a40 40 0 1 0-80 0ZM21 48a35 35 0 1 0 70 0a35 35 0 1 0-70 0Z"/></svg>
+  <div class="brand-lockup">
+    <svg class="brand-mark" viewBox="0 0 104 100"><path fill="#4b5080" fill-rule="evenodd" d="M24 54a38 38 0 1 0 76 0a38 38 0 1 0-76 0ZM15 54a33 33 0 1 0 66 0a33 33 0 1 0-66 0Z"/><path fill="#ffffff" fill-rule="evenodd" d="M2 48a40 40 0 1 0 80 0a40 40 0 1 0-80 0ZM21 48a35 35 0 1 0 70 0a35 35 0 1 0-70 0Z"/></svg>
+    <svg class="brand-word" viewBox="-6 -6 470 112" fill="none" stroke="currentColor" stroke-width="3.4"><path d="M2 0 V100 M2 56 L48 0 M2 56 L48 100"/><path d="M90 100 L120 0 L150 100"/><path d="M192 100 V0 H222 A26 26 0 0 1 222 52 H192 M220 52 L250 100"/><path d="M292 100 V0 L324 72 L356 0 V100"/><path d="M398 100 L428 0 L458 100"/></svg>
+  </div>
   <div class="logo-sub">Das Kartenspiel</div>
 
   <div id="lobby-home" class="card-box">
@@ -668,7 +740,7 @@ body[data-cardback="karo"] .card-back::after { border-color: rgba(255,255,255,.1
     <div id="tb-mode" class="tb-info"></div>
     <div id="tb-scores" class="tb-scores"></div>
     <div id="tb-phase" class="tb-phase"></div>
-    <button class="gear-btn" onclick="openHelp()" title="Spielregeln">❓</button>
+    <button class="gear-btn" onclick="openHelp()" title="Spielregeln">?</button>
     <button class="gear-btn" onclick="openSettings()" title="Einstellungen">⚙</button>
   </div>
 
@@ -676,6 +748,9 @@ body[data-cardback="karo"] .card-back::after { border-color: rgba(255,255,255,.1
   <div id="ability-ticker"><span class="tick-icon"></span><span class="tick-text"></span></div>
 
   <div id="opponents"></div>
+
+  <!-- Ereignis-Log: persistente Meldungen (Züge, Fähigkeiten, Karma-Rufe) statt kurzer Toasts -->
+  <div id="log-panel"></div>
 
   <div id="center">
     <div class="pile-area">
@@ -708,7 +783,7 @@ body[data-cardback="karo"] .card-back::after { border-color: rgba(255,255,255,.1
   <div class="drawn-label">Gezogene Karte</div>
   <div id="drawn-card-display"></div>
   <div id="drawn-decision">
-    <div class="drawn-hint">Tippe eine deiner Karten, um sie zu <strong>ersetzen</strong> – oder lege die gezogene Karte ab.</div>
+    <div class="drawn-hint" id="drawn-hint">Tippe eine deiner Karten, um sie zu <strong>ersetzen</strong> – oder lege die gezogene Karte ab.</div>
     <div id="drawn-hand"></div>
     <button class="btn btn-outline" id="drawn-discard-btn" onclick="discardDrawn()">Ablegen</button>
   </div>
@@ -745,11 +820,16 @@ body[data-cardback="karo"] .card-back::after { border-color: rgba(255,255,255,.1
 <!-- RACING OVERLAY -->
 <div id="racing-overlay">
   <h2>SCHNELL! Gleicher Wert?</h2>
-  <p>Lege eine Karte mit demselben Wert ab!</p>
+  <p id="racing-hint">Lege eine Karte mit demselben Wert ab!</p>
   <div id="racing-card-display"></div>
   <div id="racing-timer-bar"><div id="racing-timer-fill" style="width:100%"></div></div>
+  <div class="racing-hand-label">Deine Hand</div>
   <div id="my-racing-hand"></div>
-  <button class="btn btn-outline" onclick="closeRacing()" style="margin-top:10px">Kein Match</button>
+  <div id="racing-known-section" class="hidden">
+    <div class="racing-known-label">Oder gemerkte gegnerische Karte:</div>
+    <div id="racing-known-cards"></div>
+  </div>
+  <button class="btn btn-outline" id="racing-cancel-btn" onclick="cancelReactionOrClose()" style="margin-top:10px">Kein Match</button>
 </div>
 
 <!-- SCORING MODAL -->
@@ -821,18 +901,11 @@ body[data-cardback="karo"] .card-back::after { border-color: rgba(255,255,255,.1
 
     <div style="margin-top:16px">
       <h3 style="font-size:15px;color:#737bc4;margin-bottom:8px">🎯 Kartenwerte & Punkte</h3>
-      <p style="font-size:13px;line-height:1.6;margin-bottom:8px">Jede Karte hat einen Wert (von 1 bis K). Deine Punkte in der Runde sind die <strong>Summe aller Kartenwerte</strong> auf deiner Hand:</p>
-      <ul style="font-size:13px;line-height:1.8;margin-left:20px">
-        <li><strong>2–10:</strong> Ihr Zahlenwert (2 Punkte, 10 Punkte, usw.)</li>
-        <li><strong>Bube (J):</strong> 11 Punkte</li>
-        <li><strong>Dame (Q):</strong> 12 Punkte</li>
-        <li><strong>König (K):</strong> 13 Punkte</li>
-        <li><strong>Ass (A):</strong> 1 Punkt oder 14 Punkte (je nach Kartenvariante)</li>
-      </ul>
+      <p style="font-size:13px;line-height:1.6;margin-bottom:8px">Jede Karte hat einen Wert von -1 bis 13. Je niedriger desto besser. Die Summe aller Werte entspricht deiner aktuellen Gesamtpunkte. Auch hier, je niedriger, desto besser. Also werde die hohen Karten los und beende als erster das Spiel!</p>
     </div>
 
     <div style="margin-top:16px;padding:12px;background:rgba(115,123,196,.1);border-left:3px solid #737bc4;border-radius:8px">
-      <p style="font-size:12px;color:rgba(255,255,255,.8);margin:0"><strong>💡 Tipp:</strong> Merke dir gut, welche Karten du ansehen darfst! Je besser du weißt, wo die niedrigen Karten sind, desto besser kannst du deine Hand verbessern.</p>
+      <p style="font-size:12px;color:rgba(255,255,255,.8);margin:0"><strong>⚠️ Obacht!</strong> Wenn du nicht die wenigsten Punkte nach dem Beenden hast, bekommst du eine Strafe von 30 Punkten.</p>
     </div>
 
     <div class="btn-row" style="margin-top:20px">
@@ -937,8 +1010,15 @@ function handleMessage(msg) {
   // Kommt unmittelbar vor dem State mit den vertauschten Händen: markiert, welche
   // Karten fliegen sollen (bzw. dass bewusst nicht getauscht wurde).
   if (msg.type === 'swap_anim') { noteSwapAnim(msg); return; }
+  // Reaction-Swap: gespielte Gegnerkarte fliegt zum Ablagestapel, Ersatzkarte
+  // wandert vom eigenen Slot in den frei gewordenen Gegner-Slot.
+  if (msg.type === 'reaction_swap_anim') { noteReactionSwapAnim(msg); return; }
   if (msg.type === 'state') {
     state = msg;
+    // Jeder frische Server-State entriegelt die Sperren – der Server hat unsere
+    // letzte Aktion verarbeitet, weitere Klicks dürfen wieder raus.
+    abilityPendingSend = false;
+    drawnActionPending = false;
     syncRevealCountdown();
     render();
   }
@@ -1097,18 +1177,20 @@ const BG_THEMES = [
   { id: 'wein',      label: () => t('BGThemes.wein'),      css: 'radial-gradient(circle at 50% 30%,#331424 0%,#080406 78%)' },
   { id: 'reinweiss', label: () => t('BGThemes.reinweiss'), css: 'linear-gradient(180deg,#101010,#000000)' },
 ];
-// Kartenrücken – der Mond-Emblem als SVG bleibt in .card-back::before; hier nur die Preview-Kacheln.
-const KARMA_MARK_URL = "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 104 100'%3E%3Cpath fill='%234b5080' fill-rule='evenodd' d='M24 54a38 38 0 1 0 76 0a38 38 0 1 0-76 0ZM15 54a33 33 0 1 0 66 0a33 33 0 1 0-66 0Z'/%3E%3Cpath fill='%23ffffff' fill-rule='evenodd' d='M2 48a40 40 0 1 0 80 0a40 40 0 1 0-80 0ZM21 48a35 35 0 1 0 70 0a35 35 0 1 0-70 0Z'/%3E%3C/svg%3E\")";
-const KARMA_MARK_MONO = "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 104 100'%3E%3Cpath fill='%23ffffff' fill-opacity='.55' fill-rule='evenodd' d='M24 54a38 38 0 1 0 76 0a38 38 0 1 0-76 0ZM15 54a33 33 0 1 0 66 0a33 33 0 1 0-66 0Z'/%3E%3Cpath fill='%23ffffff' fill-rule='evenodd' d='M2 48a40 40 0 1 0 80 0a40 40 0 1 0-80 0ZM21 48a35 35 0 1 0 70 0a35 35 0 1 0-70 0Z'/%3E%3C/svg%3E\")";
+// Kartenrücken-Designs mit Palmenblatt-Patterns
 const CARD_BACKS = [
   { id: 'classic', label: () => t('CardBacks.classic'),
-    css: `${KARMA_MARK_URL} center / 55% no-repeat, radial-gradient(120% 90% at 50% 50%,#232743 0%,#0b0d16 78%)`, ring: 'rgba(115,123,196,.35)' },
+    preview: 'linear-gradient(135deg, #232743 0%, #0b0d16 100%)',
+    ring: 'rgba(115,123,196,.35)' },
   { id: 'rauten',  label: () => t('CardBacks.rauten'),
-    css: `${KARMA_MARK_MONO} center / 58% no-repeat, radial-gradient(140% 100% at 50% 50%,#3a3f6e 0%,#14162a 88%)`, ring: 'rgba(115,123,196,.55)' },
+    preview: 'linear-gradient(115deg, #2d5a4a 0%, #0f1a1a 50%, #1a3a2e 100%)',
+    ring: 'rgba(100,180,140,.55)' },
   { id: 'wellen',  label: () => t('CardBacks.wellen'),
-    css: `${KARMA_MARK_URL} center / 44% no-repeat, repeating-radial-gradient(circle at 50% 50%,rgba(115,123,196,.16) 0 1px,transparent 1px 7px), radial-gradient(120% 90% at 50% 50%,#1c1f3a 0%,#060811 90%)`, ring: 'rgba(115,123,196,.4)' },
+    preview: 'linear-gradient(125deg, #1f3a3a 0%, #0d1a1f 50%, #1a2f35 100%)',
+    ring: 'rgba(80,150,140,.4)' },
   { id: 'karo',    label: () => t('CardBacks.karo'),
-    css: `${KARMA_MARK_MONO} center / 52% no-repeat, radial-gradient(rgba(255,255,255,.15) 1px, transparent 1.3px) 0 0 / 12px 12px, linear-gradient(180deg,#10132a,#04050b)`, ring: 'rgba(255,255,255,.25)' },
+    preview: 'linear-gradient(135deg, #4a6b5f 0%, #1a2a25 50%, #2a4a3f 100%)',
+    ring: 'rgba(120,200,160,.25)' },
 ];
 
 function loadSettings() {
@@ -1162,8 +1244,8 @@ function renderSettings() {
     </button>`).join('');
   document.getElementById('back-grid').innerHTML = CARD_BACKS.map(b => `
     <button class="swatch ${b.id === curBack ? 'active' : ''}" onclick="setCardBack('${b.id}')">
-      <div class="back-preview" style="background:${b.css};color:${b.color}">${b.emblem}
-        <span style="position:absolute;inset:5px;border:1px solid ${b.ring};border-radius:5px"></span>
+      <div class="back-preview" style="background:${b.preview || 'linear-gradient(135deg, #1a1d2e 0%, #0d0f1e 100%)'};border:1px solid ${b.ring || 'rgba(255,255,255,.12)'}">
+        <span style="position:absolute;inset:5px;border:1px solid ${b.ring || 'rgba(255,255,255,.12)'};border-radius:5px"></span>
       </div>
       <div class="swatch-lbl">${typeof b.label === 'function' ? b.label() : b.label}</div>
     </button>`).join('');
@@ -1240,7 +1322,15 @@ function render() {
   runTableFlip(beforeRects);
 
   if (state.phase === 'peek') renderPeekModal();
-  else document.getElementById('peek-overlay').classList.add('hidden');
+  else {
+    document.getElementById('peek-overlay').classList.add('hidden');
+    // Cache und Signatur zurücksetzen, damit die nächste Peek-Phase (neue
+    // Runde) frisch startet und die Vorderseiten nicht aus der letzten Runde
+    // wiederkommen.
+    peekFaceCache.clear();
+    peekLastHandSig = '';
+    document.getElementById('peek-hand').innerHTML = '';
+  }
 
   if (state.phase === 'scoring' || state.phase === 'done') renderScoringModal();
   else document.getElementById('scoring-overlay').classList.add('hidden');
@@ -1309,7 +1399,7 @@ function renderCenter() {
   // Discard – Larger display
   const discardEl = document.getElementById('discard-pile');
   if (state.discardTop) {
-    discardEl.innerHTML = buildCardInner(state.discardTop, 160, 235);
+    discardEl.innerHTML = buildCardInner(state.discardTop, 190, 280);
     discardEl.style.borderStyle = 'solid';
     discardEl.style.borderColor = state.discardTop.color || 'rgba(255,255,255,.3)';
   } else {
@@ -1325,6 +1415,21 @@ function renderCenter() {
     drawnArea.style.display = 'flex';
     drawnDisp.innerHTML = `<div class="card tcg-pop">${buildCardInner(state.drawnCard, 190, 278)}</div>`;
     renderDrawnHand();
+    // Button und Hinweis machen den Flow explizit: Handkarte antippen = tauschen
+    // (Fähigkeit wird verworfen). Ablegen = Karte auf den Stapel und Fähigkeit
+    // ausführen. Das war vorher hinter dem generischen "Ablegen" versteckt.
+    const hasAbility = state.drawnCard.ability && state.drawnCard.ability !== 'none';
+    const btn = document.getElementById('drawn-discard-btn');
+    const hint = document.getElementById('drawn-hint');
+    if (hasAbility) {
+      btn.textContent = 'Ablegen & Fähigkeit nutzen';
+      btn.className = 'btn btn-purple';
+      hint.innerHTML = 'Tippe eine Handkarte, um sie zu <strong>tauschen</strong> (Fähigkeit verfällt) – oder <strong>lege ab</strong>, um die Fähigkeit zu nutzen.';
+    } else {
+      btn.textContent = 'Ablegen';
+      btn.className = 'btn btn-outline';
+      hint.innerHTML = 'Tippe eine deiner Karten, um sie zu <strong>ersetzen</strong> – oder lege die gezogene Karte ab.';
+    }
   } else {
     drawnArea.style.display = 'none';
   }
@@ -1353,14 +1458,24 @@ function renderDrawnHand() {
   }
 }
 
+// Sperre gegen versehentliches Doppel-Antippen der Ablegen/Ersetzen-Aktion:
+// jeder neue State-Update entriegelt sie wieder (siehe handleMessage).
+let drawnActionPending = false;
+
 function keepDrawn(idx) {
+  if (drawnActionPending) return;
   if (state?.phase !== 'playing' || !state.drawnCard || state.currentPlayerId !== state.myId) return;
+  drawnActionPending = true;
   send({ type: 'keep', handIndex: idx });
+  setTimeout(() => { drawnActionPending = false; }, 800);
 }
 
 function discardDrawn() {
+  if (drawnActionPending) return;
   if (state?.phase !== 'playing' || !state.drawnCard || state.currentPlayerId !== state.myId) return;
+  drawnActionPending = true;
   send({ type: 'discard_drawn' });
+  setTimeout(() => { drawnActionPending = false; }, 800);
 }
 
 function renderMyZone() {
@@ -1467,6 +1582,14 @@ function renderEndBanner() {
 
 // ── Peek Modal ────────────────────────────────────────────────────────────────
 // Ablauf: 2 Karten auswählen → 6 Sekunden ansehen → wieder verdeckt.
+// Zwischenspeicher für die zuletzt bekannte Vorderseite je Kartenposition –
+// wenn die 6 Sekunden abgelaufen sind, verdeckt der Server die Karte wieder
+// (keine Feld-Daten mehr im State), aber die Karte muss sich sichtbar
+// zurückdrehen. Aus dem Cache rendern wir die Vorderseite weiter, während
+// die Karte rotiert, damit sie nicht mitten in der Animation leer wird.
+const peekFaceCache = new Map();
+let peekLastHandSig = '';
+
 function renderPeekModal() {
   const overlay = document.getElementById('peek-overlay');
   const me = state.players.find(p => p.isMe);
@@ -1504,23 +1627,25 @@ function renderPeekModal() {
   }
 
   const handEl = document.getElementById('peek-hand');
-  const anyRevealed = me.hand.some(c => c && !c.hidden);
-  handEl.className = 'peek-hand' + (anyRevealed ? '' : ' picking');
-  handEl.innerHTML = '';
+  handEl.className = 'peek-hand';
 
   // Karten so groß wie möglich, aber so, dass das 2×2-Grid komplett sichtbar
   // bleibt – während der 6 Sekunden will niemand scrollen. Begrenzt wird
-  // sowohl durch die Modalbreite als auch durch die Viewport-Höhe.
+  // sowohl durch die Modalbreite als auch durch die Viewport-Höhe. Beim
+  // ersten Aufbau nutzen wir die Modalbreite als Fallback, weil das Grid dann
+  // noch keine gemessene Breite hat.
   const modalEl = document.getElementById('peek-modal');
   const gap = parseFloat(getComputedStyle(handEl).columnGap) || 14;
-  const avail = handEl.clientWidth || 434;
+  const modalCs = getComputedStyle(modalEl);
+  const modalInner = modalEl.clientWidth
+    - parseFloat(modalCs.paddingLeft) - parseFloat(modalCs.paddingRight);
+  const avail = handEl.clientWidth || modalInner || 434;
   let cardW = Math.min(210, Math.floor((avail - gap) / 2));
 
-  const mcs = getComputedStyle(modalEl);
   const hcs = getComputedStyle(handEl);
   // Alles außer dem Kartengrid: Padding, Titel, Text, Timer, plus die
   // Positionslabels unter den Karten (~24px inkl. Slot-Gap).
-  let chrome = parseFloat(mcs.paddingTop) + parseFloat(mcs.paddingBottom)
+  let chrome = parseFloat(modalCs.paddingTop) + parseFloat(modalCs.paddingBottom)
              + parseFloat(hcs.marginTop) + parseFloat(hcs.marginBottom)
              + 2 * 24 + gap;
   for (const el of modalEl.children) {
@@ -1532,33 +1657,79 @@ function renderPeekModal() {
   const cardH = Math.max(250, Math.min(Math.round(cardW * 322 / 210), maxH));
   cardW = Math.min(cardW, Math.round(cardH * 210 / 322));
 
+  // DOM nur neu aufbauen, wenn sich die Hand-Signatur ändert (Spielerwechsel,
+  // neue Runde) – sonst nur Klassen und Vorderseiten aktualisieren, damit die
+  // 3D-Flip-Animation nicht durch ein innerHTML='' unterbrochen wird.
+  const handSig = me.hand.map(c => (c && c.uid) || '_').join('|') + `#${me.hand.length}`;
+  let rebuild = handSig !== peekLastHandSig || handEl.children.length !== me.hand.length;
+  peekLastHandSig = handSig;
+  if (rebuild) {
+    handEl.innerHTML = '';
+    for (let i = 0; i < me.hand.length; i++) {
+      const wrap = document.createElement('div');
+      wrap.className = 'peek-slot';
+      wrap.dataset.idx = String(i);
+      const card = document.createElement('div');
+      card.className = 'card peek-flip';
+      const inner = document.createElement('div');
+      inner.className = 'flip-inner';
+      const back = document.createElement('div');
+      back.className = 'flip-face flip-back';
+      back.innerHTML = '<div class="card-back"></div>';
+      const front = document.createElement('div');
+      front.className = 'flip-face flip-front';
+      inner.appendChild(back);
+      inner.appendChild(front);
+      card.appendChild(inner);
+      const lbl = document.createElement('div');
+      lbl.className = 'peek-slot-lbl';
+      lbl.textContent = `Karte ${i+1}`;
+      wrap.appendChild(card);
+      wrap.appendChild(lbl);
+      handEl.appendChild(wrap);
+    }
+  }
+
   for (let i = 0; i < me.hand.length; i++) {
     const c = me.hand[i];
+    const wrap = handEl.children[i];
+    const card = wrap.firstElementChild;
+    const front = card.querySelector('.flip-front');
+    const back = card.querySelector('.flip-back');
     const isSel = sel.includes(i);
-    const revealed = c && !c.hidden;
-    const wrap = document.createElement('div');
-    wrap.className = 'peek-slot' + (isSel || revealed ? ' is-peeked' : '');
-    const card = document.createElement('div');
-    card.className = 'card' + (isSel ? ' selected' : '');
-    if (anyRevealed) {
-      // Im Grid trägt der Wrapper die Maße – sonst kollabieren die Rückseiten,
-      // die ihre Größe vom Elternelement beziehen.
-      card.style.width = cardW + 'px';
-      card.style.height = cardH + 'px';
-    }
+    const revealed = !!(c && !c.hidden);
+
+    card.style.width = cardW + 'px';
+    card.style.height = cardH + 'px';
+
+    wrap.classList.toggle('is-selected', isSel && !revealed);
+    wrap.classList.toggle('is-peeked', isSel || revealed);
+
+    // Vorderseite füllen – während sie sichtbar ist mit frischen Server-Daten,
+    // beim Zurückdrehen aus dem Cache, damit die Animation nicht ins Leere läuft.
     if (revealed) {
-      card.innerHTML = buildCardInner(c, cardW, cardH);
-    } else {
-      card.innerHTML = '<div class="card-back"></div>';
-      if (!revealing && !done) card.onclick = () => send({ type: 'peek', cardIndex: i });
+      peekFaceCache.set(i, c);
+      front.innerHTML = buildCardInner(c, cardW, cardH);
+    } else if (peekFaceCache.has(i)) {
+      const cached = peekFaceCache.get(i);
+      front.innerHTML = buildCardInner(cached, cardW, cardH);
     }
-    const lbl = document.createElement('div');
-    lbl.className = 'peek-slot-lbl';
-    lbl.textContent = `Karte ${i+1}`;
-    wrap.appendChild(card);
-    wrap.appendChild(lbl);
-    handEl.appendChild(wrap);
+
+    // Klick nur auf die Rückseite während der Auswahl. Rebuild = kein Anim-Start,
+    // sonst per rAF, damit der Browser vor dem Setzen von .is-flipped einen
+    // Frame ohne die Klasse sieht.
+    const clickable = !revealing && !done;
+    back.onclick = clickable ? (() => send({ type: 'peek', cardIndex: i })) : null;
+    back.style.cursor = clickable ? 'pointer' : 'default';
+
+    const shouldFlip = revealed;
+    if (rebuild) {
+      card.classList.toggle('is-flipped', shouldFlip);
+    } else if (shouldFlip !== card.classList.contains('is-flipped')) {
+      requestAnimationFrame(() => card.classList.toggle('is-flipped', shouldFlip));
+    }
   }
+
   tickReveal();
 }
 
@@ -1573,6 +1744,8 @@ function sendPeekDone() { send({ type: 'peek_done' }); }
 
 let pendingSwapAnim = null;        // vom Server angekündigter Tausch
 let pendingSwapAnimTimer = null;
+let pendingReactionSwap = null;    // vom Server angekündigter Reaction-Swap
+let pendingReactionSwapTimer = null;
 
 function noteSwapAnim(msg) {
   pendingSwapAnim = msg;
@@ -1580,6 +1753,18 @@ function noteSwapAnim(msg) {
   // statt beim nächsten beliebigen Render loszufliegen.
   clearTimeout(pendingSwapAnimTimer);
   pendingSwapAnimTimer = setTimeout(() => { pendingSwapAnim = null; }, 2500);
+}
+
+function noteReactionSwapAnim(msg) {
+  pendingReactionSwap = msg;
+  // Piggyback auf pendingSwapAnim: die Ersatzkarte behält ihre uid und wandert von
+  // einem Slot in den anderen. Damit sie den bogigen Flug mit Purple-Glow bekommt
+  // (statt bloßem Shift), muss ihre uid in der swapping-Menge landen.
+  pendingSwapAnim = { cards: [{ uid: msg.replacementCard.uid }] };
+  clearTimeout(pendingSwapAnimTimer);
+  clearTimeout(pendingReactionSwapTimer);
+  pendingSwapAnimTimer = setTimeout(() => { pendingSwapAnim = null; }, 2500);
+  pendingReactionSwapTimer = setTimeout(() => { pendingReactionSwap = null; }, 2500);
 }
 
 function reducedMotion() {
@@ -1605,8 +1790,13 @@ function tableCardEl(playerId, index) {
 function runTableFlip(before) {
   const anim = pendingSwapAnim;
   if (anim) { pendingSwapAnim = null; clearTimeout(pendingSwapAnimTimer); }
+  const rSwap = pendingReactionSwap;
+  if (rSwap) { pendingReactionSwap = null; clearTimeout(pendingReactionSwapTimer); }
   if (anim && anim.mode === 'stay') { animateStay(anim.cards); return; }
-  if (!before || !before.size) return;
+  if (!before || !before.size) {
+    if (rSwap) animatePlayedToDiscard(rSwap.playedCard, null);
+    return;
+  }
 
   const swapping = new Set((anim && anim.cards ? anim.cards : []).map(c => c.uid));
 
@@ -1620,6 +1810,58 @@ function runTableFlip(before) {
     if (isSwap) spawnSlotGhost(from);
     flyCard(el, dx, dy, from.width / to.width, from.height / to.height, isSwap);
   }
+
+  // Die gespielte Gegnerkarte verschwindet vom Tisch – FLIP oben findet sie nicht
+  // im neuen DOM. Deshalb hier ein eigener Flug vom alten Slot zum Ablagestapel.
+  if (rSwap) animatePlayedToDiscard(rSwap.playedCard, before);
+}
+
+// Fliegt einen Klon der jetzt schon auf dem Ablagestapel liegenden Karte optisch
+// vom alten Slot dorthin. Der Stapel selbst wird währenddessen ausgeblendet, sonst
+// hätte man die Karte doppelt (statisch im Ziel + fliegend) im Blick.
+function animatePlayedToDiscard(played, beforeRects) {
+  const discardEl = document.getElementById('discard-pile');
+  if (!discardEl) return;
+  const fromRect = beforeRects ? beforeRects.get(played.uid) : null;
+  const toRect = discardEl.getBoundingClientRect();
+  if (!fromRect) return;
+
+  spawnSlotGhost(fromRect);
+
+  const clone = document.createElement('div');
+  clone.className = 'card card-flying';
+  clone.style.position = 'fixed';
+  clone.style.left = fromRect.left + 'px';
+  clone.style.top = fromRect.top + 'px';
+  clone.style.width = fromRect.width + 'px';
+  clone.style.height = fromRect.height + 'px';
+  clone.style.transformOrigin = 'top left';
+  clone.innerHTML = discardEl.innerHTML;
+  document.body.appendChild(clone);
+
+  const prevOpacity = discardEl.style.opacity;
+  discardEl.style.opacity = '0';
+
+  const dx = toRect.left - fromRect.left;
+  const dy = toRect.top - fromRect.top;
+  const sx = toRect.width / fromRect.width;
+  const sy = toRect.height / fromRect.height;
+  const len = Math.hypot(dx, dy) || 1;
+  const bow = Math.min(90, len * 0.25);
+  const px = (-dy / len) * bow, py = (dx / len) * bow;
+
+  const a = clone.animate([
+    { transform: 'translate(0,0) scale(1,1) rotate(0deg)', offset: 0 },
+    { transform: `translate(${dx/2 + px}px, ${dy/2 + py}px) scale(${(sx+1)/2}, ${(sy+1)/2}) rotate(6deg)`, offset: .55 },
+    { transform: `translate(${dx}px, ${dy}px) scale(${sx}, ${sy}) rotate(0deg)`, offset: 1 },
+  ], { duration: reducedMotion() ? 1 : 850, easing: 'cubic-bezier(.34,.02,.24,1)' });
+
+  a.onfinish = () => {
+    clone.remove();
+    discardEl.style.opacity = prevOpacity;
+    discardEl.classList.add('card-landed');
+    setTimeout(() => discardEl.classList.remove('card-landed'), 700);
+  };
 }
 
 // Die Karte startet optisch an ihrer alten Stelle und bewegt sich von dort auf
@@ -1752,7 +1994,7 @@ function renderAbilityModal() {
   // Show drawn card
   const drawnArea = document.getElementById('ability-drawn');
   if (state.drawnCard) {
-    drawnArea.innerHTML = `<div class="card" style="width:80px;height:115px">${buildCardInner(state.drawnCard, 80, 115)}</div>`;
+    drawnArea.innerHTML = `<div class="card" style="width:120px;height:174px">${buildCardInner(state.drawnCard, 120, 174)}</div>`;
   } else {
     drawnArea.innerHTML = '';
   }
@@ -1772,9 +2014,9 @@ function renderAbilityModal() {
     } else {
       desc.innerHTML = 'Du siehst sie <strong>6 Sekunden</strong> – danach wird sie wieder verdeckt:';
       body.innerHTML = revealTimerHtml() + (as.revealedCard
-        ? `<div style="display:flex;justify-content:center;margin:12px 0"><div class="card" style="width:90px;height:130px">${buildCardInner(as.revealedCard, 90, 130)}</div></div>`
+        ? `<div style="display:flex;justify-content:center;margin:12px 0"><div class="card" style="width:120px;height:174px">${buildCardInner(as.revealedCard, 120, 174)}</div></div>`
         : '<div style="text-align:center;color:rgba(255,255,255,.4);margin:20px 0">Karte ist wieder verdeckt.</div>');
-      addBtn(actions, 'Fertig', '#22c55e', () => send({ type: 'ability', done: true }));
+      addBtn(actions, 'Fertig', '#22c55e', () => _sendAbility({ type: 'ability', done: true }));
     }
   }
 
@@ -1786,9 +2028,9 @@ function renderAbilityModal() {
     } else {
       desc.innerHTML = 'Du siehst sie <strong>6 Sekunden</strong> – danach wird sie wieder verdeckt:';
       body.innerHTML = revealTimerHtml() + (as.revealedCard
-        ? `<div style="display:flex;justify-content:center;margin:12px 0"><div class="card" style="width:90px;height:130px">${buildCardInner(as.revealedCard, 90, 130)}</div></div>`
+        ? `<div style="display:flex;justify-content:center;margin:12px 0"><div class="card" style="width:120px;height:174px">${buildCardInner(as.revealedCard, 120, 174)}</div></div>`
         : '<div style="text-align:center;color:rgba(255,255,255,.4);margin:20px 0">Karte ist wieder verdeckt.</div>');
-      addBtn(actions, 'Fertig', '#22c55e', () => send({ type: 'ability', done: true }));
+      addBtn(actions, 'Fertig', '#22c55e', () => _sendAbility({ type: 'ability', done: true }));
     }
   }
 
@@ -1817,18 +2059,18 @@ function renderAbilityModal() {
         body.innerHTML = revealTimerHtml() + `<div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin:12px 0">` +
           as.revealedCards.map(r => {
             const p = state.players.find(x => x.id === r.playerId);
-            return `<div style="text-align:center"><div style="font-size:11px;color:rgba(255,255,255,.5);margin-bottom:4px">${esc(p?.name||'?')} #${r.cardIndex+1}</div><div class="card" style="width:80px;height:115px">${buildCardInner(r.card, 80, 115)}</div></div>`;
+            return `<div style="text-align:center"><div style="font-size:11px;color:rgba(255,255,255,.5);margin-bottom:4px">${esc(p?.name||'?')} #${r.cardIndex+1}</div><div class="card" style="width:120px;height:174px">${buildCardInner(r.card, 120, 174)}</div></div>`;
           }).join('') + '</div>';
       } else {
         desc.textContent = 'Die Karten sind wieder verdeckt. Tauschen – aus dem Gedächtnis?';
         body.innerHTML = `<div style="display:flex;gap:16px;justify-content:center;margin:12px 0">` +
           (as.selectedCards || []).map(sc => {
             const p = state.players.find(x => x.id === sc.playerId);
-            return `<div style="text-align:center"><div style="font-size:11px;color:rgba(255,255,255,.5);margin-bottom:4px">${esc(p?.name||'?')} #${sc.cardIndex+1}</div><div class="card" style="width:80px;height:115px"><div class="card-back"></div></div></div>`;
+            return `<div style="text-align:center"><div style="font-size:11px;color:rgba(255,255,255,.5);margin-bottom:4px">${esc(p?.name||'?')} #${sc.cardIndex+1}</div><div class="card" style="width:120px;height:174px"><div class="card-back"></div></div></div>`;
           }).join('') + '</div>';
       }
-      addBtn(actions, 'Tauschen', '#9C27B0', () => send({ type: 'ability', doSwap: true }));
-      addBtn(actions, 'Nicht tauschen', '#64748b', () => send({ type: 'ability', doSwap: false }));
+      addBtn(actions, 'Tauschen', '#9C27B0', () => _sendAbility({ type: 'ability', doSwap: true }));
+      addBtn(actions, 'Nicht tauschen', '#64748b', () => _sendAbility({ type: 'ability', doSwap: false }));
     }
   }
   tickReveal();
@@ -1848,7 +2090,7 @@ function buildMyHandForAbility(selected, mode) {
   for (let i = 0; i < me.hand.length; i++) {
     const c = me.hand[i];
     const sel = selected && selected.some(s => s.playerId === state.myId && s.cardIndex === i);
-    html += `<div class="card ${sel?'selected':''}" style="width:75px;height:108px" onclick="abilitySelectCard('${state.myId}',${i})">${c && !c.hidden ? buildCardInner(c,75,108) : '<div class="card-back"></div>'}</div>`;
+    html += `<div class="card ${sel?'selected':''}" style="width:100px;height:145px" onclick="abilitySelectCard('${state.myId}',${i})">${c && !c.hidden ? buildCardInner(c,100,145) : '<div class="card-back"></div>'}</div>`;
   }
   html += '</div>';
   return html;
@@ -1860,7 +2102,7 @@ function buildOpponentsForAbility() {
     if (p.isMe) continue;
     html += `<div><div style="font-size:12px;color:rgba(255,255,255,.5);margin-bottom:4px">${esc(p.name)}</div><div style="display:flex;gap:6px;flex-wrap:wrap">`;
     for (let i = 0; i < p.hand.length; i++) {
-      html += `<div class="card" style="width:65px;height:94px" onclick="abilitySelectOther('${p.id}',${i})"><div class="card-back"></div></div>`;
+      html += `<div class="card" style="width:100px;height:145px" onclick="abilitySelectOther('${p.id}',${i})"><div class="card-back"></div></div>`;
     }
     html += '</div></div>';
   }
@@ -1876,12 +2118,25 @@ function buildAllCardsForAbility(selected) {
       const c = p.hand[i];
       const sel = selected.some(s => s.playerId === p.id && s.cardIndex === i);
       const fn = `abilitySelectCard('${p.id}',${i})`;
-      html += `<div class="card ${sel?'selected':''}" style="width:65px;height:94px" onclick="${fn}">${c && !c.hidden ? buildCardInner(c,65,94) : '<div class="card-back"></div>'}</div>`;
+      html += `<div class="card ${sel?'selected':''}" style="width:100px;height:145px" onclick="${fn}">${c && !c.hidden ? buildCardInner(c,100,145) : '<div class="card-back"></div>'}</div>`;
     }
     html += '</div></div>';
   }
   html += '</div>';
   return html;
+}
+
+// Verhindert, dass ein zweiter Klick auf eine Karte losgeht, bevor der Server
+// den Reveal-Zustand zurückspiegelt. Ohne diese Sperre landete der zweite Klick
+// beim alten Server-Code im "Fertig"-Zweig und beendete die Fähigkeit sofort.
+let abilityPendingSend = false;
+function _sendAbility(msg) {
+  if (abilityPendingSend) return;
+  abilityPendingSend = true;
+  send(msg);
+  // Freigabe kommt aus dem nächsten State-Update (siehe handleMessage). Als
+  // Sicherheitsnetz nach 800 ms lösen wir automatisch, falls kein State kommt.
+  setTimeout(() => { abilityPendingSend = false; }, 800);
 }
 
 function abilitySelectCard(playerId, cardIndex) {
@@ -1890,23 +2145,23 @@ function abilitySelectCard(playerId, cardIndex) {
 
   if (as.type === 'see_own') {
     if (playerId === state.myId && as.waitingForSelection) {
-      send({ type: 'ability', cardIndex });
+      _sendAbility({ type: 'ability', cardIndex });
     }
     return;
   }
   if (as.type === 'see_others') {
     if (playerId !== state.myId && as.waitingForSelection) {
-      send({ type: 'ability', targetPlayerId: playerId, cardIndex });
+      _sendAbility({ type: 'ability', targetPlayerId: playerId, cardIndex });
     }
     return;
   }
   if (as.type === 'swap' || as.type === 'see_swap') {
     if (as.step === 'select1') {
-      send({ type: 'ability', card1: { playerId, cardIndex } });
+      _sendAbility({ type: 'ability', card1: { playerId, cardIndex } });
     } else if (as.step === 'select2') {
       const c1 = as.selectedCards?.[0];
       if (c1 && !(c1.playerId === playerId && c1.cardIndex === cardIndex)) {
-        send({ type: 'ability', card2: { playerId, cardIndex } });
+        _sendAbility({ type: 'ability', card2: { playerId, cardIndex } });
       }
     }
   }
@@ -1915,20 +2170,26 @@ function abilitySelectCard(playerId, cardIndex) {
 function abilitySelectOther(playerId, cardIndex) { abilitySelectCard(playerId, cardIndex); }
 
 // ── Racing Overlay ────────────────────────────────────────────────────────────
+// Zwei Wege, das Fenster zu schließen:
+//   1. Eigene Handkarte antippen → normales `race` (schnell ablegen).
+//   2. Bekannte Gegner-Karte antippen → Reaction-Swap: erst Gegnerkarte wählen,
+//      dann eigene Ersatzkarte. `reactionSwapTarget` merkt sich Schritt 1.
+let reactionSwapTarget = null; // { playerId, cardIndex, uid, value } | null
+
 function renderRacingOverlay() {
   const overlay = document.getElementById('racing-overlay');
   if (state.phase !== 'racing') {
     overlay.style.display = 'none';
     if (racingTimerInterval) { clearInterval(racingTimerInterval); racingTimerInterval = null; }
+    reactionSwapTarget = null;
     return;
   }
   overlay.style.display = 'flex';
 
   if (state.racingCard) {
-    document.getElementById('racing-card-display').innerHTML = `<div class="card" style="width:90px;height:130px">${buildCardInner(state.racingCard, 90, 130)}</div>`;
+    document.getElementById('racing-card-display').innerHTML = `<div class="card" style="width:130px;height:190px">${buildCardInner(state.racingCard, 130, 190)}</div>`;
   }
 
-  // Timer bar (3s)
   if (!racingTimerInterval) {
     racingEndTime = Date.now() + 3000;
     racingTimerInterval = setInterval(() => {
@@ -1939,25 +2200,145 @@ function renderRacingOverlay() {
     }, 50);
   }
 
+  const hint = document.getElementById('racing-hint');
+  if (reactionSwapTarget) {
+    hint.textContent = 'Wähle eine deiner Karten als Ersatz für die gegnerische Karte.';
+    hint.className = 'reaction-hint';
+  } else {
+    hint.textContent = 'Lege eine Karte mit demselben Wert ab – oder schnapp dir eine gemerkte Gegnerkarte.';
+    hint.className = '';
+  }
+
+  // Eigene Handkarten sind hier bewusst IMMER verdeckt – "Schnapp!" bedeutet,
+  // aus dem Gedächtnis heraus zu greifen. Position wird durch Karte 1/2/…
+  // beschriftet, damit ohne Rätselraten geklickt werden kann.
   const me = state.players.find(p => p.isMe);
   const racingHand = document.getElementById('my-racing-hand');
   racingHand.innerHTML = '';
   if (me) {
     for (let i = 0; i < me.hand.length; i++) {
-      const c = me.hand[i];
+      const slot = document.createElement('div');
+      slot.className = 'racing-my-slot';
       const card = document.createElement('div');
-      card.className = 'card';
-      card.style.width = '80px';
-      card.style.height = '115px';
-      if (c && !c.hidden) card.innerHTML = buildCardInner(c, 80, 115);
-      else card.innerHTML = '<div class="card-back"></div>';
-      card.onclick = () => { send({ type: 'race', cardIndex: i }); closeRacing(); };
-      racingHand.appendChild(card);
+      card.className = 'card racing-my-card';
+      card.style.width = '130px';
+      card.style.height = '190px';
+      card.innerHTML = '<div class="card-back"></div>';
+      card.onclick = () => handleRacingMyClick(i);
+      const lbl = document.createElement('div');
+      lbl.className = 'slot-lbl';
+      lbl.textContent = `Karte ${i + 1}`;
+      slot.appendChild(card);
+      slot.appendChild(lbl);
+      racingHand.appendChild(slot);
     }
   }
+
+  // Gemerkte Gegner-Karten mit passendem Wert – nur diese sind für Reaction-Swap gültig.
+  const knownSection = document.getElementById('racing-known-section');
+  const knownCards = document.getElementById('racing-known-cards');
+  knownCards.innerHTML = '';
+  const targets = collectReactionTargets();
+  if (targets.length === 0) {
+    knownSection.classList.add('hidden');
+  } else {
+    knownSection.classList.remove('hidden');
+    // Nach Spieler gruppieren, damit klar ist, wem die Karte gehört.
+    const byPid = new Map();
+    for (const t of targets) {
+      if (!byPid.has(t.playerId)) byPid.set(t.playerId, { name: t.playerName, cards: [] });
+      byPid.get(t.playerId).cards.push(t);
+    }
+    for (const [pid, group] of byPid) {
+      const owner = document.createElement('div');
+      owner.className = 'racing-known-owner';
+      const name = document.createElement('div');
+      name.className = 'owner-name';
+      name.textContent = group.name;
+      const cards = document.createElement('div');
+      cards.className = 'owner-cards';
+      for (const t of group.cards) {
+        const slot = document.createElement('div');
+        slot.className = 'racing-my-slot';
+        const card = document.createElement('div');
+        card.className = 'card racing-known-card';
+        card.style.width = '130px';
+        card.style.height = '190px';
+        card.innerHTML = buildCardInner(t.card, 130, 190);
+        if (reactionSwapTarget && reactionSwapTarget.uid === t.uid) card.classList.add('selected');
+        card.onclick = () => handleReactionTargetClick(t);
+        const lbl = document.createElement('div');
+        lbl.className = 'slot-lbl';
+        lbl.textContent = `Karte ${t.cardIndex + 1}`;
+        slot.appendChild(card);
+        slot.appendChild(lbl);
+        cards.appendChild(slot);
+      }
+      owner.appendChild(name);
+      owner.appendChild(cards);
+      knownCards.appendChild(owner);
+    }
+  }
+
+  document.getElementById('racing-cancel-btn').textContent = reactionSwapTarget ? 'Abbrechen' : 'Kein Match';
+}
+
+// Sammelt Karten der Mitspieler, die (a) dem Viewer bekannt sind (knownByViewer)
+// und (b) den Wert der racingCard tragen. Server prüft dieselbe Regel autoritativ.
+function collectReactionTargets() {
+  const out = [];
+  if (!state?.racingCard) return out;
+  const value = state.racingCard.value;
+  for (const p of state.players) {
+    if (p.isMe) continue;
+    for (let i = 0; i < p.hand.length; i++) {
+      const c = p.hand[i];
+      if (!c || !c.knownByViewer) continue;
+      if (c.value !== value) continue;
+      out.push({ playerId: p.id, playerName: p.name, cardIndex: i, uid: c.uid, card: c });
+    }
+  }
+  return out;
+}
+
+function handleRacingMyClick(idx) {
+  if (reactionSwapTarget) {
+    // Schritt 2 des Reaction-Swaps: eigene Ersatzkarte gewählt.
+    send({
+      type: 'reaction_swap',
+      targetPlayerId: reactionSwapTarget.playerId,
+      targetCardIndex: reactionSwapTarget.cardIndex,
+      myReplacementIndex: idx,
+    });
+    reactionSwapTarget = null;
+    closeRacing();
+    return;
+  }
+  send({ type: 'race', cardIndex: idx });
+  closeRacing();
+}
+
+function handleReactionTargetClick(t) {
+  // Toggle: nochmal auf dieselbe Karte klickt sie ab.
+  if (reactionSwapTarget && reactionSwapTarget.uid === t.uid) {
+    reactionSwapTarget = null;
+  } else {
+    reactionSwapTarget = t;
+  }
+  renderRacingOverlay();
+}
+
+function cancelReactionOrClose() {
+  if (reactionSwapTarget) {
+    reactionSwapTarget = null;
+    renderRacingOverlay();
+    return;
+  }
+  closeRacing();
 }
 
 function closeRacing() {
+  reactionSwapTarget = null;
   document.getElementById('racing-overlay').style.display = 'none';
 }
 
@@ -2054,7 +2435,7 @@ function getAbilityDesc(ability) {
 
 function buildCardInner(card, w, h) {
   const colorClass = getColorClass(card.color);
-  const imgH = Math.floor(h * 0.5);
+  const imgH = Math.floor(h * 0.42);
   const infoPanelH = h - imgH - 24;
 
   const abilityName = getAbilityName(card.ability);
@@ -2090,8 +2471,18 @@ function drawCard() {
   }
 }
 
-// ── Toast ─────────────────────────────────────────────────────────────────────
+// ── Toast / Log ───────────────────────────────────────────────────────────────
+// Alle Server-Meldungen laufen im Spiel ins persistente Log-Panel; nur wenn das
+// Panel (noch) nicht sichtbar ist – etwa in der Lobby oder bei Verbindungsfehlern
+// vor Spielstart – wird auf den alten Toast zurückgefallen, damit die Nachricht
+// überhaupt jemand sieht.
 function showToast(msg, color = '#333') {
+  const panel = document.getElementById('log-panel');
+  const gameVisible = document.getElementById('game')?.style.display === 'flex';
+  if (panel && gameVisible) {
+    addLog(msg, color);
+    return;
+  }
   const container = document.getElementById('toast-container');
   const el = document.createElement('div');
   el.className = 'toast';
@@ -2100,6 +2491,36 @@ function showToast(msg, color = '#333') {
   el.textContent = msg;
   container.appendChild(el);
   setTimeout(() => el.remove(), 3100);
+}
+
+function addLog(msg, color = 'rgba(255,255,255,.35)') {
+  const panel = document.getElementById('log-panel');
+  if (!panel) return;
+  const empty = panel.querySelector('.log-empty');
+  if (empty) empty.remove();
+  panel.querySelectorAll('.is-new').forEach(el => el.classList.remove('is-new'));
+
+  const now = new Date();
+  const time = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
+
+  const line = document.createElement('div');
+  line.className = 'log-line is-new';
+  line.style.borderLeftColor = color;
+  line.innerHTML = '<span class="log-time"></span><span class="log-msg"></span>';
+  line.querySelector('.log-time').textContent = time;
+  line.querySelector('.log-msg').textContent = msg;
+  panel.appendChild(line);
+
+  // Auto-scroll nur, wenn der Spieler nicht gerade selbst hochgescrollt hat.
+  const atBottom = panel.scrollHeight - panel.scrollTop - panel.clientHeight < 60;
+  if (atBottom) panel.scrollTop = panel.scrollHeight;
+
+  while (panel.children.length > 200) panel.removeChild(panel.firstChild);
+}
+
+function clearLog() {
+  const panel = document.getElementById('log-panel');
+  if (panel) panel.innerHTML = '<div class="log-empty">Noch keine Ereignisse…</div>';
 }
 
 // ── Swipe ─────────────────────────────────────────────────────────────────────
@@ -2148,8 +2569,9 @@ function copySessionId() {
   }).catch(() => showToast('Fehler beim Kopieren', '#ef4444'));
 }
 
-document.addEventListener('DOMContentLoaded', setupSwipeListeners);
+document.addEventListener('DOMContentLoaded', () => { setupSwipeListeners(); clearLog(); });
 setupSwipeListeners();
+clearLog();
 </script>
 </body>
 </html>
