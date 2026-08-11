@@ -383,13 +383,28 @@ body[data-cardback="karo"] .card-back::after { border-color: rgba(120,200,160,.2
 }
 
 /* Racing */
-#racing-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.85); display: none; align-items: center; justify-content: center; z-index: 90; flex-direction: column; gap: 20px; }
-#racing-overlay h2 { font-size: 28px; font-weight: 900; color: #fff; text-align: center; }
+#racing-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.9); display: none; align-items: center; justify-content: flex-start; z-index: 90; flex-direction: column; gap: 12px; padding: 24px 20px; overflow-y: auto; }
+#racing-overlay h2 { font-size: 24px; font-weight: 900; color: #fff; text-align: center; }
 #racing-card-display { display: flex; justify-content: center; }
 #racing-timer-bar { width: 300px; height: 8px; background: rgba(255,255,255,.2); border-radius: 4px; overflow: hidden; }
 #racing-timer-fill { height: 100%; background: linear-gradient(90deg, #22c55e, #84cc16); border-radius: 4px; transition: width linear; }
-#my-racing-hand { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
-#racing-overlay p { color: rgba(255,255,255,.65); text-align: center; font-size: 14px; }
+.racing-hand-label, .racing-known-label { font-size: 11px; color: rgba(255,255,255,.55); text-transform: uppercase; letter-spacing: .22em; text-align: center; margin-top: 6px; }
+#my-racing-hand { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+.racing-my-slot { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.racing-my-slot .slot-lbl { font-size: 11px; color: rgba(255,255,255,.5); text-transform: uppercase; letter-spacing: .18em; }
+.racing-my-card { cursor: pointer; transition: transform .15s ease, box-shadow .15s ease; border-radius: var(--radius); }
+.racing-my-card:hover { transform: translateY(-4px); box-shadow: 0 8px 20px rgba(115,123,196,.45); }
+#racing-known-section { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+#racing-known-section.hidden { display: none; }
+#racing-known-cards { display: flex; gap: 22px; justify-content: center; flex-wrap: wrap; }
+.racing-known-owner { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.racing-known-owner .owner-name { font-size: 13px; font-weight: 700; color: #ce93d8; text-transform: uppercase; letter-spacing: .14em; }
+.racing-known-owner .owner-cards { display: flex; gap: 14px; }
+.racing-known-card { cursor: pointer; transition: transform .15s ease, box-shadow .15s ease; border-radius: var(--radius); outline: 2px solid #9C27B0; outline-offset: 3px; }
+.racing-known-card:hover { transform: translateY(-4px); box-shadow: 0 8px 22px rgba(156,39,176,.55); }
+.racing-known-card.selected { outline: 3px solid #f0abfc; box-shadow: 0 0 24px rgba(240,171,252,.7); }
+#racing-overlay p { color: rgba(255,255,255,.65); text-align: center; font-size: 14px; max-width: 620px; }
+#racing-overlay p.reaction-hint { color: #f0abfc; font-weight: 600; }
 
 /* Scoring */
 #scoring-modal .score-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,.08); }
@@ -400,11 +415,46 @@ body[data-cardback="karo"] .card-back::after { border-color: rgba(120,200,160,.2
 #scoring-modal .match-total { font-size: 12px; color: rgba(255,255,255,.5); }
 #scoring-modal .hand-reveal { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
 
-/* Toast */
+/* Toast (Fallback für Lobby/Verbindungsfehler – im Spiel läuft alles über #log-panel) */
 #toast-container { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; gap: 8px; z-index: 200; align-items: center; pointer-events: none; }
 .toast { background: rgba(0,0,0,.9); border-radius: 20px; padding: 8px 18px; font-size: 13px; font-weight: 600; border: 1px solid rgba(255,255,255,.15); animation: toastin .3s ease, toastout .3s ease 2.7s forwards; }
 @keyframes toastin { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:none; } }
 @keyframes toastout { from { opacity:1; } to { opacity:0; } }
+
+/* Log-Panel: persistente Ereignisliste zwischen Gegnern und Stapeln.
+   Ersetzt die kurzen Toasts während des Spiels – 5 Zeilen sichtbar, Rest scrollbar,
+   damit man Aktionen der Mitspieler nachlesen kann, auch wenn man kurz weggeschaut hat. */
+#log-panel {
+  --log-line-h: 26px;
+  width: min(560px, calc(100% - 32px));
+  height: calc(var(--log-line-h) * 5 + 20px);
+  margin: 4px auto 8px;
+  padding: 10px 12px;
+  flex-shrink: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: rgba(0,0,0,.42);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.05), 0 4px 14px rgba(0,0,0,.35);
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,.25) transparent;
+}
+#log-panel::-webkit-scrollbar { width: 6px; }
+#log-panel::-webkit-scrollbar-thumb { background: rgba(255,255,255,.22); border-radius: 3px; }
+.log-line {
+  display: flex; align-items: baseline; gap: 8px;
+  min-height: var(--log-line-h); line-height: var(--log-line-h);
+  font-size: 14px; font-weight: 400;
+  padding-left: 8px;
+  border-left: 3px solid transparent;
+  animation: logIn .25s ease;
+}
+.log-line .log-time { font-size: 12px; font-weight: 400; color: var(--ink-3); flex-shrink: 0; font-variant-numeric: tabular-nums; }
+.log-line .log-msg  { color: rgba(255,255,255,.92); }
+.log-line.is-new { background: linear-gradient(90deg, rgba(255,255,255,.07), transparent 70%); }
+@keyframes logIn { from { opacity:0; transform: translateY(-4px); } to { opacity:1; transform:none; } }
+.log-empty { color: var(--ink-3); font-size: 13px; line-height: 26px; padding-left: 8px; font-style: italic; }
 
 /* Status dots */
 .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
@@ -699,6 +749,9 @@ body[data-cardback="karo"] .card-back::after { border-color: rgba(120,200,160,.2
 
   <div id="opponents"></div>
 
+  <!-- Ereignis-Log: persistente Meldungen (Züge, Fähigkeiten, Karma-Rufe) statt kurzer Toasts -->
+  <div id="log-panel"></div>
+
   <div id="center">
     <div class="pile-area">
       <div class="pile-label">Nachziehstapel</div>
@@ -767,11 +820,16 @@ body[data-cardback="karo"] .card-back::after { border-color: rgba(120,200,160,.2
 <!-- RACING OVERLAY -->
 <div id="racing-overlay">
   <h2>SCHNELL! Gleicher Wert?</h2>
-  <p>Lege eine Karte mit demselben Wert ab!</p>
+  <p id="racing-hint">Lege eine Karte mit demselben Wert ab!</p>
   <div id="racing-card-display"></div>
   <div id="racing-timer-bar"><div id="racing-timer-fill" style="width:100%"></div></div>
+  <div class="racing-hand-label">Deine Hand</div>
   <div id="my-racing-hand"></div>
-  <button class="btn btn-outline" onclick="closeRacing()" style="margin-top:10px">Kein Match</button>
+  <div id="racing-known-section" class="hidden">
+    <div class="racing-known-label">Oder gemerkte gegnerische Karte:</div>
+    <div id="racing-known-cards"></div>
+  </div>
+  <button class="btn btn-outline" id="racing-cancel-btn" onclick="cancelReactionOrClose()" style="margin-top:10px">Kein Match</button>
 </div>
 
 <!-- SCORING MODAL -->
@@ -952,6 +1010,9 @@ function handleMessage(msg) {
   // Kommt unmittelbar vor dem State mit den vertauschten Händen: markiert, welche
   // Karten fliegen sollen (bzw. dass bewusst nicht getauscht wurde).
   if (msg.type === 'swap_anim') { noteSwapAnim(msg); return; }
+  // Reaction-Swap: gespielte Gegnerkarte fliegt zum Ablagestapel, Ersatzkarte
+  // wandert vom eigenen Slot in den frei gewordenen Gegner-Slot.
+  if (msg.type === 'reaction_swap_anim') { noteReactionSwapAnim(msg); return; }
   if (msg.type === 'state') {
     state = msg;
     // Jeder frische Server-State entriegelt die Sperren – der Server hat unsere
@@ -1683,6 +1744,8 @@ function sendPeekDone() { send({ type: 'peek_done' }); }
 
 let pendingSwapAnim = null;        // vom Server angekündigter Tausch
 let pendingSwapAnimTimer = null;
+let pendingReactionSwap = null;    // vom Server angekündigter Reaction-Swap
+let pendingReactionSwapTimer = null;
 
 function noteSwapAnim(msg) {
   pendingSwapAnim = msg;
@@ -1690,6 +1753,18 @@ function noteSwapAnim(msg) {
   // statt beim nächsten beliebigen Render loszufliegen.
   clearTimeout(pendingSwapAnimTimer);
   pendingSwapAnimTimer = setTimeout(() => { pendingSwapAnim = null; }, 2500);
+}
+
+function noteReactionSwapAnim(msg) {
+  pendingReactionSwap = msg;
+  // Piggyback auf pendingSwapAnim: die Ersatzkarte behält ihre uid und wandert von
+  // einem Slot in den anderen. Damit sie den bogigen Flug mit Purple-Glow bekommt
+  // (statt bloßem Shift), muss ihre uid in der swapping-Menge landen.
+  pendingSwapAnim = { cards: [{ uid: msg.replacementCard.uid }] };
+  clearTimeout(pendingSwapAnimTimer);
+  clearTimeout(pendingReactionSwapTimer);
+  pendingSwapAnimTimer = setTimeout(() => { pendingSwapAnim = null; }, 2500);
+  pendingReactionSwapTimer = setTimeout(() => { pendingReactionSwap = null; }, 2500);
 }
 
 function reducedMotion() {
@@ -1715,8 +1790,13 @@ function tableCardEl(playerId, index) {
 function runTableFlip(before) {
   const anim = pendingSwapAnim;
   if (anim) { pendingSwapAnim = null; clearTimeout(pendingSwapAnimTimer); }
+  const rSwap = pendingReactionSwap;
+  if (rSwap) { pendingReactionSwap = null; clearTimeout(pendingReactionSwapTimer); }
   if (anim && anim.mode === 'stay') { animateStay(anim.cards); return; }
-  if (!before || !before.size) return;
+  if (!before || !before.size) {
+    if (rSwap) animatePlayedToDiscard(rSwap.playedCard, null);
+    return;
+  }
 
   const swapping = new Set((anim && anim.cards ? anim.cards : []).map(c => c.uid));
 
@@ -1730,6 +1810,58 @@ function runTableFlip(before) {
     if (isSwap) spawnSlotGhost(from);
     flyCard(el, dx, dy, from.width / to.width, from.height / to.height, isSwap);
   }
+
+  // Die gespielte Gegnerkarte verschwindet vom Tisch – FLIP oben findet sie nicht
+  // im neuen DOM. Deshalb hier ein eigener Flug vom alten Slot zum Ablagestapel.
+  if (rSwap) animatePlayedToDiscard(rSwap.playedCard, before);
+}
+
+// Fliegt einen Klon der jetzt schon auf dem Ablagestapel liegenden Karte optisch
+// vom alten Slot dorthin. Der Stapel selbst wird währenddessen ausgeblendet, sonst
+// hätte man die Karte doppelt (statisch im Ziel + fliegend) im Blick.
+function animatePlayedToDiscard(played, beforeRects) {
+  const discardEl = document.getElementById('discard-pile');
+  if (!discardEl) return;
+  const fromRect = beforeRects ? beforeRects.get(played.uid) : null;
+  const toRect = discardEl.getBoundingClientRect();
+  if (!fromRect) return;
+
+  spawnSlotGhost(fromRect);
+
+  const clone = document.createElement('div');
+  clone.className = 'card card-flying';
+  clone.style.position = 'fixed';
+  clone.style.left = fromRect.left + 'px';
+  clone.style.top = fromRect.top + 'px';
+  clone.style.width = fromRect.width + 'px';
+  clone.style.height = fromRect.height + 'px';
+  clone.style.transformOrigin = 'top left';
+  clone.innerHTML = discardEl.innerHTML;
+  document.body.appendChild(clone);
+
+  const prevOpacity = discardEl.style.opacity;
+  discardEl.style.opacity = '0';
+
+  const dx = toRect.left - fromRect.left;
+  const dy = toRect.top - fromRect.top;
+  const sx = toRect.width / fromRect.width;
+  const sy = toRect.height / fromRect.height;
+  const len = Math.hypot(dx, dy) || 1;
+  const bow = Math.min(90, len * 0.25);
+  const px = (-dy / len) * bow, py = (dx / len) * bow;
+
+  const a = clone.animate([
+    { transform: 'translate(0,0) scale(1,1) rotate(0deg)', offset: 0 },
+    { transform: `translate(${dx/2 + px}px, ${dy/2 + py}px) scale(${(sx+1)/2}, ${(sy+1)/2}) rotate(6deg)`, offset: .55 },
+    { transform: `translate(${dx}px, ${dy}px) scale(${sx}, ${sy}) rotate(0deg)`, offset: 1 },
+  ], { duration: reducedMotion() ? 1 : 850, easing: 'cubic-bezier(.34,.02,.24,1)' });
+
+  a.onfinish = () => {
+    clone.remove();
+    discardEl.style.opacity = prevOpacity;
+    discardEl.classList.add('card-landed');
+    setTimeout(() => discardEl.classList.remove('card-landed'), 700);
+  };
 }
 
 // Die Karte startet optisch an ihrer alten Stelle und bewegt sich von dort auf
@@ -2038,20 +2170,26 @@ function abilitySelectCard(playerId, cardIndex) {
 function abilitySelectOther(playerId, cardIndex) { abilitySelectCard(playerId, cardIndex); }
 
 // ── Racing Overlay ────────────────────────────────────────────────────────────
+// Zwei Wege, das Fenster zu schließen:
+//   1. Eigene Handkarte antippen → normales `race` (schnell ablegen).
+//   2. Bekannte Gegner-Karte antippen → Reaction-Swap: erst Gegnerkarte wählen,
+//      dann eigene Ersatzkarte. `reactionSwapTarget` merkt sich Schritt 1.
+let reactionSwapTarget = null; // { playerId, cardIndex, uid, value } | null
+
 function renderRacingOverlay() {
   const overlay = document.getElementById('racing-overlay');
   if (state.phase !== 'racing') {
     overlay.style.display = 'none';
     if (racingTimerInterval) { clearInterval(racingTimerInterval); racingTimerInterval = null; }
+    reactionSwapTarget = null;
     return;
   }
   overlay.style.display = 'flex';
 
   if (state.racingCard) {
-    document.getElementById('racing-card-display').innerHTML = `<div class="card" style="width:90px;height:130px">${buildCardInner(state.racingCard, 90, 130)}</div>`;
+    document.getElementById('racing-card-display').innerHTML = `<div class="card" style="width:130px;height:190px">${buildCardInner(state.racingCard, 130, 190)}</div>`;
   }
 
-  // Timer bar (3s)
   if (!racingTimerInterval) {
     racingEndTime = Date.now() + 3000;
     racingTimerInterval = setInterval(() => {
@@ -2062,25 +2200,145 @@ function renderRacingOverlay() {
     }, 50);
   }
 
+  const hint = document.getElementById('racing-hint');
+  if (reactionSwapTarget) {
+    hint.textContent = 'Wähle eine deiner Karten als Ersatz für die gegnerische Karte.';
+    hint.className = 'reaction-hint';
+  } else {
+    hint.textContent = 'Lege eine Karte mit demselben Wert ab – oder schnapp dir eine gemerkte Gegnerkarte.';
+    hint.className = '';
+  }
+
+  // Eigene Handkarten sind hier bewusst IMMER verdeckt – "Schnapp!" bedeutet,
+  // aus dem Gedächtnis heraus zu greifen. Position wird durch Karte 1/2/…
+  // beschriftet, damit ohne Rätselraten geklickt werden kann.
   const me = state.players.find(p => p.isMe);
   const racingHand = document.getElementById('my-racing-hand');
   racingHand.innerHTML = '';
   if (me) {
     for (let i = 0; i < me.hand.length; i++) {
-      const c = me.hand[i];
+      const slot = document.createElement('div');
+      slot.className = 'racing-my-slot';
       const card = document.createElement('div');
-      card.className = 'card';
-      card.style.width = '80px';
-      card.style.height = '115px';
-      if (c && !c.hidden) card.innerHTML = buildCardInner(c, 80, 115);
-      else card.innerHTML = '<div class="card-back"></div>';
-      card.onclick = () => { send({ type: 'race', cardIndex: i }); closeRacing(); };
-      racingHand.appendChild(card);
+      card.className = 'card racing-my-card';
+      card.style.width = '130px';
+      card.style.height = '190px';
+      card.innerHTML = '<div class="card-back"></div>';
+      card.onclick = () => handleRacingMyClick(i);
+      const lbl = document.createElement('div');
+      lbl.className = 'slot-lbl';
+      lbl.textContent = `Karte ${i + 1}`;
+      slot.appendChild(card);
+      slot.appendChild(lbl);
+      racingHand.appendChild(slot);
     }
   }
+
+  // Gemerkte Gegner-Karten mit passendem Wert – nur diese sind für Reaction-Swap gültig.
+  const knownSection = document.getElementById('racing-known-section');
+  const knownCards = document.getElementById('racing-known-cards');
+  knownCards.innerHTML = '';
+  const targets = collectReactionTargets();
+  if (targets.length === 0) {
+    knownSection.classList.add('hidden');
+  } else {
+    knownSection.classList.remove('hidden');
+    // Nach Spieler gruppieren, damit klar ist, wem die Karte gehört.
+    const byPid = new Map();
+    for (const t of targets) {
+      if (!byPid.has(t.playerId)) byPid.set(t.playerId, { name: t.playerName, cards: [] });
+      byPid.get(t.playerId).cards.push(t);
+    }
+    for (const [pid, group] of byPid) {
+      const owner = document.createElement('div');
+      owner.className = 'racing-known-owner';
+      const name = document.createElement('div');
+      name.className = 'owner-name';
+      name.textContent = group.name;
+      const cards = document.createElement('div');
+      cards.className = 'owner-cards';
+      for (const t of group.cards) {
+        const slot = document.createElement('div');
+        slot.className = 'racing-my-slot';
+        const card = document.createElement('div');
+        card.className = 'card racing-known-card';
+        card.style.width = '130px';
+        card.style.height = '190px';
+        card.innerHTML = buildCardInner(t.card, 130, 190);
+        if (reactionSwapTarget && reactionSwapTarget.uid === t.uid) card.classList.add('selected');
+        card.onclick = () => handleReactionTargetClick(t);
+        const lbl = document.createElement('div');
+        lbl.className = 'slot-lbl';
+        lbl.textContent = `Karte ${t.cardIndex + 1}`;
+        slot.appendChild(card);
+        slot.appendChild(lbl);
+        cards.appendChild(slot);
+      }
+      owner.appendChild(name);
+      owner.appendChild(cards);
+      knownCards.appendChild(owner);
+    }
+  }
+
+  document.getElementById('racing-cancel-btn').textContent = reactionSwapTarget ? 'Abbrechen' : 'Kein Match';
+}
+
+// Sammelt Karten der Mitspieler, die (a) dem Viewer bekannt sind (knownByViewer)
+// und (b) den Wert der racingCard tragen. Server prüft dieselbe Regel autoritativ.
+function collectReactionTargets() {
+  const out = [];
+  if (!state?.racingCard) return out;
+  const value = state.racingCard.value;
+  for (const p of state.players) {
+    if (p.isMe) continue;
+    for (let i = 0; i < p.hand.length; i++) {
+      const c = p.hand[i];
+      if (!c || !c.knownByViewer) continue;
+      if (c.value !== value) continue;
+      out.push({ playerId: p.id, playerName: p.name, cardIndex: i, uid: c.uid, card: c });
+    }
+  }
+  return out;
+}
+
+function handleRacingMyClick(idx) {
+  if (reactionSwapTarget) {
+    // Schritt 2 des Reaction-Swaps: eigene Ersatzkarte gewählt.
+    send({
+      type: 'reaction_swap',
+      targetPlayerId: reactionSwapTarget.playerId,
+      targetCardIndex: reactionSwapTarget.cardIndex,
+      myReplacementIndex: idx,
+    });
+    reactionSwapTarget = null;
+    closeRacing();
+    return;
+  }
+  send({ type: 'race', cardIndex: idx });
+  closeRacing();
+}
+
+function handleReactionTargetClick(t) {
+  // Toggle: nochmal auf dieselbe Karte klickt sie ab.
+  if (reactionSwapTarget && reactionSwapTarget.uid === t.uid) {
+    reactionSwapTarget = null;
+  } else {
+    reactionSwapTarget = t;
+  }
+  renderRacingOverlay();
+}
+
+function cancelReactionOrClose() {
+  if (reactionSwapTarget) {
+    reactionSwapTarget = null;
+    renderRacingOverlay();
+    return;
+  }
+  closeRacing();
 }
 
 function closeRacing() {
+  reactionSwapTarget = null;
   document.getElementById('racing-overlay').style.display = 'none';
 }
 
@@ -2213,8 +2471,18 @@ function drawCard() {
   }
 }
 
-// ── Toast ─────────────────────────────────────────────────────────────────────
+// ── Toast / Log ───────────────────────────────────────────────────────────────
+// Alle Server-Meldungen laufen im Spiel ins persistente Log-Panel; nur wenn das
+// Panel (noch) nicht sichtbar ist – etwa in der Lobby oder bei Verbindungsfehlern
+// vor Spielstart – wird auf den alten Toast zurückgefallen, damit die Nachricht
+// überhaupt jemand sieht.
 function showToast(msg, color = '#333') {
+  const panel = document.getElementById('log-panel');
+  const gameVisible = document.getElementById('game')?.style.display === 'flex';
+  if (panel && gameVisible) {
+    addLog(msg, color);
+    return;
+  }
   const container = document.getElementById('toast-container');
   const el = document.createElement('div');
   el.className = 'toast';
@@ -2223,6 +2491,36 @@ function showToast(msg, color = '#333') {
   el.textContent = msg;
   container.appendChild(el);
   setTimeout(() => el.remove(), 3100);
+}
+
+function addLog(msg, color = 'rgba(255,255,255,.35)') {
+  const panel = document.getElementById('log-panel');
+  if (!panel) return;
+  const empty = panel.querySelector('.log-empty');
+  if (empty) empty.remove();
+  panel.querySelectorAll('.is-new').forEach(el => el.classList.remove('is-new'));
+
+  const now = new Date();
+  const time = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
+
+  const line = document.createElement('div');
+  line.className = 'log-line is-new';
+  line.style.borderLeftColor = color;
+  line.innerHTML = '<span class="log-time"></span><span class="log-msg"></span>';
+  line.querySelector('.log-time').textContent = time;
+  line.querySelector('.log-msg').textContent = msg;
+  panel.appendChild(line);
+
+  // Auto-scroll nur, wenn der Spieler nicht gerade selbst hochgescrollt hat.
+  const atBottom = panel.scrollHeight - panel.scrollTop - panel.clientHeight < 60;
+  if (atBottom) panel.scrollTop = panel.scrollHeight;
+
+  while (panel.children.length > 200) panel.removeChild(panel.firstChild);
+}
+
+function clearLog() {
+  const panel = document.getElementById('log-panel');
+  if (panel) panel.innerHTML = '<div class="log-empty">Noch keine Ereignisse…</div>';
 }
 
 // ── Swipe ─────────────────────────────────────────────────────────────────────
@@ -2271,8 +2569,9 @@ function copySessionId() {
   }).catch(() => showToast('Fehler beim Kopieren', '#ef4444'));
 }
 
-document.addEventListener('DOMContentLoaded', setupSwipeListeners);
+document.addEventListener('DOMContentLoaded', () => { setupSwipeListeners(); clearLog(); });
 setupSwipeListeners();
+clearLog();
 </script>
 </body>
 </html>
