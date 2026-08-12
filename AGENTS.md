@@ -12,7 +12,7 @@ There are **two near-identical server files that must stay in sync**:
 | File | Role | Launched by | Image paths |
 |------|------|-------------|-------------|
 | `server_render.py` (root) | **dev / local** | `.Codex/launch.json` | `app/public/...` |
-| `app/server_final.py` | **production (Render)** | `Procfile` (`web: cd app && python server_final.py`) | `public/...` |
+| `app/server_final.py` | **production (Railway)** | `Procfile` (`web: cd app && python server_final.py`) | `public/...` |
 
 They differ **only** in the `IMAGES_DIR` / `PUBLIC_DIR` path prefix (lines ~39–40). **Any game-logic change must be made in BOTH.** Confirm they're still in sync:
 ```bash
@@ -25,7 +25,7 @@ Expect only those 2 path lines to differ. If more differs, the deploy is out of 
 - `app/server_final.py` — production mirror of the above.
 - `app/public/index.html` — **entire frontend**, all CSS + JS inline (~2500 lines). Connects to `ws://<host>/ws`. Card rendering: `buildCardInner(card, w, h)`.
 - `.Codex/launch.json` — `karma` preview config (points at `server_render.py`).
-- `Procfile` — Render deploy entrypoint (points at `app/server_final.py`).
+- `Procfile` — Railway deploy entrypoint (points at `app/server_final.py`). Railway builds from the GitHub repo; pushing `main` triggers the deploy. There is no `railway.json`/`railway.toml` in the repo — the service is configured in the Railway dashboard.
 - `Karten/Karten.csv` — source card data (names/quotes). `Karten/Karten.xlsx`, `regeln/*.docx` — design docs.
 - `app/public/Bilder/` — card face images (served at `/images/...`). `Bilder/` (root) + `Bilder.zip` are the originals.
 - `requirements.txt` — `aiohttp>=3.10.0`. `README.md` is a stub.
