@@ -66,7 +66,53 @@ body {
 .brand-lockup { display: flex; flex-direction: column; align-items: center; gap: 26px; }
 
 /* ── LOBBY ── */
-#lobby { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; gap: 30px; padding: 24px; }
+#lobby {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  min-height: 100vh; gap: 30px; padding: 24px; position: relative; isolation: isolate;
+  overflow: hidden; background: #020907;
+}
+/* Start-Lobby: eigene, animierte HUD-Bühne. Der Inhalt bleibt über den
+   Ebenen, sodass die Animation weder Lesbarkeit noch Eingaben beeinträchtigt. */
+#lobby::before, #lobby::after { content: ''; position: fixed; pointer-events: none; z-index: 0; }
+#lobby::before {
+  inset: -4%;
+  background:
+    radial-gradient(ellipse at 50% 50%, transparent 25%, rgba(0, 4, 5, .18) 62%, rgba(0, 2, 3, .76) 100%),
+    url('/assets/karma-hud-lobby.png') center / cover no-repeat;
+  filter: saturate(1.08) contrast(1.05);
+  animation: karmaHudDrift 24s ease-in-out infinite alternate;
+}
+#lobby::after {
+  inset: 0;
+  opacity: .34;
+  background:
+    linear-gradient(90deg, transparent 0 7%, rgba(0, 230, 160, .14) 7.1% 7.2%, transparent 7.3% 17%, rgba(53, 199, 255, .1) 17.1% 17.18%, transparent 17.3% 100%),
+    repeating-linear-gradient(180deg, rgba(128, 255, 220, .11) 0 1px, transparent 1px 6px);
+  background-size: 270px 100%, 100% 180px;
+  mix-blend-mode: screen;
+  animation: karmaDataRain 9s linear infinite, karmaScanFlicker 5s steps(2, end) infinite;
+}
+#lobby > * { position: relative; z-index: 1; }
+@keyframes karmaHudDrift {
+  from { transform: scale(1.025) translate3d(-.55%, -.35%, 0); }
+  to { transform: scale(1.075) translate3d(.55%, .45%, 0); }
+}
+@keyframes karmaDataRain { from { background-position: 0 0, 0 0; } to { background-position: 270px 0, 0 180px; } }
+@keyframes karmaScanFlicker { 0%, 92%, 100% { opacity: .34; } 94% { opacity: .18; } 96% { opacity: .45; } }
+.brand-lockup { filter: drop-shadow(0 0 26px rgba(0, 230, 160, .18)); }
+#lobby .card-box {
+  background: linear-gradient(180deg, rgba(2, 18, 17, .78), rgba(1, 10, 12, .7));
+  border-color: rgba(66, 255, 201, .24);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, .6), inset 0 1px rgba(126, 255, 223, .08);
+}
+#lobby .btn-gold, #lobby .btn-green {
+  background: linear-gradient(135deg, #00b985, #008eb7);
+  box-shadow: 0 6px 24px rgba(0, 230, 160, .22);
+}
+#lobby input:focus, #lobby select:focus { border-color: rgba(53, 199, 255, .82); background: rgba(0, 230, 160, .08); }
+@media (prefers-reduced-motion: reduce) {
+  #lobby::before, #lobby::after { animation: none; }
+}
 .logo-sub { color: var(--ink-3); font-size: 11px; letter-spacing: .42em; text-transform: uppercase; margin-top: -14px; font-weight: 300; }
 .card-box { background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02)); border: 1px solid var(--line); border-radius: 18px; padding: 30px; width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 14px; backdrop-filter: blur(10px); box-shadow: 0 24px 60px rgba(0,0,0,.55); }
 .card-box h2 { font-size: 12px; font-weight: 400; color: var(--ink-2); border-bottom: 1px solid var(--line); padding-bottom: 12px; text-transform: uppercase; letter-spacing: .24em; }
