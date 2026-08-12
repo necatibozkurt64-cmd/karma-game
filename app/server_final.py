@@ -17,8 +17,8 @@ CARD_DEFS = [
     dict(nr=2,  name='Tupac',                  value=2,  ability='none',       quote='Chill, Alter, es kommen auch gute Zeiten.',  count=4,  colors=['#4CAF50','#9C27B0','#2196F3','#FF9800']),
     dict(nr=3,  name='Arnold',                 value=3,  ability='none',       quote='I choose four',                             count=4,  colors=['#4CAF50','#9C27B0','#2196F3','#FF9800']),
     dict(nr=4,  name='Cartman',                value=4,  ability='none',       quote='Respect My Authority!',                    count=4,  colors=['#4CAF50','#9C27B0','#2196F3','#FF9800']),
-    dict(nr=5,  name='Zinedine Zidane',        value=5,  ability='none',       quote='Ciao bella ciao!',                         count=4,  colors=['#4CAF50','#9C27B0','#2196F3','#FF9800']),
-    dict(nr=6,  name='Bruce Lee',              value=6,  ability='none',       quote='Bee water my friend',                      count=4,  colors=['#4CAF50','#9C27B0','#2196F3','#FF9800']),
+    dict(nr=5,  name='Zidane',                 value=5,  ability='none',       quote='Ciao bella ciao!',                         count=4,  colors=['#4CAF50','#9C27B0','#2196F3','#FF9800']),
+    dict(nr=6,  name='Lee',                    value=6,  ability='none',       quote='Bee water my friend',                      count=4,  colors=['#4CAF50','#9C27B0','#2196F3','#FF9800']),
     dict(nr=7,  name='Ronaldo',                value=7,  ability='see_own',    quote='SUUUI ...your own card!!!',                 count=4,  colors=['#4CAF50','#9C27B0','#2196F3','#FF9800']),
     dict(nr=8,  name='Leo',                     value=8,  ability='see_own',    quote='check this out',                           count=4,  colors=['#4CAF50','#9C27B0','#2196F3','#FF9800']),
     dict(nr=9,  name='Snowden',                value=9,  ability='see_others', quote='They see everything..',                    count=4,  colors=['#4CAF50','#9C27B0','#2196F3','#FF9800']),
@@ -43,6 +43,16 @@ REVEAL_SECONDS = 6
 # bevor die zeitkritische Schnapp-Phase startet. Muss zur Client-Animation passen
 # (card-flying: 900ms + Nachglühen).
 FLIGHT_SECONDS = 1.4
+# Schnapp-Fenster. Gilt für die Zeitleiste am Tisch (#race-bar im Client) –
+# gezielt länger als die alten 3 s des Vollbild-Overlays, weil jetzt kleine
+# Tischkarten getroffen werden müssen statt großer Overlay-Karten.
+RACE_SECONDS = 5.0
+# So lange bleibt eine im Schnapp aufgedeckte Karte für alle sichtbar.
+# Muss zur Client-Animation passen (Flip + Halten in animateRaceReveal).
+RACE_REVEAL_SECONDS = 1.8
+# Zeit für den Gewinner, eine eigene Karte als Ersatz in den frei gewordenen
+# Gegner-Slot zu legen. Läuft sie ab, wählt der Server die letzte Karte.
+RACE_GIVE_SECONDS = 12.0
 
 def _to_snake(name):
     return re.sub(r'(?<!^)(?=[A-Z])', '_', name).lower()
@@ -79,6 +89,11 @@ def new_session(host_id, host_name, host_ws, game_mode):
         phase='lobby', current_player_index=0,
         drawn_card=None, ability_state=None,
         racing_card=None, racing_task=None,
+        # Schnapp-Phase: Deadline für die Zeitleiste, Spieler die ihren einen
+        # Versuch schon verbraucht haben, und die offene Karten-Abgabe nach
+        # einem Treffer auf eine gegnerische Karte.
+        race_deadline=0.0, race_missed=set(),
+        race_give=None, race_give_task=None,
         end_called_by=None, final_round_left=0,
         round_number=1, match_scores={}, round_scores={},
         score_breakdown={},
@@ -271,9 +286,9 @@ async def send_state(s):
                 shown = s.get('reveal_all') or (p['id'] == viewer['id'] and viewer['revealed'].get(str(i)))
                 view = card_view(card, not shown)
                 # knownByViewer lets the client mark cards the viewer has learned about
-                # (via peek / see_* abilities / keeping a drawn card). It flags which
-                # opponent slots are targetable in the upcoming reaction_swap flow
-                # without revealing the actual value here.
+                # (via peek / see_* abilities / keeping a drawn card) without revealing
+                # the value here. In der Schnapp-Phase darf zwar auf JEDE Karte getippt
+                # werden – aber diese sind die, bei denen man nicht raten muss.
                 if view and card and card.get('uid') in viewer.get('known_cards', {}):
                     view['knownByViewer'] = True
                 hand_view.append(view)
@@ -303,6 +318,13 @@ async def send_state(s):
         if cp and cp['id'] == viewer['id'] and s['drawn_card']:
             drawn_view = card_view(s['drawn_card'], False)
 
+        # Wer hält gerade eine gezogene Karte und überlegt noch? Das ist am echten
+        # Tisch für alle sichtbar (nur der Kartenwert nicht) und treibt im Client die
+        # Halte-Animation. Nur in 'playing' – legt der Spieler die Karte für eine
+        # Fähigkeit ab, ist die Entscheidung gefallen und die Fähigkeitsanzeige
+        # übernimmt, obwohl drawn_card serverseitig noch gesetzt ist.
+        draw_holder = cp['id'] if (cp and s['drawn_card'] and s['phase'] == 'playing') else None
+
         discard_top = card_view(s['discard_pile'][-1], False) if s['discard_pile'] else None
 
         await send(viewer['ws'], dict(
@@ -315,8 +337,20 @@ async def send_state(s):
             deckSize=len(s['deck']),
             discardTop=discard_top,
             drawnCard=drawn_view,
+            drawnBy=draw_holder,
             abilityState=ability_for_viewer,
             racingCard=card_view(s['racing_card'], False) if s['racing_card'] else None,
+            # Zeitleiste am Tisch: der Client zählt lokal flüssig herunter und
+            # synchronisiert sich bei jedem State neu auf diesen Wert.
+            raceSecondsLeft=round(max(0.0, s['race_deadline'] - now), 2) if s['phase'] == 'racing' else 0.0,
+            raceTotalSeconds=RACE_SECONDS,
+            raceMissed=(viewer['id'] in s['race_missed']),
+            raceGive=(dict(
+                racerId=s['race_give']['racer_id'],
+                ownerId=s['race_give']['owner_id'],
+                cardIndex=s['race_give']['card_index'],
+                secondsLeft=round(max(0.0, s['race_give']['deadline'] - now), 1),
+            ) if s.get('race_give') else None),
             endCalledBy=s['end_called_by'],
             finalRoundLeft=s['final_round_left'],
             gameMode=s['game_mode'],
@@ -351,6 +385,8 @@ async def start_game(s):
     s['final_round_left'] = 0
     s['reveal_all'] = False
     s['round_scores'] = {}
+    _clear_race(s)
+    _cancel_race_give(s)
     _cancel_ability_reveal(s)
     _cancel_swap_flight(s)
     for p in s['players']:
@@ -416,7 +452,8 @@ async def handle_call_end(s, pid):
         return
     s['end_called_by'] = pid
     s['final_round_left'] = len(s['players']) - 1
-    await broadcast(s, dict(type='toast', msg=f"{cp['name']} beendet das Spiel!", color='#ff9800'))
+    await broadcast(s, dict(type='toast', msg=f"{cp['name']} beendet das Spiel!", color='#ff9800',
+                            anim={'kind': 'callEnd', 'playerId': pid}))
     await advance_turn(s, count_final=False)
 
 async def handle_draw(s, pid):
@@ -430,7 +467,8 @@ async def handle_draw(s, pid):
         return
     card = s['deck'].pop()
     s['drawn_card'] = card
-    await broadcast(s, dict(type='toast', msg=f"{cp['name']} zieht eine Karte", color='#60a5fa'))
+    await broadcast(s, dict(type='toast', msg=f"{cp['name']} zieht eine Karte", color='#60a5fa',
+                            anim={'kind': 'draw', 'playerId': cp['id']}))
     await send_state(s)
 
 async def handle_keep(s, pid, hand_index):
@@ -449,7 +487,9 @@ async def handle_keep(s, pid, hand_index):
     cp['revealed'].pop(str(hand_index), None)
     s['drawn_card'] = None
     s['discard_pile'].append(replaced)
-    await broadcast(s, dict(type='toast', msg=f"{cp['name']} ersetzt Karte {hand_index + 1}", color='#a78bfa'))
+    await broadcast(s, dict(type='toast', msg=f"{cp['name']} ersetzt Karte {hand_index + 1}", color='#a78bfa',
+                            anim={'kind': 'keep', 'playerId': cp['id'], 'cardIndex': hand_index,
+                                  'card': card_view(replaced, False)}))
     await start_racing(s)
 
 async def handle_discard_drawn(s, pid):
@@ -472,138 +512,249 @@ async def handle_discard_drawn(s, pid):
         s['drawn_card'] = None
         s['discard_pile'].append(card)
         cp = s['players'][s['current_player_index']]
-        await broadcast(s, dict(type='toast', msg=f"{cp['name']} legt eine Karte ab", color='#60a5fa'))
+        await broadcast(s, dict(type='toast', msg=f"{cp['name']} legt eine Karte ab", color='#60a5fa',
+                                anim={'kind': 'deckToDiscard', 'playerId': cp['id'],
+                                      'card': card_view(card, False)}))
         await start_racing(s)
+
+# ── Schnapp-Phase ─────────────────────────────────────────────────────────────
+# Nach jeder abgelegten Karte läuft ein kurzes Fenster, in dem JEDER Spieler auf
+# eine beliebige Karte am Tisch tippen darf – die eigene oder eine gegnerische.
+# Die getippte Karte wird für alle sichtbar aufgedeckt:
+#   Treffer  → sie wandert auf den Ablagestapel, der Schnapper ist am Zug.
+#              War es eine Gegnerkarte, füllt er die entstandene Lücke mit einer
+#              eigenen Karte auf (race_give) – dadurch hat er eine Karte weniger.
+#   Fehlgriff→ die Karte geht zurück an ihren Platz, der Schnapper zieht eine
+#              Strafkarte und ist für den Rest dieses Fensters raus.
+
+# Log-Animationen: jede Meldung im Ereignis-Log trägt optional einen `anim`-
+# Deskriptor. Der Client kann ihn beim Klick auf die Zeile erneut abspielen –
+# deshalb sind es Slot-Referenzen (Spieler + Position), keine Bildschirmwerte.
+def _slot(ref):
+    return {'playerId': ref['player_id'], 'cardIndex': ref['card_index']}
+
+def _swap_anim(c1, c2):
+    return {'kind': 'swap', 'slots': [_slot(c1), _slot(c2)]}
+
+def _reindex_revealed(revealed, removed_index):
+    """Reveal-Map nach dem Entfernen eines Slots neu durchnummerieren."""
+    out = {}
+    for k, v in revealed.items():
+        ki = int(k)
+        if ki < removed_index:
+            out[str(ki)] = v
+        elif ki > removed_index:
+            out[str(ki - 1)] = v
+    return out
+
+def _cancel_race_give(s):
+    if s.get('race_give_task'):
+        s['race_give_task'].cancel()
+    s['race_give_task'] = None
+    s['race_give'] = None
+
+def _clear_race(s):
+    if s.get('racing_task'):
+        s['racing_task'].cancel()
+        s['racing_task'] = None
+    s['racing_card'] = None
+    s['race_deadline'] = 0.0
+    s['race_missed'] = set()
 
 async def start_racing(s):
     s['racing_card'] = s['discard_pile'][-1]
     s['phase'] = 'racing'
+    s['race_missed'] = set()
+    _cancel_race_give(s)
+    s['race_deadline'] = _now() + RACE_SECONDS
     if s['racing_task']:
         s['racing_task'].cancel()
     s['racing_task'] = asyncio.ensure_future(_racing_timer(s))
     await send_state(s)
 
 async def _racing_timer(s):
-    await asyncio.sleep(3)
-    if s['phase'] == 'racing':
-        s['racing_card'] = None
-        s['phase'] = 'playing'
-        s['racing_task'] = None
-        await advance_turn(s)
+    try:
+        await asyncio.sleep(RACE_SECONDS)
+    except asyncio.CancelledError:
+        return
+    if s['phase'] != 'racing':
+        return
+    s['racing_task'] = None
+    card = s['racing_card']
+    _clear_race(s)
+    s['phase'] = 'playing'
+    await broadcast(s, dict(
+        type='toast', msg='Schnapp-Fenster abgelaufen – niemand war schnell genug',
+        color='#64748b',
+        anim={'kind': 'raceTimeout', 'card': card_view(card, False) if card else None},
+    ))
+    await advance_turn(s)
 
-async def handle_race(s, pid, card_index):
+async def handle_race(s, pid, target_pid, card_index):
+    """Ein Schnapp-Versuch auf eine beliebige Karte am Tisch."""
     if s['phase'] != 'racing' or not s['racing_card']:
         return
     p = next((x for x in s['players'] if x['id'] == pid), None)
-    if not p or card_index < 0 or card_index >= len(p['hand']):
+    if not p:
         return
-    card = p['hand'][card_index]
-    if card['value'] == s['racing_card']['value']:
-        if s['racing_task']:
-            s['racing_task'].cancel()
-            s['racing_task'] = None
-        removed = p['hand'].pop(card_index)
-        _forget_uid(s, removed['uid'])
-        new_revealed = {}
-        for k, v in p['revealed'].items():
-            ki = int(k)
-            if ki < card_index:
-                new_revealed[str(ki)] = v
-            elif ki > card_index:
-                new_revealed[str(ki - 1)] = v
-        p['revealed'] = new_revealed
-        s['discard_pile'].append(removed)
-        s['racing_card'] = None
-        s['current_player_index'] = s['players'].index(p)
-        s['phase'] = 'playing'
-        await broadcast(s, dict(type='toast', msg=f"{p['name']} wirft Karte {card_index + 1} ab (gleicher Wert)", color='#4CAF50'))
-        await send_state(s)
-    else:
-        refill_deck(s)
-        if s['deck']:
-            penalty = s['deck'].pop()
-            p['hand'].append(penalty)
-        await broadcast(s, dict(type='toast', msg=f"{p['name']} greift daneben – Strafkarte", color='#f44336'))
-        await send_state(s)
-
-async def handle_reaction_swap(s, pid, target_pid, target_index, my_replacement_index):
-    """Reaction variant: during racing, a player who has previously seen an opponent's
-    card (its uid is in known_cards) may play THAT card onto the discard and hand one
-    of their own cards to the opponent as replacement. Net effect: opponent hand size
-    unchanged (one card swapped), requester hand -1, requester takes the next turn.
-
-    Server is authoritative — the requester's knowledge is validated against
-    known_cards, not trusted from the client."""
-    if s['phase'] != 'racing' or not s['racing_card']:
+    # Ein Versuch pro Spieler und Fenster – sonst könnte man sich blind durch
+    # alle Slots klicken, bis einer passt.
+    if pid in s['race_missed']:
         return
-    p = next((x for x in s['players'] if x['id'] == pid), None)
-    tp = next((x for x in s['players'] if x['id'] == target_pid), None)
-    if not p or not tp or p is tp:
+    owner = p if not target_pid or target_pid == pid else next((x for x in s['players'] if x['id'] == target_pid), None)
+    if not owner or card_index < 0 or card_index >= len(owner['hand']):
         return
-    if target_index < 0 or target_index >= len(tp['hand']):
-        return
-    if my_replacement_index < 0 or my_replacement_index >= len(p['hand']):
-        return
-    taken = tp['hand'][target_index]
-    replacement = p['hand'][my_replacement_index]
-    if not taken or not replacement:
-        return
-    if taken['value'] != s['racing_card']['value']:
-        return
-    # Knowledge check: requester must have observed this specific uid.
-    if taken['uid'] not in p.get('known_cards', {}):
+    card = owner['hand'][card_index]
+    if not card:
         return
 
-    if s['racing_task']:
-        s['racing_task'].cancel()
-        s['racing_task'] = None
+    own = owner['id'] == pid
+    match = card['value'] == s['racing_card']['value']
+    where = 'bei sich' if own else f"bei {owner['name']}"
 
-    # Snapshot movement for animation BEFORE mutating hands, otherwise the client
-    # would compute stale source coordinates.
-    anim = dict(
-        type='reaction_swap_anim',
-        playedCard={
-            'playerId': target_pid, 'cardIndex': target_index,
-            'uid': taken['uid'], 'dest': 'discard',
-        },
-        replacementCard={
-            'playerId': pid, 'cardIndex': my_replacement_index,
-            'uid': replacement['uid'],
-            'destPlayerId': target_pid, 'destCardIndex': target_index,
-        },
+    # Wird VOR der Mutation gebaut: der Client braucht den Slot, an dem die Karte
+    # in diesem Moment noch liegt, um die Aufdeck-Animation dort zu starten.
+    reveal = dict(
+        type='race_reveal', racerId=pid, racerName=p['name'],
+        ownerId=owner['id'], ownerName=owner['name'], cardIndex=card_index,
+        uid=card['uid'], card=card_view(card, False), match=match, own=own,
+        revealSeconds=RACE_REVEAL_SECONDS,
     )
 
-    # Target loses the played card, gains the replacement in the SAME slot. Their
-    # reveal for that slot is invalidated (new card, not the same identity).
-    tp['hand'][target_index] = replacement
-    tp['revealed'].pop(str(target_index), None)
+    if not match:
+        s['race_missed'].add(pid)
+        refill_deck(s)
+        penalty_index = None
+        if s['deck']:
+            p['hand'].append(s['deck'].pop())
+            penalty_index = len(p['hand']) - 1
+        reveal['penalty'] = {'playerId': pid, 'cardIndex': penalty_index}
+        await broadcast(s, reveal)
+        await broadcast(s, dict(
+            type='toast',
+            msg=f"{p['name']} deckt {where} Karte {card_index + 1} auf: {card['name']} ({card['value']}) – kein Treffer, Strafkarte",
+            color='#f44336',
+            anim={'kind': 'raceMiss', 'racerId': pid, 'ownerId': owner['id'],
+                  'cardIndex': card_index, 'card': card_view(card, False),
+                  'penaltyIndex': penalty_index},
+        ))
+        await send_state(s)
+        return
 
-    # Requester's hand shrinks by one. Reindex the reveal map like handle_race does.
-    p['hand'].pop(my_replacement_index)
-    new_revealed = {}
-    for k, v in p['revealed'].items():
-        ki = int(k)
-        if ki < my_replacement_index:
-            new_revealed[str(ki)] = v
-        elif ki > my_replacement_index:
-            new_revealed[str(ki - 1)] = v
-    p['revealed'] = new_revealed
+    # ── Treffer: Fenster sofort schließen ────────────────────────────────────
+    _clear_race(s)
+    _forget_uid(s, card['uid'])
+    s['discard_pile'].append(card)
+    await broadcast(s, reveal)
 
-    # The taken card is now public on discard; forget its uid across the table.
-    # The replacement card's uid stays in known_cards for whoever already knew it
-    # (typically the requester) — knowledge follows the card automatically.
-    _forget_uid(s, taken['uid'])
-    s['discard_pile'].append(taken)
+    if own:
+        owner['hand'].pop(card_index)
+        owner['revealed'] = _reindex_revealed(owner['revealed'], card_index)
+        s['current_player_index'] = s['players'].index(p)
+        s['phase'] = 'playing'
+        await broadcast(s, dict(
+            type='toast',
+            msg=f"{p['name']} schnappt Karte {card_index + 1}: {card['name']} ({card['value']}) – Treffer, eine Karte weniger und am Zug",
+            color='#4CAF50',
+            anim={'kind': 'raceHit', 'racerId': pid, 'ownerId': owner['id'],
+                  'cardIndex': card_index, 'card': card_view(card, False), 'own': True},
+        ))
+        await send_state(s)
+        return
 
-    s['racing_card'] = None
+    # Gegnerkarte getroffen: der Slot bleibt als Lücke stehen und wird gleich
+    # mit einer Karte des Gewinners aufgefüllt. Netto verliert der Gewinner die
+    # Karte, der Gegner behält seine Handgröße.
+    owner['hand'][card_index] = None
+    owner['revealed'].pop(str(card_index), None)
+
+    await broadcast(s, dict(
+        type='toast',
+        msg=f"{p['name']} schnappt Karte {card_index + 1} von {owner['name']}: {card['name']} ({card['value']}) – Treffer",
+        color='#9C27B0',
+        anim={'kind': 'raceHit', 'racerId': pid, 'ownerId': owner['id'],
+              'cardIndex': card_index, 'card': card_view(card, False), 'own': False},
+    ))
+
+    if not any(p['hand']):
+        # Nichts abzugeben – die Lücke fällt ersatzlos weg.
+        owner['hand'].pop(card_index)
+        owner['revealed'] = _reindex_revealed(owner['revealed'], card_index)
+        s['current_player_index'] = s['players'].index(p)
+        s['phase'] = 'playing'
+        await send_state(s)
+        return
+
+    s['phase'] = 'race_give'
+    s['race_give'] = dict(racer_id=pid, owner_id=owner['id'], card_index=card_index,
+                          deadline=_now() + RACE_GIVE_SECONDS)
+    s['race_give_task'] = asyncio.ensure_future(_race_give_timer(s, s['race_give']))
+    await send_state(s)
+
+async def _race_give_timer(s, gv):
+    try:
+        await asyncio.sleep(RACE_GIVE_SECONDS)
+    except asyncio.CancelledError:
+        return
+    if s['phase'] != 'race_give' or s.get('race_give') is not gv:
+        return
+    s['race_give_task'] = None
+    p = next((x for x in s['players'] if x['id'] == gv['racer_id']), None)
+    if not p:
+        return
+    # Zeit abgelaufen: der Server gibt die letzte Karte ab, damit das Spiel
+    # nicht an einem abgelenkten Gewinner hängen bleibt.
+    filled = [i for i, c in enumerate(p['hand']) if c]
+    if not filled:
+        return
+    await _resolve_race_give(s, filled[-1], auto=True)
+
+async def handle_race_give(s, pid, hand_index):
+    if s['phase'] != 'race_give' or not s.get('race_give'):
+        return
+    if s['race_give']['racer_id'] != pid:
+        return
+    p = next((x for x in s['players'] if x['id'] == pid), None)
+    if not p or hand_index < 0 or hand_index >= len(p['hand']) or not p['hand'][hand_index]:
+        return
+    await _resolve_race_give(s, hand_index)
+
+async def _resolve_race_give(s, hand_index, auto=False):
+    gv = s['race_give']
+    if not gv:
+        return
+    p = next((x for x in s['players'] if x['id'] == gv['racer_id']), None)
+    owner = next((x for x in s['players'] if x['id'] == gv['owner_id']), None)
+    slot = gv['card_index']
+    if not p or not owner or hand_index >= len(p['hand']) or not p['hand'][hand_index]:
+        return
+    given = p['hand'][hand_index]
+
+    # Vor der Mutation aufnehmen – der Client braucht den Startslot.
+    anim = dict(
+        type='race_give_anim',
+        fromPlayerId=p['id'], fromCardIndex=hand_index,
+        toPlayerId=owner['id'], toCardIndex=slot, uid=given['uid'],
+    )
+
+    # Die abgegebene Karte behält ihre uid, also folgt das Wissen darüber
+    # automatisch – der Gewinner weiß weiterhin, was der Gegner jetzt hält.
+    owner['hand'][slot] = given
+    owner['revealed'].pop(str(slot), None)
+    p['hand'].pop(hand_index)
+    p['revealed'] = _reindex_revealed(p['revealed'], hand_index)
+
+    _cancel_race_give(s)
     s['current_player_index'] = s['players'].index(p)
     s['phase'] = 'playing'
 
     await broadcast(s, anim)
     await broadcast(s, dict(
         type='toast',
-        msg=f"{p['name']} schnappt sich Karte {target_index + 1} von {tp['name']}",
+        msg=f"{p['name']} gibt Karte {hand_index + 1} an {owner['name']} ab{' (automatisch)' if auto else ''} – am Zug mit einer Karte weniger",
         color='#9C27B0',
+        anim={'kind': 'give', 'fromPlayerId': p['id'], 'fromCardIndex': hand_index,
+              'toPlayerId': owner['id'], 'toCardIndex': slot},
     ))
     await send_state(s)
 
@@ -656,7 +807,8 @@ async def handle_ability(s, pid, data):
             a['selected_cards'] = [{'player_id': pid, 'card_index': idx}]
             a['waiting_for_selection'] = False
             start_ability_reveal(s, a)
-            await broadcast(s, dict(type='toast', msg=f"{p['name']} sieht Karte {idx + 1}", color='#f472b6'))
+            await broadcast(s, dict(type='toast', msg=f"{p['name']} sieht Karte {idx + 1}", color='#f472b6',
+                                    anim={'kind': 'peek', 'slots': [{'playerId': p['id'], 'cardIndex': idx}]}))
             await send_state(s)
         else:
             # Reveal läuft: nur explizites Fertig beendet vorzeitig, alles andere
@@ -682,7 +834,8 @@ async def handle_ability(s, pid, data):
             a['selected_cards'] = [{'player_id': tp['id'], 'card_index': idx}]
             a['waiting_for_selection'] = False
             start_ability_reveal(s, a)
-            await broadcast(s, dict(type='toast', msg=f"{activator['name']} sieht Karte {idx + 1} von {tp['name']}", color='#f472b6'))
+            await broadcast(s, dict(type='toast', msg=f"{activator['name']} sieht Karte {idx + 1} von {tp['name']}", color='#f472b6',
+                                    anim={'kind': 'peek', 'slots': [{'playerId': tp['id'], 'cardIndex': idx}]}))
             await send_state(s)
         else:
             if done_flag:
@@ -719,6 +872,7 @@ async def handle_ability(s, pid, data):
                     type='toast',
                     msg=f"{activator['name']} tauscht Karte {c1['card_index']+1} von {p1n} mit Karte {c2['card_index']+1} von {p2n}",
                     color='#9C27B0',
+                    anim=_swap_anim(c1, c2),
                 ))
                 await start_swap_flight(s, flight, 'swap')
 
@@ -754,6 +908,7 @@ async def handle_ability(s, pid, data):
                     type='toast',
                     msg=f"{activator['name']} sieht Karte {c1['card_index']+1} von {p1n} und Karte {c2['card_index']+1} von {p2n}",
                     color='#f472b6',
+                    anim={'kind': 'peek', 'slots': [_slot(c1), _slot(c2)]},
                 ))
                 await send_state(s)
         elif a['step'] == 'decide_swap':
@@ -774,11 +929,13 @@ async def handle_ability(s, pid, data):
                     type='toast',
                     msg=f"{activator['name']} tauscht Karte {c1['card_index']+1} von {p1n} mit Karte {c2['card_index']+1} von {p2n}",
                     color='#9C27B0',
+                    anim=_swap_anim(c1, c2),
                 ))
             else:
                 # Auch "nicht getauscht" ist öffentliche Information – sonst wüssten
                 # die anderen nicht, ob sich etwas verändert hat.
-                await broadcast(s, dict(type='toast', msg=f"{activator['name']} tauscht nicht", color='#64748b'))
+                await broadcast(s, dict(type='toast', msg=f"{activator['name']} tauscht nicht", color='#64748b',
+                                        anim={'kind': 'stay', 'slots': [_slot(c1), _slot(c2)]}))
             _forget_uid(s, a['drawn_card']['uid'])
             s['discard_pile'].append(a['drawn_card'])
             s['drawn_card'] = None
@@ -806,14 +963,16 @@ async def advance_turn(s, count_final=True):
 
 async def end_round(s):
     s['phase'] = 'scoring'
-    if s['racing_task']:
-        s['racing_task'].cancel()
-        s['racing_task'] = None
+    _clear_race(s)
+    _cancel_race_give(s)
     _cancel_ability_reveal(s)
     _cancel_swap_flight(s)
     for p in s['players']:
         _cancel_reveal(p)
-    s['racing_card'] = None
+    # Offene Schnapp-Lücken (Gewinner hat nie abgegeben) verschwinden ersatzlos,
+    # sonst würde die Wertung über None-Slots stolpern.
+    for p in s['players']:
+        p['hand'] = [c for c in p['hand'] if c]
     s['drawn_card'] = None
     s['ability_state'] = None
 
@@ -828,22 +987,24 @@ async def end_round(s):
             'penalties': []
         }
 
+    # Strafpunkte kann ausschliesslich der Spieler bekommen, der die Runde beendet
+    # hat - und hoechstens einmal 30 Punkte pro Runde (die Gruende stapeln nicht).
+    # Massgeblich ist nur seine Rundenpunktzahl auf der Hand, nie die Gesamtwertung.
     min_score = min(scores.values())
     caller = s['end_called_by']
-    if caller and scores.get(caller, 0) != min_score:
-        penalty = 30
-        scores[caller] = scores.get(caller, 0) + penalty
-        score_breakdown[caller]['penalties'].append({
-            'amount': penalty,
-            'reason': 'Spiel beendet aber nicht gewonnen: +30 Strafpunkte'
-        })
-    for p in s['players']:
-        if p['id'] != caller and scores.get(p['id'], 0) > 7:
+    if caller and caller in scores:
+        caller_score = scores[caller]
+        reasons = []
+        if caller_score != min_score:
+            reasons.append('nicht gewonnen')
+        if caller_score > 7:
+            reasons.append('mehr als 7 Punkte auf der Hand')
+        if reasons:
             penalty = 30
-            scores[p['id']] = scores.get(p['id'], 0) + penalty
-            score_breakdown[p['id']]['penalties'].append({
+            scores[caller] = caller_score + penalty
+            score_breakdown[caller]['penalties'].append({
                 'amount': penalty,
-                'reason': 'Mehr als 7 Punkte in einer verlorenen Runde: +30 Strafpunkte'
+                'reason': 'Spiel beendet, aber ' + ' und '.join(reasons) + ': +30 Strafpunkte'
             })
 
     s['round_scores'] = scores
@@ -953,12 +1114,9 @@ async def dispatch(ws, msg):
     elif t == 'discard_drawn':
         await handle_discard_drawn(s, pid)
     elif t == 'race':
-        await handle_race(s, pid, gi('cardIndex'))
-    elif t == 'reaction_swap':
-        target_pid = g('targetPlayerId', 'target_player_id')
-        target_idx = gi('targetCardIndex')
-        my_idx = gi('myReplacementIndex')
-        await handle_reaction_swap(s, pid, target_pid, target_idx, my_idx)
+        await handle_race(s, pid, g('targetPlayerId', 'target_player_id'), gi('cardIndex'))
+    elif t == 'race_give':
+        await handle_race_give(s, pid, gi('handIndex'))
     elif t == 'ability':
         await handle_ability(s, pid, msg)
     elif t == 'next_round':

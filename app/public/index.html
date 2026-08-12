@@ -108,10 +108,25 @@ select option { background: #0b0d14; }
 
 /* Opponents zone */
 #opponents { display: flex; justify-content: center; gap: 20px; padding: 10px 16px; flex-shrink: 0; flex-wrap: wrap; }
-.opponent-zone { display: flex; flex-direction: column; align-items: center; gap: 8px; }
-.opp-name { font-size: 10px; font-weight: 400; color: var(--ink-2); text-align: center; text-transform: uppercase; letter-spacing: .2em; }
+.opponent-zone { display: flex; flex-direction: column; align-items: center; gap: 8px; position: relative; transition: transform .35s ease; }
+.opp-name { font-size: 10px; font-weight: 400; color: var(--ink-2); text-align: center; text-transform: uppercase; letter-spacing: .2em; transition: color .35s ease; }
 .opp-name.active { color: var(--brand-lift); }
-.opp-hand { display: flex; gap: 4px; }
+.opp-hand { display: flex; gap: 4px; transition: transform .35s ease, box-shadow .35s ease; border-radius: 10px; }
+
+/* Aktiver Spieler – dezenter Lichtschein ("Glow-Pool") unter Karten + Name.
+   Gilt für Gegner und die eigene Zone, damit "wer ist am Zug" sofort lesbar ist. */
+.turn-glow::before {
+  content: ''; position: absolute; left: 50%; top: 50%;
+  width: 128%; height: 150%; transform: translate(-50%, -50%);
+  background: radial-gradient(ellipse at center, rgba(115,123,196,.32) 0%, rgba(115,123,196,.13) 42%, transparent 72%);
+  border-radius: 50%; filter: blur(3px); z-index: 0; pointer-events: none;
+}
+.opponent-zone.turn-glow { transform: translateY(1px); }
+.opponent-zone.turn-glow > * { position: relative; z-index: 1; }
+.opponent-zone.turn-glow .opp-hand {
+  transform: scale(1.04);
+  box-shadow: 0 8px 30px rgba(115,123,196,.26);
+}
 .opp-card { width: 75px; height: 105px; border-radius: 8px; position: relative; }
 
 /* Center zone */
@@ -120,7 +135,10 @@ select option { background: #0b0d14; }
 .pile-label { font-size: 9px; color: var(--ink-3); text-transform: uppercase; letter-spacing: .28em; }
 
 /* My zone */
-#myzone { padding: 10px 16px 16px; flex-shrink: 0; }
+#myzone { padding: 10px 16px 16px; flex-shrink: 0; position: relative; transition: transform .35s ease; }
+#myzone.turn-glow > * { position: relative; z-index: 1; }
+#myzone.turn-glow .my-name-row .my-name { color: var(--brand-lift); transition: color .35s ease; }
+#myzone.turn-glow::before { width: min(56%, 620px); height: 128%; }
 .my-label { font-size: 11px; color: var(--ink-3); text-align: center; margin-bottom: 8px; }
 .my-name-row { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 8px; }
 .my-name { font-size: 13px; font-weight: 400; text-transform: uppercase; letter-spacing: .2em; }
@@ -138,7 +156,10 @@ select option { background: #0b0d14; }
 .card.glow-red { box-shadow: 0 0 0 2px #ef4444, 0 4px 20px rgba(239,68,68,.4); }
 
 .card-inner { width: 100%; height: 100%; border-radius: var(--radius); overflow: hidden; position: relative; background: #1e293b; border: 1.5px solid rgba(255,255,255,.1); }
-.card-inner img { width: 100%; height: 70%; object-fit: cover; display: block; }
+/* Der Ausschnitt sitzt bewusst oberhalb der Mitte – die Gesichter liegen bei
+   fast allen Motiven im oberen Drittel. Pro Karte feinjustiert in
+   CARD_IMAGE_FOCUS (inline object-position aus buildCardInner). */
+.card-inner img { width: 100%; height: 70%; object-fit: cover; object-position: 50% 30%; display: block; }
 .card-info { padding: 4px 5px; }
 .card-name { font-size: 8px; font-weight: 700; color: rgba(255,255,255,.9); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .card-value { font-size: 18px; font-weight: 900; color: #fff; text-align: center; line-height: 1.1; }
@@ -367,6 +388,40 @@ body[data-cardback="karo"] .card-back::after { border-color: rgba(120,200,160,.2
   100% { opacity: 0; }
 }
 
+/* Gezogene Karte am Tisch: gleitet vom Nachziehstapel zum Spieler am Zug und
+   bleibt dort liegen, solange dieser überlegt. Für alle sichtbar – aber immer als
+   Rückseite, der Wert bleibt beim Ziehenden. */
+.draw-hold { position: fixed; z-index: 46; pointer-events: none; will-change: transform; }
+.draw-hold-card {
+  width: 100%; height: 100%; border-radius: var(--radius);
+  filter: drop-shadow(0 16px 30px rgba(0,0,0,.6)) drop-shadow(0 0 16px rgba(115,123,196,.5));
+}
+.draw-hold-card .card-back { width: 100%; height: 100%; }
+/* Erst wenn die Karte angekommen ist: leichtes Wiegen in der Hand + Hinweis. */
+.draw-hold.is-held .draw-hold-card { animation: drawHoldThink 3.2s ease-in-out infinite; }
+@keyframes drawHoldThink {
+  0%   { transform: translateY(0) rotate(-3.5deg); }
+  50%  { transform: translateY(-8px) rotate(3.5deg); }
+  100% { transform: translateY(0) rotate(-3.5deg); }
+}
+/* Dass überlegt wird, steht am Namen – dort sitzt schon der übrige Spielerstatus.
+   Die Karte selbst bleibt damit ein reines Objekt ohne Beschriftung. */
+.opp-thinking { color: var(--brand-lift); margin-left: .5em; }
+.opp-thinking i {
+  display: inline-block; width: 3px; height: 3px; margin-left: 2px;
+  border-radius: 50%; background: currentColor; vertical-align: middle; opacity: .25;
+  animation: drawHoldDot 1.2s ease-in-out infinite;
+}
+.opp-thinking i:nth-of-type(2) { animation-delay: .2s; }
+.opp-thinking i:nth-of-type(3) { animation-delay: .4s; }
+@keyframes drawHoldDot { 0%, 100% { opacity: .25; } 50% { opacity: 1; } }
+/* Die Karte liegt oft mehrere Sekunden da – Dauerbewegung wäre hier besonders
+   störend. Sie bleibt sichtbar, nur eben still. */
+@media (prefers-reduced-motion: reduce) {
+  .draw-hold.is-held .draw-hold-card { animation: none; transform: rotate(-3.5deg); }
+  .opp-thinking i { animation: none; opacity: .7; }
+}
+
 /* Hund ohne Tausch: die Karten heben kurz ab und legen sich zurück */
 @keyframes stayBounce {
   0%   { transform: translateY(0) rotate(0deg); }
@@ -382,29 +437,82 @@ body[data-cardback="karo"] .card-back::after { border-color: rgba(120,200,160,.2
   text-shadow: 0 0 10px rgba(0,0,0,.9); pointer-events: none; z-index: 3;
 }
 
-/* Racing */
-#racing-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.9); display: none; align-items: center; justify-content: flex-start; z-index: 90; flex-direction: column; gap: 12px; padding: 24px 20px; overflow-y: auto; }
-#racing-overlay h2 { font-size: 24px; font-weight: 900; color: #fff; text-align: center; }
-#racing-card-display { display: flex; justify-content: center; }
-#racing-timer-bar { width: 300px; height: 8px; background: rgba(255,255,255,.2); border-radius: 4px; overflow: hidden; }
-#racing-timer-fill { height: 100%; background: linear-gradient(90deg, #22c55e, #84cc16); border-radius: 4px; transition: width linear; }
-.racing-hand-label, .racing-known-label { font-size: 11px; color: rgba(255,255,255,.55); text-transform: uppercase; letter-spacing: .22em; text-align: center; margin-top: 6px; }
-#my-racing-hand { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
-.racing-my-slot { display: flex; flex-direction: column; align-items: center; gap: 6px; }
-.racing-my-slot .slot-lbl { font-size: 11px; color: rgba(255,255,255,.5); text-transform: uppercase; letter-spacing: .18em; }
-.racing-my-card { cursor: pointer; transition: transform .15s ease, box-shadow .15s ease; border-radius: var(--radius); }
-.racing-my-card:hover { transform: translateY(-4px); box-shadow: 0 8px 20px rgba(115,123,196,.45); }
-#racing-known-section { display: flex; flex-direction: column; align-items: center; gap: 8px; }
-#racing-known-section.hidden { display: none; }
-#racing-known-cards { display: flex; gap: 22px; justify-content: center; flex-wrap: wrap; }
-.racing-known-owner { display: flex; flex-direction: column; align-items: center; gap: 8px; }
-.racing-known-owner .owner-name { font-size: 13px; font-weight: 700; color: #ce93d8; text-transform: uppercase; letter-spacing: .14em; }
-.racing-known-owner .owner-cards { display: flex; gap: 14px; }
-.racing-known-card { cursor: pointer; transition: transform .15s ease, box-shadow .15s ease; border-radius: var(--radius); outline: 2px solid #9C27B0; outline-offset: 3px; }
-.racing-known-card:hover { transform: translateY(-4px); box-shadow: 0 8px 22px rgba(156,39,176,.55); }
-.racing-known-card.selected { outline: 3px solid #f0abfc; box-shadow: 0 0 24px rgba(240,171,252,.7); }
-#racing-overlay p { color: rgba(255,255,255,.65); text-align: center; font-size: 14px; max-width: 620px; }
-#racing-overlay p.reaction-hint { color: #f0abfc; font-weight: 600; }
+/* Schnapp-Leiste: ersetzt das alte Vollbild-Overlay. Sitzt zwischen Log und
+   Stapeln, damit der Tisch während des Countdowns sichtbar (und klickbar) bleibt. */
+#race-bar {
+  width: min(560px, calc(100% - 32px));
+  margin: 2px auto 10px;
+  padding: 10px 14px 12px;
+  flex-shrink: 0;
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(34,197,94,.14), rgba(0,0,0,.45));
+  border: 1px solid rgba(34,197,94,.45);
+  box-shadow: 0 0 0 1px rgba(0,0,0,.4), 0 6px 22px rgba(34,197,94,.18);
+  animation: raceBarIn .28s ease;
+}
+#race-bar.hidden { display: none; }
+#race-bar.is-give { background: linear-gradient(180deg, rgba(156,39,176,.18), rgba(0,0,0,.45)); border-color: rgba(206,147,216,.55); box-shadow: 0 0 0 1px rgba(0,0,0,.4), 0 6px 22px rgba(156,39,176,.22); }
+#race-bar.is-out  { background: linear-gradient(180deg, rgba(244,67,54,.14), rgba(0,0,0,.45)); border-color: rgba(244,67,54,.45); box-shadow: none; }
+@keyframes raceBarIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+
+.race-head { display: flex; align-items: center; gap: 10px; }
+.race-icon { font-size: 18px; line-height: 1; animation: raceIcon .9s ease-in-out infinite; }
+@keyframes raceIcon { 0%,100% { transform: scale(1); } 50% { transform: scale(1.22); } }
+#race-bar.is-out .race-icon, #race-bar.is-give .race-icon { animation: none; }
+.race-title { font-size: 13px; font-weight: 900; letter-spacing: .22em; text-transform: uppercase; color: #fff; }
+.race-value {
+  margin-left: 2px; padding: 2px 9px; border-radius: 999px;
+  font-size: 13px; font-weight: 900; font-variant-numeric: tabular-nums;
+  background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.22); color: #fff;
+}
+.race-secs { margin-left: auto; font-size: 17px; font-weight: 900; font-variant-numeric: tabular-nums; color: #86efac; }
+#race-bar.is-give .race-secs { color: #f0abfc; }
+#race-bar.is-out .race-secs { color: rgba(255,255,255,.35); }
+.race-sub { margin-top: 3px; font-size: 12px; color: rgba(255,255,255,.6); }
+.race-track { margin-top: 8px; height: 7px; border-radius: 4px; background: rgba(255,255,255,.14); overflow: hidden; }
+.race-fill { height: 100%; width: 100%; border-radius: 4px; background: linear-gradient(90deg, #22c55e, #84cc16); }
+.race-fill.warn { background: linear-gradient(90deg, #f59e0b, #f97316); }
+.race-fill.crit { background: linear-gradient(90deg, #ef4444, #f97316); }
+#race-bar.is-give .race-fill { background: linear-gradient(90deg, #9C27B0, #f0abfc); }
+
+/* Anfassbare Tischkarten während des Schnapp-Fensters */
+@keyframes raceTargetPulse {
+  0%,100% { box-shadow: 0 0 0 1px rgba(34,197,94,.45); }
+  50%     { box-shadow: 0 0 12px 3px rgba(34,197,94,.5); }
+}
+.race-target { cursor: pointer; border-radius: var(--radius); outline: 2px solid rgba(34,197,94,.5); outline-offset: -2px; animation: raceTargetPulse 1.3s ease-in-out infinite; }
+.race-target:hover { outline-color: #86efac; transform: translateY(-3px); transition: transform .12s ease; }
+.race-target.known { outline-color: rgba(240,171,252,.85); }
+.give-source { cursor: pointer; border-radius: var(--radius); outline: 2px solid rgba(206,147,216,.75); outline-offset: -2px; animation: tblSelPulse 1.3s ease-in-out infinite; }
+.give-source:hover { transform: translateY(-3px); transition: transform .12s ease; }
+
+/* Lücke im Gegner-Blatt, solange der Gewinner seine Ersatzkarte noch nicht abgegeben hat */
+.slot-empty { background: transparent !important; border: 2px dashed rgba(206,147,216,.7) !important; box-shadow: none !important; }
+.slot-empty::after { content: '?'; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); font-size: 18px; font-weight: 900; color: rgba(206,147,216,.8); }
+
+/* Schnapp-Animationen.
+   Die Drehung läuft bewusst als 2D-scaleX statt als rotateY/preserve-3d: der
+   Glow-`filter` auf dem Container flacht 3D-Kontexte ab, und der Ablauf wird per
+   Web Animations API gesteuert (rAF wird in Hintergrund-Tabs gedrosselt). */
+.race-flip { position: fixed; z-index: 210; pointer-events: none; }
+.race-flip .rf-inner { position: relative; width: 100%; height: 100%; will-change: transform; }
+.race-flip .rf-face { position: absolute; inset: 0; border-radius: var(--radius); overflow: hidden; }
+.race-flip.hit  { filter: drop-shadow(0 0 16px rgba(76,175,80,.85)); }
+.race-flip.miss { filter: drop-shadow(0 0 16px rgba(244,67,54,.85)); }
+.race-flip .rf-verdict {
+  position: absolute; left: 50%; top: -14px; transform: translateX(-50%);
+  padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 900;
+  letter-spacing: .16em; text-transform: uppercase; white-space: nowrap;
+  opacity: 0; animation: verdictIn .3s ease .5s forwards;
+}
+.race-flip.hit  .rf-verdict { background: #4CAF50; color: #04120a; }
+.race-flip.miss .rf-verdict { background: #f44336; color: #fff; }
+@keyframes verdictIn { from { opacity: 0; transform: translate(-50%,6px); } to { opacity: 1; transform: translate(-50%,0); } }
+@keyframes raceShake {
+  0%,100% { transform: translateX(0); } 20% { transform: translateX(-7px) rotate(-2deg); }
+  45% { transform: translateX(6px) rotate(2deg); } 70% { transform: translateX(-4px); }
+}
+.card-penalty { animation: raceShake .5s ease; }
 
 /* Scoring */
 #scoring-modal .score-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,.08); }
@@ -454,6 +562,12 @@ body[data-cardback="karo"] .card-back::after { border-color: rgba(120,200,160,.2
 .log-line .log-msg  { color: rgba(255,255,255,.92); }
 .log-line.is-new { background: linear-gradient(90deg, rgba(255,255,255,.07), transparent 70%); }
 @keyframes logIn { from { opacity:0; transform: translateY(-4px); } to { opacity:1; transform:none; } }
+/* Wiederholbare Zeilen: Klick spielt die Animation des Ereignisses erneut ab. */
+.log-line.replayable { cursor: pointer; border-radius: 0 6px 6px 0; transition: background .12s ease; }
+.log-line.replayable:hover { background: rgba(255,255,255,.08); }
+.log-line .log-replay { margin-left: auto; flex-shrink: 0; font-size: 11px; color: var(--ink-3); opacity: 0; transition: opacity .12s ease; }
+.log-line.replayable:hover .log-replay { opacity: .9; }
+.log-line.replaying { background: rgba(115,123,196,.18); }
 .log-empty { color: var(--ink-3); font-size: 13px; line-height: 26px; padding-left: 8px; font-style: italic; }
 
 /* Status dots */
@@ -519,7 +633,10 @@ body[data-cardback="karo"] .card-back::after { border-color: rgba(120,200,160,.2
 
 .tcg-card-header {
   position: relative;
-  padding: 8px 10px;
+  /* Schlanker als früher (8px/38x44-Hex): der Kopf war real 61px hoch und hat
+     auf der 190px-Karte das Bildfeld auf ~38px zusammengedrückt. Jetzt ~47px,
+     der gewonnene Platz geht an das Bild – siehe HEADER_H in buildCardInner. */
+  padding: 5px 9px;
   background: rgba(0,0,0,.35);
   border-bottom: 1px solid rgba(115,123,196,.32);
   display: flex;
@@ -548,14 +665,14 @@ body[data-cardback="karo"] .card-back::after { border-color: rgba(120,200,160,.2
 }
 
 .tcg-card-value-hex {
-  width: 38px;
-  height: 44px;
+  width: 31px;
+  height: 36px;
   background: linear-gradient(160deg, #737bc4 0%, #4b5080 100%);
   clip-path: polygon(30% 0%, 70% 0%, 100% 50%, 70% 100%, 30% 100%, 0% 50%);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 20px;
+  font-size: 16px;
   font-weight: 500;
   color: #fff;
   box-shadow: 0 4px 14px rgba(115,123,196,.5);
@@ -573,12 +690,19 @@ body[data-cardback="karo"] .card-back::after { border-color: rgba(120,200,160,.2
   overflow: hidden;
   font-size: 10px;
   color: rgba(255,255,255,.3);
+  /* Das Bild ist der einzige Flex-Teil ohne feste Mindestgröße gewesen und wurde
+     deshalb als Erstes zusammengestaucht. Es behält jetzt die Höhe, die
+     buildCardInner ausrechnet. Das Peek-Modal überschreibt das weiter unten
+     bewusst mit `flex: 1 1 auto`. */
+  flex-shrink: 0;
 }
 
 .tcg-card-image img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  /* Fallback, falls das inline object-position aus buildCardInner mal fehlt. */
+  object-position: 50% 30%;
 }
 
 .tcg-card-info {
@@ -591,6 +715,10 @@ body[data-cardback="karo"] .card-back::after { border-color: rgba(120,200,160,.2
   flex-grow: 1;
   gap: 4px;
   color: rgba(255,255,255,.85);
+  /* Auf den kleinen Karten passt der Fähigkeitstext nicht komplett – er lief
+     bisher unten aus der Karte heraus. Lieber sauber abschneiden; den vollen
+     Text gibt es auf den großen Karten (Ablage, Peek-/Ability-Modal). */
+  overflow: hidden;
 }
 
 .tcg-ability-label {
@@ -752,6 +880,19 @@ body[data-cardback="karo"] .card-back::after { border-color: rgba(120,200,160,.2
   <!-- Ereignis-Log: persistente Meldungen (Züge, Fähigkeiten, Karma-Rufe) statt kurzer Toasts -->
   <div id="log-panel"></div>
 
+  <!-- Schnapp-Fenster: Countdown + Zeitleiste direkt über den Stapeln.
+       Während sie läuft, ist jede Karte am Tisch anklickbar. -->
+  <div id="race-bar" class="hidden">
+    <div class="race-head">
+      <span class="race-icon">⚡</span>
+      <span class="race-title" id="race-title">Schnapp</span>
+      <span class="race-value" id="race-value"></span>
+      <span class="race-secs" id="race-secs">0.0</span>
+    </div>
+    <div class="race-sub" id="race-sub"></div>
+    <div class="race-track"><div class="race-fill" id="race-fill"></div></div>
+  </div>
+
   <div id="center">
     <div class="pile-area">
       <div class="pile-label">Nachziehstapel</div>
@@ -817,21 +958,6 @@ body[data-cardback="karo"] .card-back::after { border-color: rgba(120,200,160,.2
   </div>
 </div>
 
-<!-- RACING OVERLAY -->
-<div id="racing-overlay">
-  <h2>SCHNELL! Gleicher Wert?</h2>
-  <p id="racing-hint">Lege eine Karte mit demselben Wert ab!</p>
-  <div id="racing-card-display"></div>
-  <div id="racing-timer-bar"><div id="racing-timer-fill" style="width:100%"></div></div>
-  <div class="racing-hand-label">Deine Hand</div>
-  <div id="my-racing-hand"></div>
-  <div id="racing-known-section" class="hidden">
-    <div class="racing-known-label">Oder gemerkte gegnerische Karte:</div>
-    <div id="racing-known-cards"></div>
-  </div>
-  <button class="btn btn-outline" id="racing-cancel-btn" onclick="cancelReactionOrClose()" style="margin-top:10px">Kein Match</button>
-</div>
-
 <!-- SCORING MODAL -->
 <div class="overlay hidden" id="scoring-overlay">
   <div class="modal" id="scoring-modal">
@@ -871,7 +997,7 @@ body[data-cardback="karo"] .card-back::after { border-color: rgba(120,200,160,.2
         <li><strong>Entscheide dich:</strong>
           <ul style="margin-top:4px">
             <li>👉 <strong>Ersetze eine deiner Karten</strong> mit der gezogenen Karte (die alte Karte geht auf den Ablagestapel)</li>
-            <li>👉 <strong>Lege die gezogene Karte ab</strong> (kehre zum vorherigen Zustand zurück)</li>
+            <li>👉 <strong>Lege die gezogene Karte ab & aktiviere ihre Fähigkeit</strong></li>
           </ul>
         </li>
         <li><strong>Dein Zug endet</strong> – der nächste Spieler ist an der Reihe</li>
@@ -895,8 +1021,107 @@ body[data-cardback="karo"] .card-back::after { border-color: rgba(120,200,160,.2
     </div>
 
     <div style="margin-top:16px">
-      <h3 style="font-size:15px;color:#737bc4;margin-bottom:8px">🏃 Racing – Schnell reagieren!</h3>
-      <p style="font-size:13px;line-height:1.6">Wenn eine Karte mit gleichem Wert wie die oberste Karte des Ablagestapels gespielt wird, kann jeder Spieler sofort eine Karte mit demselben Wert ablegen – wer es schafft, gewinnt den Stapel!</p>
+      <h3 style="font-size:15px;color:#737bc4;margin-bottom:8px">🎴 Alle Karten – Werte & Fähigkeiten</h3>
+      <p style="font-size:12px;line-height:1.6;margin-bottom:12px;color:rgba(255,255,255,.7)">Hier ist eine vollständige Übersicht aller Karten im Spiel:</p>
+      <div style="overflow-x:auto">
+        <table style="width:100%;font-size:12px;border-collapse:collapse;background:rgba(0,0,0,.2);border-radius:8px;overflow:hidden">
+          <thead>
+            <tr style="background:rgba(115,123,196,.2);border-bottom:1px solid rgba(115,123,196,.3)">
+              <th style="padding:10px;text-align:left;color:#737bc4;font-weight:700">Karte</th>
+              <th style="padding:10px;text-align:center;color:#737bc4;font-weight:700">Wert</th>
+              <th style="padding:10px;text-align:left;color:#737bc4;font-weight:700">Fähigkeit</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="border-bottom:1px solid rgba(255,255,255,.08)">
+              <td style="padding:8px 10px">🐱 Katze</td>
+              <td style="padding:8px 10px;text-align:center;font-weight:700;color:#FFD700"><strong>-1</strong></td>
+              <td style="padding:8px 10px">Glückskarte!</td>
+            </tr>
+            <tr style="border-bottom:1px solid rgba(255,255,255,.08)">
+              <td style="padding:8px 10px">🏆 Titi</td>
+              <td style="padding:8px 10px;text-align:center;font-weight:700;color:#FFD700"><strong>0</strong></td>
+              <td style="padding:8px 10px">Der Beste!</td>
+            </tr>
+            <tr style="border-bottom:1px solid rgba(255,255,255,.08)">
+              <td style="padding:8px 10px">👨 Olli</td>
+              <td style="padding:8px 10px;text-align:center;font-weight:700"><strong>1</strong></td>
+              <td style="padding:8px 10px">Keine</td>
+            </tr>
+            <tr style="border-bottom:1px solid rgba(255,255,255,.08)">
+              <td style="padding:8px 10px">🎤 Tupac</td>
+              <td style="padding:8px 10px;text-align:center;font-weight:700"><strong>2</strong></td>
+              <td style="padding:8px 10px">Keine</td>
+            </tr>
+            <tr style="border-bottom:1px solid rgba(255,255,255,.08)">
+              <td style="padding:8px 10px">💪 Arnold</td>
+              <td style="padding:8px 10px;text-align:center;font-weight:700"><strong>3</strong></td>
+              <td style="padding:8px 10px">Keine</td>
+            </tr>
+            <tr style="border-bottom:1px solid rgba(255,255,255,.08)">
+              <td style="padding:8px 10px">😈 Cartman</td>
+              <td style="padding:8px 10px;text-align:center;font-weight:700"><strong>4</strong></td>
+              <td style="padding:8px 10px">Keine</td>
+            </tr>
+            <tr style="border-bottom:1px solid rgba(255,255,255,.08)">
+              <td style="padding:8px 10px">⚽ Zidane</td>
+              <td style="padding:8px 10px;text-align:center;font-weight:700"><strong>5</strong></td>
+              <td style="padding:8px 10px">Keine</td>
+            </tr>
+            <tr style="border-bottom:1px solid rgba(255,255,255,.08)">
+              <td style="padding:8px 10px">🥋 Lee</td>
+              <td style="padding:8px 10px;text-align:center;font-weight:700"><strong>6</strong></td>
+              <td style="padding:8px 10px">Keine</td>
+            </tr>
+            <tr style="border-bottom:1px solid rgba(255,255,255,.08)">
+              <td style="padding:8px 10px">⚽ Ronaldo</td>
+              <td style="padding:8px 10px;text-align:center;font-weight:700"><strong>7</strong></td>
+              <td style="padding:8px 10px">👁️ Eigene Karte sehen</td>
+            </tr>
+            <tr style="border-bottom:1px solid rgba(255,255,255,.08)">
+              <td style="padding:8px 10px">🎬 Leo</td>
+              <td style="padding:8px 10px;text-align:center;font-weight:700"><strong>8</strong></td>
+              <td style="padding:8px 10px">👁️ Eigene Karte sehen</td>
+            </tr>
+            <tr style="border-bottom:1px solid rgba(255,255,255,.08)">
+              <td style="padding:8px 10px">🕵️ Snowden</td>
+              <td style="padding:8px 10px;text-align:center;font-weight:700"><strong>9</strong></td>
+              <td style="padding:8px 10px">👀 Gegner-Karte sehen</td>
+            </tr>
+            <tr style="border-bottom:1px solid rgba(255,255,255,.08)">
+              <td style="padding:8px 10px">🤔 Trump</td>
+              <td style="padding:8px 10px;text-align:center;font-weight:700"><strong>10</strong></td>
+              <td style="padding:8px 10px">👀 Gegner-Karte sehen</td>
+            </tr>
+            <tr style="border-bottom:1px solid rgba(255,255,255,.08)">
+              <td style="padding:8px 10px">🃏 Joker</td>
+              <td style="padding:8px 10px;text-align:center;font-weight:700"><strong>11</strong></td>
+              <td style="padding:8px 10px">🔀 Karten tauschen</td>
+            </tr>
+            <tr style="border-bottom:1px solid rgba(255,255,255,.08)">
+              <td style="padding:8px 10px">🐕 Hund</td>
+              <td style="padding:8px 10px;text-align:center;font-weight:700"><strong>12</strong></td>
+              <td style="padding:8px 10px">👁️ Sehen & Tauschen</td>
+            </tr>
+            <tr>
+              <td style="padding:8px 10px">💩 Mr Hankey</td>
+              <td style="padding:8px 10px;text-align:center;font-weight:700;color:#ef4444"><strong>13</strong></td>
+              <td style="padding:8px 10px">Penalty-Karte</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div style="margin-top:16px">
+      <h3 style="font-size:15px;color:#737bc4;margin-bottom:8px">⚡ Schnapp – Schnell reagieren!</h3>
+      <p style="font-size:13px;line-height:1.6">Nach jeder abgelegten Karte läuft ein kurzes Zeitfenster (die Leiste über den Stapeln). Solange sie läuft, darf jeder Spieler auf <strong>eine beliebige Karte am Tisch</strong> tippen – die eigene oder die eines Mitspielers. Die Karte wird für alle sichtbar aufgedeckt:</p>
+      <ul style="font-size:13px;line-height:1.7;margin:8px 0 0 18px">
+        <li><strong>Gleicher Wert?</strong> Die Karte wandert auf den Ablagestapel, das Fenster schließt sofort und du bist am Zug – mit einer Karte weniger.</li>
+        <li>War es eine <strong>gegnerische</strong> Karte, füllst du die entstandene Lücke mit einer deiner eigenen Karten auf. Der Gegner behält seine Handgröße, du verlierst eine.</li>
+        <li><strong>Falscher Wert?</strong> Die Karte geht zurück an ihren Platz, du ziehst eine <strong>Strafkarte</strong> und bist für dieses Fenster raus.</li>
+      </ul>
+      <p style="font-size:12px;line-height:1.6;margin-top:8px;color:rgba(255,255,255,.65)">Jeder hat pro Fenster genau einen Versuch – also nur tippen, wenn du dir die Karte gemerkt hast.</p>
     </div>
 
     <div style="margin-top:16px">
@@ -905,7 +1130,7 @@ body[data-cardback="karo"] .card-back::after { border-color: rgba(120,200,160,.2
     </div>
 
     <div style="margin-top:16px;padding:12px;background:rgba(115,123,196,.1);border-left:3px solid #737bc4;border-radius:8px">
-      <p style="font-size:12px;color:rgba(255,255,255,.8);margin:0"><strong>⚠️ Obacht!</strong> Wenn du nicht die wenigsten Punkte nach dem Beenden hast, bekommst du eine Strafe von 30 Punkten.</p>
+      <p style="font-size:12px;color:rgba(255,255,255,.8);margin:0"><strong>⚠️ Obacht!</strong> Strafpunkte bekommt <strong>nur der Spieler, der das Spiel beendet</strong> – und zwar 30 Punkte, wenn er nicht die wenigsten Punkte hat <strong>oder</strong> wenn seine Hand in dieser Runde mehr als 7 Punkte zählt. Es bleibt immer bei höchstens 30 Strafpunkten, und alle anderen Spieler gehen straffrei aus.</p>
     </div>
 
     <div class="btn-row" style="margin-top:20px">
@@ -956,8 +1181,6 @@ body[data-cardback="karo"] .card-back::after { border-color: rgba(120,200,160,.2
 let ws = null;
 let state = null;
 let myId = crypto.randomUUID();
-let racingTimerInterval = null;
-let racingEndTime = null;
 let abilitySelectionStep = null;
 let abilitySelection = [];
 
@@ -1006,13 +1229,15 @@ function handleMessage(msg) {
     return;
   }
   if (msg.type === 'error') { showToast(msg.msg, '#ef4444'); return; }
-  if (msg.type === 'toast') { showToast(msg.msg, msg.color); return; }
+  if (msg.type === 'toast') { showToast(msg.msg, msg.color, msg.anim); return; }
   // Kommt unmittelbar vor dem State mit den vertauschten Händen: markiert, welche
   // Karten fliegen sollen (bzw. dass bewusst nicht getauscht wurde).
   if (msg.type === 'swap_anim') { noteSwapAnim(msg); return; }
-  // Reaction-Swap: gespielte Gegnerkarte fliegt zum Ablagestapel, Ersatzkarte
-  // wandert vom eigenen Slot in den frei gewordenen Gegner-Slot.
-  if (msg.type === 'reaction_swap_anim') { noteReactionSwapAnim(msg); return; }
+  // Schnapp: die getippte Karte dreht sich für alle sichtbar um. Danach fliegt
+  // sie entweder auf den Ablagestapel (Treffer) oder zurück in den Slot (Fehlgriff).
+  if (msg.type === 'race_reveal') { noteRaceReveal(msg); return; }
+  // Abgabe nach einem Treffer auf eine Gegnerkarte: eigene Karte füllt die Lücke.
+  if (msg.type === 'race_give_anim') { noteRaceGiveAnim(msg); return; }
   if (msg.type === 'state') {
     state = msg;
     // Jeder frische Server-State entriegelt die Sperren – der Server hat unsere
@@ -1020,6 +1245,7 @@ function handleMessage(msg) {
     abilityPendingSend = false;
     drawnActionPending = false;
     syncRevealCountdown();
+    syncRaceCountdown();
     render();
   }
 }
@@ -1299,7 +1525,7 @@ function renderLobby() {
 
 // ── Main Render ───────────────────────────────────────────────────────────────
 function render() {
-  if (state.phase === 'lobby') { renderLobby(); return; }
+  if (state.phase === 'lobby') { removeDrawHold(); renderLobby(); return; }
 
   // Switch to game view
   document.getElementById('lobby').style.display = 'none';
@@ -1317,9 +1543,11 @@ function render() {
   renderAbilityModal();
   renderAbilityTicker();
   applyAbilityHighlights();
-  renderRacingOverlay();
+  renderRaceBar();
 
   runTableFlip(beforeRects);
+  // Nach dem Neuaufbau: Anker der Spielerzonen sind jetzt aktuell.
+  syncDrawHold();
 
   if (state.phase === 'peek') renderPeekModal();
   else {
@@ -1349,21 +1577,27 @@ function renderTopBar() {
     scores.appendChild(chip);
   }
 
-  const phaseNames = { peek:'Karten ansehen', playing:'Spielen', ability:'Fähigkeit', swap_flight:'Tausch', racing:'Schnapp!', scoring:'Wertung', done:'Fertig' };
+  const phaseNames = { peek:'Karten ansehen', playing:'Spielen', ability:'Fähigkeit', swap_flight:'Tausch', racing:'Schnapp!', race_give:'Karte abgeben', scoring:'Wertung', done:'Fertig' };
   document.getElementById('tb-phase').textContent = phaseNames[state.phase] || state.phase;
 }
 
 function renderOpponents() {
   const zone = document.getElementById('opponents');
   zone.innerHTML = '';
+  // Zug-Highlight nur in Phasen mit einem klaren "am Zug"-Spieler.
+  const showTurn = ['playing', 'ability', 'swap_flight'].includes(state.phase);
   for (const p of state.players) {
     if (p.isMe) continue;
-    const isActive = state.players.indexOf(p) === state.currentPlayerIndex;
+    const isActive = showTurn && state.players.indexOf(p) === state.currentPlayerIndex;
     const div = document.createElement('div');
-    div.className = 'opponent-zone';
+    div.className = 'opponent-zone' + (isActive ? ' turn-glow' : '');
+    // Ankerpunkt für die gezogene Karte, die vor dem Spieler liegen bleibt.
+    div.dataset.pid = p.id;
     const nameEl = document.createElement('div');
     nameEl.className = 'opp-name' + (isActive ? ' active' : '');
-    nameEl.innerHTML = `${isActive ? '▶ ' : ''}${esc(p.name)}${!p.connected ? ' (weg)' : ''}`;
+    const thinking = state.drawnBy === p.id
+      ? '<span class="opp-thinking">· überlegt<i></i><i></i><i></i></span>' : '';
+    nameEl.innerHTML = `${isActive ? '▶ ' : ''}${esc(p.name)}${!p.connected ? ' (weg)' : ''}${thinking}`;
     const hand = document.createElement('div');
     hand.className = 'opp-hand';
     for (let i = 0; i < p.hand.length; i++) {
@@ -1374,10 +1608,22 @@ function renderOpponents() {
       if (c && c.uid) cardEl.dataset.uid = c.uid;
       cardEl.dataset.pid = p.id;
       cardEl.dataset.index = i;
-      if (c && !c.hidden) {
+      if (!c) {
+        // Lücke aus einem Schnapp-Treffer – wird gleich vom Gewinner aufgefüllt.
+        cardEl.classList.add('slot-empty');
+      } else if (!c.hidden) {
         cardEl.innerHTML = buildCardInner(c, 52, 75);
       } else {
         cardEl.innerHTML = '<div class="card-back"></div>';
+      }
+      // Schnapp-Fenster: auch fremde Karten sind Ziel. Wer die Karte schon kennt,
+      // bekommt einen anderen Rahmen – muss also nicht raten.
+      if (c && canRace()) {
+        cardEl.classList.add('race-target');
+        if (c.knownByViewer) cardEl.classList.add('known');
+        cardEl.onclick = () => sendRace(p.id, i);
+      } else {
+        cardEl.onclick = null;
       }
       hand.appendChild(cardEl);
     }
@@ -1412,7 +1658,7 @@ function renderCenter() {
   const drawnArea = document.getElementById('drawn-area');
   const drawnDisp = document.getElementById('drawn-card-display');
   if (state.drawnCard && state.phase === 'playing' && state.currentPlayerId === state.myId) {
-    drawnArea.style.display = 'flex';
+    showDrawnArea(drawnArea);
     drawnDisp.innerHTML = `<div class="card tcg-pop">${buildCardInner(state.drawnCard, 190, 278)}</div>`;
     renderDrawnHand();
     // Button und Hinweis machen den Flow explizit: Handkarte antippen = tauschen
@@ -1432,7 +1678,34 @@ function renderCenter() {
     }
   } else {
     drawnArea.style.display = 'none';
+    if (drawOverlayTimer) { clearTimeout(drawOverlayTimer); drawOverlayTimer = null; }
+    drawOverlayUid = null;
   }
+}
+
+// Die Entscheidungsansicht geht erst auf, wenn die gezogene Karte vom Stapel bei
+// mir angekommen ist – sonst würde das Vollbild-Overlay den eigenen Flug sofort
+// zudecken. Bis dahin sieht der Ziehende dieselbe Animation wie alle anderen.
+let drawOverlayUid = null;    // uid, deren Overlay schon offen ist
+let drawOverlayTimer = null;
+
+function showDrawnArea(drawnArea) {
+  const uid = state.drawnCard.uid;
+  if (drawOverlayUid === uid || reducedMotion()) {
+    drawOverlayUid = uid;
+    drawnArea.style.display = 'flex';
+    return;
+  }
+  if (drawOverlayTimer) return;   // Flug läuft noch
+  drawnArea.style.display = 'none';
+  drawOverlayTimer = setTimeout(() => {
+    drawOverlayTimer = null;
+    // Inzwischen könnte die Karte längst abgelegt oder der Zug vorbei sein.
+    if (state?.drawnCard?.uid !== uid || state.phase !== 'playing' || state.currentPlayerId !== state.myId) return;
+    drawOverlayUid = uid;
+    document.getElementById('drawn-area').style.display = 'flex';
+    syncDrawHold();   // Overlay übernimmt – die Karte am Tisch darf weg.
+  }, DRAW_FLIGHT_MS);
 }
 
 // Handkarten direkt in der Entscheidungsansicht – ein Tipp ersetzt die Karte.
@@ -1483,7 +1756,9 @@ function renderMyZone() {
   if (!me) return;
   document.getElementById('my-name').textContent = me.name;
   const isMyTurn = state.currentPlayerId === state.myId;
-  document.getElementById('turn-badge').classList.toggle('hidden', !isMyTurn || state.phase === 'racing');
+  const myTurnGlow = isMyTurn && ['playing', 'ability', 'swap_flight'].includes(state.phase);
+  document.getElementById('turn-badge').classList.toggle('hidden', !isMyTurn || state.phase === 'racing' || state.phase === 'race_give');
+  document.getElementById('myzone').classList.toggle('turn-glow', myTurnGlow);
 
   const hand = document.getElementById('my-hand');
   hand.innerHTML = '<div class="hand-heading">Deine Hand</div>';
@@ -1494,11 +1769,15 @@ function renderMyZone() {
     card.dataset.index = i;
     card.dataset.pid = me.id;
     if (c && c.uid) card.dataset.uid = c.uid;
-    if (c && !c.hidden) {
+    if (!c) {
+      card.classList.add('slot-empty');
+    } else if (!c.hidden) {
       card.innerHTML = buildCardInner(c, 90, 130);
     } else {
       card.innerHTML = '<div class="card-back"></div>';
     }
+    if (c && canRace()) card.classList.add('race-target');
+    if (c && canGive()) card.classList.add('give-source');
     card.onclick = () => handleMyCardClick(i, c);
     hand.appendChild(card);
   }
@@ -1510,7 +1789,7 @@ function renderActionBar(isMyTurn, me) {
   const bar = document.getElementById('action-bar');
   bar.innerHTML = '';
 
-  if (!isMyTurn || state.phase === 'racing' || state.phase === 'ability' || state.phase === 'swap_flight') return;
+  if (!isMyTurn || state.phase === 'racing' || state.phase === 'race_give' || state.phase === 'ability' || state.phase === 'swap_flight') return;
 
   if (state.phase === 'playing' && !state.drawnCard) {
     if (!state.endCalledBy) {
@@ -1538,7 +1817,11 @@ function handleMyCardClick(idx, card) {
     return;
   }
   if (state.phase === 'racing') {
-    send({ type: 'race', cardIndex: idx });
+    sendRace(state.myId, idx);
+    return;
+  }
+  if (state.phase === 'race_give') {
+    sendRaceGive(idx);
     return;
   }
 }
@@ -1564,6 +1847,12 @@ function renderInstruction() {
     // Für Beobachter übernimmt das Laufband – hier keine zweite Zeile.
   } else if (state.phase === 'swap_flight') {
     txt = 'Achte darauf, wohin die Karten wandern…';
+  } else if (state.phase === 'racing') {
+    // Die #race-bar sagt schon alles – hier keine zweite Zeile.
+  } else if (state.phase === 'race_give') {
+    txt = state.raceGive?.racerId === state.myId
+      ? 'Wähle eine deiner Karten, die du abgibst'
+      : '';
   }
   el.textContent = txt;
   el.classList.toggle('hidden', !txt);
@@ -1744,8 +2033,8 @@ function sendPeekDone() { send({ type: 'peek_done' }); }
 
 let pendingSwapAnim = null;        // vom Server angekündigter Tausch
 let pendingSwapAnimTimer = null;
-let pendingReactionSwap = null;    // vom Server angekündigter Reaction-Swap
-let pendingReactionSwapTimer = null;
+let pendingRaceReveal = null;      // vom Server angekündigter Schnapp-Versuch
+let pendingRaceRevealTimer = null;
 
 function noteSwapAnim(msg) {
   pendingSwapAnim = msg;
@@ -1755,20 +2044,34 @@ function noteSwapAnim(msg) {
   pendingSwapAnimTimer = setTimeout(() => { pendingSwapAnim = null; }, 2500);
 }
 
-function noteReactionSwapAnim(msg) {
-  pendingReactionSwap = msg;
-  // Piggyback auf pendingSwapAnim: die Ersatzkarte behält ihre uid und wandert von
-  // einem Slot in den anderen. Damit sie den bogigen Flug mit Purple-Glow bekommt
+function noteRaceReveal(msg) {
+  pendingRaceReveal = msg;
+  clearTimeout(pendingRaceRevealTimer);
+  pendingRaceRevealTimer = setTimeout(() => { pendingRaceReveal = null; }, 3000);
+}
+
+function noteRaceGiveAnim(msg) {
+  // Piggyback auf pendingSwapAnim: die abgegebene Karte behält ihre uid und wandert
+  // von einem Slot in den anderen. Damit sie den bogigen Flug mit Glow bekommt
   // (statt bloßem Shift), muss ihre uid in der swapping-Menge landen.
-  pendingSwapAnim = { cards: [{ uid: msg.replacementCard.uid }] };
+  pendingSwapAnim = { cards: [{ uid: msg.uid }] };
   clearTimeout(pendingSwapAnimTimer);
-  clearTimeout(pendingReactionSwapTimer);
   pendingSwapAnimTimer = setTimeout(() => { pendingSwapAnim = null; }, 2500);
-  pendingReactionSwapTimer = setTimeout(() => { pendingReactionSwap = null; }, 2500);
 }
 
 function reducedMotion() {
   return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
+
+// Aufräumen nach einem Flug – genau einmal, egal ob `onfinish` kommt oder nicht.
+// In inaktiven Tabs verzögert der Browser Animations-Events; ohne dieses Netz
+// bliebe z. B. der Ablagestapel dauerhaft ausgeblendet und ein Klon liegen.
+function onAnimEnd(anim, ms, fn) {
+  let ran = false;
+  const once = () => { if (ran) return; ran = true; fn(); };
+  anim.onfinish = once;
+  anim.oncancel = once;
+  setTimeout(once, ms + 120);
 }
 
 function tableCards() {
@@ -1790,11 +2093,11 @@ function tableCardEl(playerId, index) {
 function runTableFlip(before) {
   const anim = pendingSwapAnim;
   if (anim) { pendingSwapAnim = null; clearTimeout(pendingSwapAnimTimer); }
-  const rSwap = pendingReactionSwap;
-  if (rSwap) { pendingReactionSwap = null; clearTimeout(pendingReactionSwapTimer); }
+  const race = pendingRaceReveal;
+  if (race) { pendingRaceReveal = null; clearTimeout(pendingRaceRevealTimer); }
   if (anim && anim.mode === 'stay') { animateStay(anim.cards); return; }
   if (!before || !before.size) {
-    if (rSwap) animatePlayedToDiscard(rSwap.playedCard, null);
+    if (race) animateRaceReveal(race, null);
     return;
   }
 
@@ -1811,20 +2114,101 @@ function runTableFlip(before) {
     flyCard(el, dx, dy, from.width / to.width, from.height / to.height, isSwap);
   }
 
-  // Die gespielte Gegnerkarte verschwindet vom Tisch – FLIP oben findet sie nicht
-  // im neuen DOM. Deshalb hier ein eigener Flug vom alten Slot zum Ablagestapel.
-  if (rSwap) animatePlayedToDiscard(rSwap.playedCard, before);
+  // Bei einem Treffer ist die Karte schon vom Tisch verschwunden – FLIP oben
+  // findet sie nicht mehr. Die Schnapp-Animation arbeitet deshalb mit den
+  // Positionen VOR dem Neuaufbau.
+  if (race) animateRaceReveal(race, before);
 }
 
-// Fliegt einen Klon der jetzt schon auf dem Ablagestapel liegenden Karte optisch
-// vom alten Slot dorthin. Der Stapel selbst wird währenddessen ausgeblendet, sonst
-// hätte man die Karte doppelt (statisch im Ziel + fliegend) im Blick.
-function animatePlayedToDiscard(played, beforeRects) {
+// ── Schnapp-Animationen ───────────────────────────────────────────────────────
+// Ablauf für alle Spieler identisch, damit jeder nachvollziehen kann, was passiert:
+//   1. Ein Klon der Karte liegt über dem Slot und dreht sich um (Wert wird öffentlich).
+//   2. Kurz halten, Urteil einblenden.
+//   3a. Treffer → Flug auf den Ablagestapel.
+//   3b. Fehlgriff → zurückdrehen, Slot wackelt, Strafkarte fliegt vom Deck.
+function animateRaceReveal(msg, beforeRects) {
+  const slotEl = tableCardEl(msg.ownerId, msg.cardIndex);
+  const rect = (beforeRects && beforeRects.get(msg.uid))
+    || (slotEl && slotEl.getBoundingClientRect());
+  if (!rect || !rect.width) { if (msg.penalty) animatePenalty(msg.penalty); return; }
+
+  if (reducedMotion()) {
+    if (msg.match) animateCloneToDiscard(rect, msg.card);
+    else if (msg.penalty) animatePenalty(msg.penalty);
+    return;
+  }
+
+  // Alles, was die Karte sonst gleichzeitig zeigen würde, wird verdeckt, solange
+  // der Klon darüber liegt – sonst sähe man sie doppelt. Bei einem Treffer liegt
+  // sie im State schon auf dem Ablagestapel, bei einem Fehlgriff noch im Slot,
+  // und die Strafkarte steckt bereits in der Hand.
+  const hidden = msg.match ? null : slotEl;
+  if (hidden) hidden.style.visibility = 'hidden';
   const discardEl = document.getElementById('discard-pile');
-  if (!discardEl) return;
-  const fromRect = beforeRects ? beforeRects.get(played.uid) : null;
+  if (msg.match && discardEl) discardEl.style.opacity = '0';
+  const penaltyEl = msg.penalty ? tableCardEl(msg.penalty.playerId, msg.penalty.cardIndex) : null;
+  if (penaltyEl) penaltyEl.style.visibility = 'hidden';
+
+  const flip = document.createElement('div');
+  flip.className = 'race-flip ' + (msg.match ? 'hit' : 'miss');
+  flip.style.left = rect.left + 'px';
+  flip.style.top = rect.top + 'px';
+  flip.style.width = rect.width + 'px';
+  flip.style.height = rect.height + 'px';
+  flip.innerHTML = `<div class="rf-inner"><div class="rf-face"></div></div>
+    <div class="rf-verdict">${msg.match ? 'Treffer' : 'Daneben'}</div>`;
+  const inner = flip.querySelector('.rf-inner');
+  const face = flip.querySelector('.rf-face');
+  const backHTML = '<div class="card-back"></div>';
+  const frontHTML = buildCardInner(msg.card, rect.width, rect.height);
+  face.innerHTML = backHTML;
+  document.body.appendChild(flip);
+
+  // Halbe Drehung, Inhalt tauschen, wieder aufziehen.
+  turnCard(inner, face, frontHTML, () => {
+    const HOLD = Math.max(500, (msg.revealSeconds || 1.8) * 1000 - 900);
+    setTimeout(() => {
+      if (msg.match) {
+        // Aufgedeckt weiterfliegen: derselbe Klon wird zur fliegenden Karte.
+        flyCloneToDiscard(flip, rect, frontHTML);
+      } else {
+        turnCard(inner, face, backHTML, () => {
+          flip.remove();
+          if (hidden) {
+            hidden.style.visibility = '';
+            hidden.classList.add('card-penalty');
+            setTimeout(() => hidden.classList.remove('card-penalty'), 520);
+          }
+          if (penaltyEl) penaltyEl.style.visibility = '';
+          if (msg.penalty) animatePenalty(msg.penalty);
+        });
+      }
+    }, HOLD);
+  });
+}
+
+// Kartendrehung: auf Breite 0 schrumpfen, in der Mitte den Inhalt tauschen, wieder
+// aufziehen. Sieht aus wie eine Drehung, kommt aber ohne 3D aus (der Glow-`filter`
+// am Container flacht 3D-Kontexte ab). Die Abfolge hängt bewusst an setTimeout und
+// nicht an animation.onfinish: in inaktiven Tabs werden Animations-Events verzögert,
+// und dann bliebe die Karte auf halber Drehung stehen.
+const TURN_MS = 420;
+function turnCard(inner, face, newHTML, done) {
+  inner.animate([
+    { transform: 'scaleX(1)' },
+    { transform: 'scaleX(0)', offset: .5 },
+    { transform: 'scaleX(1)' },
+  ], { duration: reducedMotion() ? 1 : TURN_MS, easing: 'ease-in-out' });
+  setTimeout(() => { face.innerHTML = newHTML; }, TURN_MS / 2);
+  setTimeout(() => done && done(), TURN_MS);
+}
+
+// Der aufgedeckte Klon fliegt weiter auf den Ablagestapel. Der Stapel selbst wird
+// währenddessen ausgeblendet, sonst läge die Karte doppelt im Blick.
+function flyCloneToDiscard(flip, fromRect, innerHTML) {
+  const discardEl = document.getElementById('discard-pile');
+  if (!discardEl) { flip.remove(); return; }
   const toRect = discardEl.getBoundingClientRect();
-  if (!fromRect) return;
 
   spawnSlotGhost(fromRect);
 
@@ -1836,10 +2220,12 @@ function animatePlayedToDiscard(played, beforeRects) {
   clone.style.width = fromRect.width + 'px';
   clone.style.height = fromRect.height + 'px';
   clone.style.transformOrigin = 'top left';
-  clone.innerHTML = discardEl.innerHTML;
+  clone.innerHTML = innerHTML;
   document.body.appendChild(clone);
+  flip.remove();
 
-  const prevOpacity = discardEl.style.opacity;
+  // Der Stapel bleibt ausgeblendet, bis die Karte dort landet. Zurückgesetzt wird
+  // auf '' – renderCenter setzt auf dem Ablagestapel nie eine eigene Opacity.
   discardEl.style.opacity = '0';
 
   const dx = toRect.left - fromRect.left;
@@ -1854,14 +2240,62 @@ function animatePlayedToDiscard(played, beforeRects) {
     { transform: 'translate(0,0) scale(1,1) rotate(0deg)', offset: 0 },
     { transform: `translate(${dx/2 + px}px, ${dy/2 + py}px) scale(${(sx+1)/2}, ${(sy+1)/2}) rotate(6deg)`, offset: .55 },
     { transform: `translate(${dx}px, ${dy}px) scale(${sx}, ${sy}) rotate(0deg)`, offset: 1 },
-  ], { duration: reducedMotion() ? 1 : 850, easing: 'cubic-bezier(.34,.02,.24,1)' });
+  ], { duration: 800, easing: 'cubic-bezier(.34,.02,.24,1)' });
 
-  a.onfinish = () => {
+  onAnimEnd(a, 800, () => {
     clone.remove();
-    discardEl.style.opacity = prevOpacity;
+    discardEl.style.opacity = '';
     discardEl.classList.add('card-landed');
     setTimeout(() => discardEl.classList.remove('card-landed'), 700);
-  };
+  });
+}
+
+// Kurzform ohne Flip – für prefers-reduced-motion und für Wiederholungen aus dem Log.
+function animateCloneToDiscard(fromRect, card) {
+  const discardEl = document.getElementById('discard-pile');
+  if (!discardEl) return;
+  const shell = document.createElement('div');
+  flyCloneToDiscard(shell, fromRect, buildCardInner(card, fromRect.width, fromRect.height));
+}
+
+// Strafkarte: fliegt sichtbar vom Nachziehstapel in den neuen Slot.
+function animatePenalty(penalty) {
+  if (!penalty || penalty.cardIndex == null) return;
+  const deckEl = document.getElementById('deck-pile');
+  const target = tableCardEl(penalty.playerId, penalty.cardIndex);
+  if (!deckEl || !target) return;
+  const from = deckEl.getBoundingClientRect();
+  const to = target.getBoundingClientRect();
+  if (reducedMotion()) { target.classList.add('card-penalty'); setTimeout(() => target.classList.remove('card-penalty'), 520); return; }
+
+  const clone = document.createElement('div');
+  clone.className = 'card card-flying';
+  clone.style.position = 'fixed';
+  clone.style.left = from.left + 'px';
+  clone.style.top = from.top + 'px';
+  clone.style.width = from.width + 'px';
+  clone.style.height = from.height + 'px';
+  clone.style.transformOrigin = 'top left';
+  clone.style.filter = 'drop-shadow(0 10px 22px rgba(0,0,0,.6)) drop-shadow(0 0 14px rgba(244,67,54,.85))';
+  clone.innerHTML = '<div class="card-back"></div>';
+  document.body.appendChild(clone);
+
+  target.style.visibility = 'hidden';
+
+  const dx = to.left - from.left, dy = to.top - from.top;
+  const sx = to.width / from.width, sy = to.height / from.height;
+  const a = clone.animate([
+    { transform: 'translate(0,0) scale(1,1) rotate(0deg)', offset: 0 },
+    { transform: `translate(${dx/2}px, ${dy/2 - 40}px) scale(${(sx+1)/2}, ${(sy+1)/2}) rotate(-9deg)`, offset: .55 },
+    { transform: `translate(${dx}px, ${dy}px) scale(${sx}, ${sy}) rotate(0deg)`, offset: 1 },
+  ], { duration: 720, easing: 'cubic-bezier(.34,.02,.24,1)' });
+
+  onAnimEnd(a, 720, () => {
+    clone.remove();
+    target.style.visibility = '';
+    target.classList.add('card-penalty');
+    setTimeout(() => target.classList.remove('card-penalty'), 520);
+  });
 }
 
 // Die Karte startet optisch an ihrer alten Stelle und bewegt sich von dort auf
@@ -1877,20 +2311,21 @@ function flyCard(el, dx, dy, sx, sy, isSwap) {
   el.style.transformOrigin = 'top left';
   el.classList.add(isSwap ? 'card-flying' : 'card-shifting');
 
+  const dur = reducedMotion() ? 1 : (isSwap ? 900 : 380);
   const anim = el.animate([
     { transform: `translate(${dx}px, ${dy}px) scale(${sx}, ${sy}) rotate(0deg)`, offset: 0 },
     { transform: `translate(${dx / 2 + px}px, ${dy / 2 + py}px) scale(${midX}, ${midY}) rotate(${tilt}deg)`, offset: .5 },
     { transform: 'translate(0px, 0px) scale(1, 1) rotate(0deg)', offset: 1 },
-  ], { duration: reducedMotion() ? 1 : (isSwap ? 900 : 380), easing: 'cubic-bezier(.34,.02,.24,1)' });
+  ], { duration: dur, easing: 'cubic-bezier(.34,.02,.24,1)' });
 
-  anim.onfinish = () => {
+  onAnimEnd(anim, dur, () => {
     el.style.transformOrigin = '';
     el.classList.remove('card-flying', 'card-shifting');
     if (isSwap) {
       el.classList.add('card-landed');
       setTimeout(() => el.classList.remove('card-landed'), 700);
     }
-  };
+  });
 }
 
 // Der verlassene Slot bleibt kurz als gestrichelter Umriss stehen – so ist auch
@@ -1917,6 +2352,119 @@ function animateStay(cards) {
     setTimeout(() => el.classList.remove('card-stay'), 750);
   }
 }
+
+// ── Gezogene Karte: Flug zum Spieler am Zug + Liegenbleiben ───────────────────
+// Wie am echten Tisch: die Karte wird sichtbar vom Nachziehstapel gezogen, gleitet
+// zu dem Spieler, der am Zug ist, und bleibt dort vor ihm liegen, solange er
+// überlegt. Für alle Spieler in der Tischansicht sichtbar – immer als Rückseite.
+// Quelle der Wahrheit ist state.drawnBy (Server), nicht das einmalige Draw-Event:
+// so steht die Karte auch nach einem Reconnect oder Re-Render noch am richtigen
+// Platz, und sie verschwindet exakt dann, wenn die Entscheidung gefallen ist.
+const DRAW_FLIGHT_MS = 620;
+let drawHoldPid = null;      // wessen Karte gerade liegt (null = keine)
+let drawHoldFlying = false;  // während des Flugs nicht umpositionieren
+
+function removeDrawHold() {
+  document.getElementById('draw-hold')?.remove();
+  drawHoldPid = null;
+  drawHoldFlying = false;
+}
+
+function clampToViewport(a) {
+  a.left = Math.max(8, Math.min(a.left, innerWidth - a.w - 8));
+  a.top = Math.max(8, Math.min(a.top, innerHeight - a.h - 8));
+  return a;
+}
+
+// Zielposition: beim Ziehenden die Bildschirmmitte – dort geht gleich seine
+// Entscheidungsansicht auf, der Flug läuft also direkt in sie hinein. Bei allen
+// anderen vor die Kartenreihe des Spielers, leicht überlappend.
+function drawHoldAnchor(pid) {
+  if (pid === state.myId) {
+    const w = 130, h = 190;
+    return clampToViewport({ left: innerWidth / 2 - w / 2, top: innerHeight / 2 - h / 2, w, h });
+  }
+  // Vor der Kartenreihe des Spielers: etwas größer als seine Rückseiten und
+  // unten überstehend, damit die Karte klar davor liegt statt dazwischen. Weiter
+  // nach unten geht nicht – darunter beginnt schon das Log-Panel.
+  const w = 84, h = 122;
+  const key = (window.CSS && CSS.escape) ? CSS.escape(pid) : pid;
+  const zone = document.querySelector(`#opponents .opponent-zone[data-pid="${key}"]`);
+  const r = zone ? zone.getBoundingClientRect() : tableCardEl(pid, 0)?.getBoundingClientRect();
+  if (!r || !r.width) return null;
+  return clampToViewport({ left: r.left + r.width / 2 - w / 2, top: r.bottom - h + 22, w, h });
+}
+
+function syncDrawHold() {
+  const pid = state.drawnBy;
+  // Beim Ziehenden übernimmt die große Entscheidungsansicht, sobald sie offen ist.
+  const takenOver = pid === state.myId && drawOverlayUid && drawOverlayUid === state.drawnCard?.uid;
+  if (!pid || takenOver) { if (drawHoldPid) removeDrawHold(); return; }
+  if (drawHoldPid === pid) { if (!drawHoldFlying) placeDrawHold(); return; }
+  removeDrawHold();
+  startDrawHold(pid);
+}
+
+// Der Tisch baut sich bei jedem State neu auf und Fenster ändern ihre Größe –
+// die liegende Karte wird deshalb nachgeführt statt einmal fest gesetzt.
+function placeDrawHold() {
+  const el = document.getElementById('draw-hold');
+  const a = drawHoldPid ? drawHoldAnchor(drawHoldPid) : null;
+  if (!el || !a) return;
+  el.style.left = a.left + 'px';
+  el.style.top = a.top + 'px';
+  el.style.width = a.w + 'px';
+  el.style.height = a.h + 'px';
+}
+
+function startDrawHold(pid) {
+  const anchor = drawHoldAnchor(pid);
+  if (!anchor) return;
+
+  const el = document.createElement('div');
+  el.id = 'draw-hold';
+  el.className = 'draw-hold';
+  el.innerHTML = '<div class="draw-hold-card"><div class="card-back"></div></div>';
+  el.style.left = anchor.left + 'px';
+  el.style.top = anchor.top + 'px';
+  el.style.width = anchor.w + 'px';
+  el.style.height = anchor.h + 'px';
+  document.body.appendChild(el);
+  drawHoldPid = pid;
+
+  const from = rectOf('deck-pile');
+  if (!from || !from.width || reducedMotion()) { el.classList.add('is-held'); return; }
+
+  // Inverse-FLIP wie bei den Slot-Flügen: die Karte startet optisch auf dem
+  // Stapel und läuft in ihre Endposition. Danach sitzt sie ohne Transform genau
+  // richtig – das Wiegen der Hand (CSS auf dem inneren Element) kollidiert nicht.
+  drawHoldFlying = true;
+  const dx = from.left - anchor.left, dy = from.top - anchor.top;
+  const sx = from.width / anchor.w, sy = from.height / anchor.h;
+  el.style.transformOrigin = 'top left';
+  const flight = el.animate([
+    { transform: `translate(${dx}px, ${dy}px) scale(${sx}, ${sy}) rotate(0deg)`, offset: 0 },
+    { transform: `translate(${dx * .45}px, ${dy * .45 - 26}px) scale(${(sx + 1) / 2}, ${(sy + 1) / 2}) rotate(${dx > 0 ? -6 : 6}deg)`, offset: .55 },
+    { transform: 'translate(0, 0) scale(1, 1) rotate(0deg)', offset: 1 },
+  ], { duration: DRAW_FLIGHT_MS, easing: 'cubic-bezier(.32,.02,.22,1)' });
+
+  // Der Stapel reagiert mit, damit die Herkunft der Karte klar ist.
+  pulseEl(document.getElementById('deck-pile'), 'card-landed');
+
+  onAnimEnd(flight, DRAW_FLIGHT_MS, () => {
+    drawHoldFlying = false;
+    // Anders als die Flug-Klone bleibt dieses Element liegen: der Transform muss
+    // deshalb aktiv gelöst werden. In einem Hintergrund-Tab friert der Browser
+    // die Animation ein – ohne cancel() bliebe die Karte auf dem Stapel kleben.
+    flight.cancel();
+    if (drawHoldPid !== pid) return;   // inzwischen abgelegt oder neu gestartet
+    el.style.transformOrigin = '';
+    el.classList.add('is-held');
+    placeDrawHold();
+  });
+}
+
+addEventListener('resize', () => { if (drawHoldPid && !drawHoldFlying) placeDrawHold(); });
 
 // ── Beobachter-Laufband ───────────────────────────────────────────────────────
 // Ersetzt das Vollbild-Modal für alle, die nicht am Zug sind: der Tisch bleibt
@@ -2169,177 +2717,94 @@ function abilitySelectCard(playerId, cardIndex) {
 
 function abilitySelectOther(playerId, cardIndex) { abilitySelectCard(playerId, cardIndex); }
 
-// ── Racing Overlay ────────────────────────────────────────────────────────────
-// Zwei Wege, das Fenster zu schließen:
-//   1. Eigene Handkarte antippen → normales `race` (schnell ablegen).
-//   2. Bekannte Gegner-Karte antippen → Reaction-Swap: erst Gegnerkarte wählen,
-//      dann eigene Ersatzkarte. `reactionSwapTarget` merkt sich Schritt 1.
-let reactionSwapTarget = null; // { playerId, cardIndex, uid, value } | null
+// ── Schnapp-Fenster (Race) ────────────────────────────────────────────────────
+// Kein Vollbild mehr: der Tisch bleibt sichtbar, die #race-bar zählt herunter und
+// jede Karte am Tisch – eigene wie gegnerische – ist anklickbar. Der Server
+// entscheidet über Treffer/Fehlgriff, hier läuft nur die Anzeige mit.
+let raceEndsAt = 0, raceTotal = 5, raceTimer = null;
 
-function renderRacingOverlay() {
-  const overlay = document.getElementById('racing-overlay');
-  if (state.phase !== 'racing') {
-    overlay.style.display = 'none';
-    if (racingTimerInterval) { clearInterval(racingTimerInterval); racingTimerInterval = null; }
-    reactionSwapTarget = null;
+function syncRaceCountdown() {
+  const left = state.phase === 'racing' ? (state.raceSecondsLeft || 0) : 0;
+  raceTotal = state.raceTotalSeconds || 5;
+  if (left > 0) {
+    raceEndsAt = Date.now() + left * 1000;
+    if (!raceTimer) raceTimer = setInterval(tickRace, 50);
+  } else {
+    raceEndsAt = 0;
+    if (raceTimer) { clearInterval(raceTimer); raceTimer = null; }
+  }
+  tickRace();
+}
+
+function tickRace() {
+  const secs = document.getElementById('race-secs');
+  const fill = document.getElementById('race-fill');
+  if (!secs || !fill) return;
+  const left = raceEndsAt ? Math.max(0, (raceEndsAt - Date.now()) / 1000) : 0;
+  const pct = raceTotal ? (left / raceTotal) * 100 : 0;
+  secs.textContent = left.toFixed(1) + 's';
+  fill.style.width = pct + '%';
+  fill.className = 'race-fill' + (pct <= 25 ? ' crit' : pct <= 55 ? ' warn' : '');
+  if (left <= 0 && raceTimer) { clearInterval(raceTimer); raceTimer = null; }
+}
+
+function renderRaceBar() {
+  const bar = document.getElementById('race-bar');
+  const racing = state.phase === 'racing';
+  const give = state.phase === 'race_give' && state.raceGive;
+  bar.classList.toggle('hidden', !racing && !give);
+  bar.classList.toggle('is-give', !!give);
+  bar.classList.toggle('is-out', racing && !!state.raceMissed);
+  if (!racing && !give) return;
+
+  const title = document.getElementById('race-title');
+  const value = document.getElementById('race-value');
+  const sub = document.getElementById('race-sub');
+  const secs = document.getElementById('race-secs');
+
+  if (give) {
+    const g = state.raceGive;
+    const racer = state.players.find(p => p.id === g.racerId);
+    const owner = state.players.find(p => p.id === g.ownerId);
+    title.textContent = 'Karte abgeben';
+    value.textContent = '';
+    value.style.display = 'none';
+    secs.textContent = Math.ceil(g.secondsLeft || 0) + 's';
+    sub.innerHTML = g.racerId === state.myId
+      ? `Wähle eine deiner Karten – sie füllt die Lücke bei <strong>${esc(owner?.name || '?')}</strong>. Danach bist du am Zug.`
+      : `<strong>${esc(racer?.name || '?')}</strong> sucht eine Karte für die Lücke bei <strong>${esc(owner?.name || '?')}</strong>…`;
     return;
   }
-  overlay.style.display = 'flex';
 
-  if (state.racingCard) {
-    document.getElementById('racing-card-display').innerHTML = `<div class="card" style="width:130px;height:190px">${buildCardInner(state.racingCard, 130, 190)}</div>`;
-  }
-
-  if (!racingTimerInterval) {
-    racingEndTime = Date.now() + 3000;
-    racingTimerInterval = setInterval(() => {
-      const fill = document.getElementById('racing-timer-fill');
-      const pct = Math.max(0, (racingEndTime - Date.now()) / 3000 * 100);
-      fill.style.width = pct + '%';
-      if (pct <= 0) { clearInterval(racingTimerInterval); racingTimerInterval = null; }
-    }, 50);
-  }
-
-  const hint = document.getElementById('racing-hint');
-  if (reactionSwapTarget) {
-    hint.textContent = 'Wähle eine deiner Karten als Ersatz für die gegnerische Karte.';
-    hint.className = 'reaction-hint';
+  const rc = state.racingCard;
+  title.textContent = 'Schnapp';
+  value.style.display = '';
+  value.textContent = rc ? `${rc.value} · ${rc.name}` : '';
+  if (state.raceMissed) {
+    sub.textContent = 'Daneben – du bist für dieses Fenster raus.';
   } else {
-    hint.textContent = 'Lege eine Karte mit demselben Wert ab – oder schnapp dir eine gemerkte Gegnerkarte.';
-    hint.className = '';
+    sub.innerHTML = 'Tippe eine <strong>beliebige</strong> Karte am Tisch, die denselben Wert hat – auch bei Mitspielern. Ein Versuch, sonst Strafkarte.';
   }
-
-  // Eigene Handkarten sind hier bewusst IMMER verdeckt – "Schnapp!" bedeutet,
-  // aus dem Gedächtnis heraus zu greifen. Position wird durch Karte 1/2/…
-  // beschriftet, damit ohne Rätselraten geklickt werden kann.
-  const me = state.players.find(p => p.isMe);
-  const racingHand = document.getElementById('my-racing-hand');
-  racingHand.innerHTML = '';
-  if (me) {
-    for (let i = 0; i < me.hand.length; i++) {
-      const slot = document.createElement('div');
-      slot.className = 'racing-my-slot';
-      const card = document.createElement('div');
-      card.className = 'card racing-my-card';
-      card.style.width = '130px';
-      card.style.height = '190px';
-      card.innerHTML = '<div class="card-back"></div>';
-      card.onclick = () => handleRacingMyClick(i);
-      const lbl = document.createElement('div');
-      lbl.className = 'slot-lbl';
-      lbl.textContent = `Karte ${i + 1}`;
-      slot.appendChild(card);
-      slot.appendChild(lbl);
-      racingHand.appendChild(slot);
-    }
-  }
-
-  // Gemerkte Gegner-Karten mit passendem Wert – nur diese sind für Reaction-Swap gültig.
-  const knownSection = document.getElementById('racing-known-section');
-  const knownCards = document.getElementById('racing-known-cards');
-  knownCards.innerHTML = '';
-  const targets = collectReactionTargets();
-  if (targets.length === 0) {
-    knownSection.classList.add('hidden');
-  } else {
-    knownSection.classList.remove('hidden');
-    // Nach Spieler gruppieren, damit klar ist, wem die Karte gehört.
-    const byPid = new Map();
-    for (const t of targets) {
-      if (!byPid.has(t.playerId)) byPid.set(t.playerId, { name: t.playerName, cards: [] });
-      byPid.get(t.playerId).cards.push(t);
-    }
-    for (const [pid, group] of byPid) {
-      const owner = document.createElement('div');
-      owner.className = 'racing-known-owner';
-      const name = document.createElement('div');
-      name.className = 'owner-name';
-      name.textContent = group.name;
-      const cards = document.createElement('div');
-      cards.className = 'owner-cards';
-      for (const t of group.cards) {
-        const slot = document.createElement('div');
-        slot.className = 'racing-my-slot';
-        const card = document.createElement('div');
-        card.className = 'card racing-known-card';
-        card.style.width = '130px';
-        card.style.height = '190px';
-        card.innerHTML = buildCardInner(t.card, 130, 190);
-        if (reactionSwapTarget && reactionSwapTarget.uid === t.uid) card.classList.add('selected');
-        card.onclick = () => handleReactionTargetClick(t);
-        const lbl = document.createElement('div');
-        lbl.className = 'slot-lbl';
-        lbl.textContent = `Karte ${t.cardIndex + 1}`;
-        slot.appendChild(card);
-        slot.appendChild(lbl);
-        cards.appendChild(slot);
-      }
-      owner.appendChild(name);
-      owner.appendChild(cards);
-      knownCards.appendChild(owner);
-    }
-  }
-
-  document.getElementById('racing-cancel-btn').textContent = reactionSwapTarget ? 'Abbrechen' : 'Kein Match';
 }
 
-// Sammelt Karten der Mitspieler, die (a) dem Viewer bekannt sind (knownByViewer)
-// und (b) den Wert der racingCard tragen. Server prüft dieselbe Regel autoritativ.
-function collectReactionTargets() {
-  const out = [];
-  if (!state?.racingCard) return out;
-  const value = state.racingCard.value;
-  for (const p of state.players) {
-    if (p.isMe) continue;
-    for (let i = 0; i < p.hand.length; i++) {
-      const c = p.hand[i];
-      if (!c || !c.knownByViewer) continue;
-      if (c.value !== value) continue;
-      out.push({ playerId: p.id, playerName: p.name, cardIndex: i, uid: c.uid, card: c });
-    }
-  }
-  return out;
+// Während des Fensters darf auf jede Karte getippt werden. Ein Treffer beendet
+// das Rennen sofort, ein Fehlgriff sperrt nur den Klickenden.
+function canRace() {
+  return state?.phase === 'racing' && !!state.racingCard && !state.raceMissed;
 }
 
-function handleRacingMyClick(idx) {
-  if (reactionSwapTarget) {
-    // Schritt 2 des Reaction-Swaps: eigene Ersatzkarte gewählt.
-    send({
-      type: 'reaction_swap',
-      targetPlayerId: reactionSwapTarget.playerId,
-      targetCardIndex: reactionSwapTarget.cardIndex,
-      myReplacementIndex: idx,
-    });
-    reactionSwapTarget = null;
-    closeRacing();
-    return;
-  }
-  send({ type: 'race', cardIndex: idx });
-  closeRacing();
+function sendRace(playerId, cardIndex) {
+  if (!canRace()) return;
+  send({ type: 'race', targetPlayerId: playerId, cardIndex });
 }
 
-function handleReactionTargetClick(t) {
-  // Toggle: nochmal auf dieselbe Karte klickt sie ab.
-  if (reactionSwapTarget && reactionSwapTarget.uid === t.uid) {
-    reactionSwapTarget = null;
-  } else {
-    reactionSwapTarget = t;
-  }
-  renderRacingOverlay();
+function canGive() {
+  return state?.phase === 'race_give' && state.raceGive?.racerId === state.myId;
 }
 
-function cancelReactionOrClose() {
-  if (reactionSwapTarget) {
-    reactionSwapTarget = null;
-    renderRacingOverlay();
-    return;
-  }
-  closeRacing();
-}
-
-function closeRacing() {
-  reactionSwapTarget = null;
-  document.getElementById('racing-overlay').style.display = 'none';
+function sendRaceGive(handIndex) {
+  if (!canGive()) return;
+  send({ type: 'race_give', handIndex });
 }
 
 // ── Scoring Modal ─────────────────────────────────────────────────────────────
@@ -2433,23 +2898,62 @@ function getAbilityDesc(ability) {
   return descs[ability] || '';
 }
 
+/* ── Bild-Ausschnitt pro Karte ────────────────────────────────────────────────
+   Das Bildfeld der Karte ist ein breiter, flacher Streifen; die Motive sind
+   dagegen meist hochkant. Mit `object-fit: cover` und dem Browser-Standard
+   `object-position: 50% 50%` schneidet der Streifen deshalb genau da, wo bei
+   den meisten Bildern der Oberkörper ist – die Köpfe lagen oberhalb des
+   Ausschnitts. Die Werte hier sind der ungefähre Gesichtsmittelpunkt je Bild
+   (x% y% des Originals), damit auf jeder Karte das Gesicht im Ausschnitt liegt.
+   Neues Bild ohne Eintrag → FACE_FALLBACK (leicht nach oben versetzt). */
+const CARD_IMAGE_FOCUS = {
+  '01_Olli.png':                 '47% 22%',  // Kahn im Sprung, Kopf oben mittig
+  '02_tupac.jpg':                '54% 18%',
+  '03_arnold schwarzenegger.jpg':'45% 8%',
+  '04_Eric Cartman.png':         '50% 36%',
+  '05_zidane.jpg':               '48% 12%',  // Kopfstoß: beide Köpfe im Bild halten
+  '06_bruce lee.jpg':            '42% 42%',
+  '07_Ronaldo.jpeg':             '50% 28%',
+  '08_Leonardo DiCaprio.jpg':    '56% 17%',
+  '09_snowden.jpg':              '47% 38%',
+  '10_trump.jpg':                '44% 34%',
+  '11_joker.jpg':                '47% 40%',
+  '12_Hund.jpg':                 '50% 30%',
+  '13_MrHankey.jpg':             '47% 12%',
+  '14_Thierry Henry.jpeg':       '45% 42%',
+  '15_Katze.jpg':                '52% 28%',
+};
+const FACE_FALLBACK = '50% 30%';
+function cardImageFocus(image) { return CARD_IMAGE_FOCUS[image] || FACE_FALLBACK; }
+
 function buildCardInner(card, w, h) {
   const colorClass = getColorClass(card.color);
-  const imgH = Math.floor(h * 0.42);
-  const infoPanelH = h - imgH - 24;
+  /* Die Kopfzeile ist keine 24px hoch, wie hier früher gerechnet wurde, sondern
+     ~47px (Padding + Wert-Hexagon + Rahmen). Kopf + Bild + Info ergaben damit
+     zusammen mehr als die Kartenhöhe, und Flexbox hat die Differenz vom Bild
+     abgezogen: auf der 130x190-Karte blieben statt der geplanten 79px nur 38px
+     Bild übrig – ein Streifen, der von den meisten Motiven nur den Hals traf.
+     Jetzt skaliert die Kopfzeile mit der Karte (sonst frisst sie die kleinen
+     Karten auf) und der Rest wird ehrlich zwischen Bild und Info geteilt. */
+  const headerH = Math.max(16, Math.min(47, Math.round(h * 0.25)));
+  const hexH = Math.max(11, headerH - 11);
+  const hexW = Math.round(hexH * 0.86);
+  const avail = Math.max(0, h - headerH);
+  const imgH = Math.round(avail * 0.52);
+  const infoPanelH = avail - imgH;
 
   const abilityName = getAbilityName(card.ability);
   const abilityDesc = getAbilityDesc(card.ability);
 
   return `<div class="tcg-card-container ${colorClass}" style="width:${w}px;height:${h}px;display:flex;flex-direction:column">
     <div class="tcg-card-border"></div>
-    <div class="tcg-card-header">
-      <div class="tcg-card-value-hex">${card.value >= 0 ? card.value : '∞'}</div>
+    <div class="tcg-card-header" style="height:${headerH}px;flex:0 0 auto">
+      <div class="tcg-card-value-hex" style="width:${hexW}px;height:${hexH}px;font-size:${Math.max(8, Math.round(hexH * 0.46))}px">${card.value}</div>
       <div class="tcg-card-name">${esc(card.name)}</div>
       <div class="tcg-card-star">✦</div>
     </div>
     <div class="tcg-card-image" style="height:${imgH}px">
-      <img src="/images/${encodeURIComponent(card.image)}" style="width:100%;height:100%;object-fit:cover" onerror="this.parentElement.textContent='[Bild]'">
+      <img src="/images/${encodeURIComponent(card.image)}" style="width:100%;height:100%;object-fit:cover;object-position:${cardImageFocus(card.image)}" onerror="this.parentElement.textContent='[Bild]'">
     </div>
     <div class="tcg-card-info" style="height:${infoPanelH}px">
       <div>
@@ -2476,11 +2980,11 @@ function drawCard() {
 // Panel (noch) nicht sichtbar ist – etwa in der Lobby oder bei Verbindungsfehlern
 // vor Spielstart – wird auf den alten Toast zurückgefallen, damit die Nachricht
 // überhaupt jemand sieht.
-function showToast(msg, color = '#333') {
+function showToast(msg, color = '#333', anim = null) {
   const panel = document.getElementById('log-panel');
   const gameVisible = document.getElementById('game')?.style.display === 'flex';
   if (panel && gameVisible) {
-    addLog(msg, color);
+    addLog(msg, color, anim);
     return;
   }
   const container = document.getElementById('toast-container');
@@ -2493,7 +2997,7 @@ function showToast(msg, color = '#333') {
   setTimeout(() => el.remove(), 3100);
 }
 
-function addLog(msg, color = 'rgba(255,255,255,.35)') {
+function addLog(msg, color = 'rgba(255,255,255,.35)', anim = null) {
   const panel = document.getElementById('log-panel');
   if (!panel) return;
   const empty = panel.querySelector('.log-empty');
@@ -2506,9 +3010,22 @@ function addLog(msg, color = 'rgba(255,255,255,.35)') {
   const line = document.createElement('div');
   line.className = 'log-line is-new';
   line.style.borderLeftColor = color;
-  line.innerHTML = '<span class="log-time"></span><span class="log-msg"></span>';
+  line.innerHTML = '<span class="log-time"></span><span class="log-msg"></span><span class="log-replay"></span>';
   line.querySelector('.log-time').textContent = time;
   line.querySelector('.log-msg').textContent = msg;
+
+  // Jede Zeile mit Animationsbeschreibung lässt sich anklicken und spielt das
+  // Ereignis noch einmal ab – nützlich, wenn man gerade weggeschaut hat.
+  if (anim) {
+    line.classList.add('replayable');
+    line.title = 'Animation erneut abspielen';
+    line.querySelector('.log-replay').textContent = '▶';
+    line.onclick = () => {
+      line.classList.add('replaying');
+      setTimeout(() => line.classList.remove('replaying'), 900);
+      replayAnim(anim);
+    };
+  }
   panel.appendChild(line);
 
   // Auto-scroll nur, wenn der Spieler nicht gerade selbst hochgescrollt hat.
@@ -2521,6 +3038,132 @@ function addLog(msg, color = 'rgba(255,255,255,.35)') {
 function clearLog() {
   const panel = document.getElementById('log-panel');
   if (panel) panel.innerHTML = '<div class="log-empty">Noch keine Ereignisse…</div>';
+}
+
+// ── Log-Replay ────────────────────────────────────────────────────────────────
+// Spielt die Animation eines Log-Eintrags noch einmal ab. Die Deskriptoren
+// enthalten bewusst nur Slot-Referenzen (Spieler + Position), keine gemerkten
+// Bildschirmkoordinaten – gezeichnet wird immer gegen den aktuellen Tisch.
+// Karten können seitdem den Platz gewechselt haben; die Wiederholung zeigt also
+// den Vorgang, nicht den historischen Tischzustand.
+function replayAnim(anim) {
+  if (!anim || !state) return;
+  const slotRect = (pid, idx) => {
+    const el = tableCardEl(pid, idx);
+    return el ? el.getBoundingClientRect() : null;
+  };
+
+  switch (anim.kind) {
+    case 'raceHit': {
+      // Aufdecken am Slot, dann Flug auf den Ablagestapel – wie im Original.
+      replayFlip(anim.ownerId, anim.cardIndex, anim.card, true);
+      break;
+    }
+    case 'raceMiss': {
+      replayFlip(anim.ownerId, anim.cardIndex, anim.card, false);
+      if (anim.penaltyIndex != null) {
+        setTimeout(() => animatePenalty({ playerId: anim.racerId, cardIndex: anim.penaltyIndex }), 1400);
+      }
+      break;
+    }
+    case 'raceTimeout':
+      pulseEl(document.getElementById('discard-pile'), 'card-stay');
+      break;
+    case 'give':
+      replayFlight(
+        slotRect(anim.fromPlayerId, anim.fromCardIndex),
+        slotRect(anim.toPlayerId, anim.toCardIndex));
+      break;
+    case 'keep':
+      // Ersetzte Karte: Slot → Ablagestapel.
+      replayFlight(slotRect(anim.playerId, anim.cardIndex), rectOf('discard-pile'), anim.card);
+      break;
+    case 'deckToDiscard':
+      replayFlight(rectOf('deck-pile'), rectOf('discard-pile'), anim.card);
+      break;
+    case 'draw': {
+      // Wiederholung des Zugs vom Stapel zum Spieler – ohne Liegenbleiben.
+      pulseEl(document.getElementById('deck-pile'), 'card-landed');
+      const a = anim.playerId ? drawHoldAnchor(anim.playerId) : null;
+      if (a) replayFlight(rectOf('deck-pile'), { left: a.left, top: a.top, width: a.w, height: a.h });
+      break;
+    }
+    case 'swap': {
+      const [a, b] = anim.slots || [];
+      if (!a || !b) break;
+      const ra = slotRect(a.playerId, a.cardIndex);
+      const rb = slotRect(b.playerId, b.cardIndex);
+      replayFlight(ra, rb);
+      replayFlight(rb, ra);
+      break;
+    }
+    case 'stay':
+      for (const s of anim.slots || []) {
+        const el = tableCardEl(s.playerId, s.cardIndex);
+        if (el) pulseEl(el, 'card-stay', 750);
+      }
+      break;
+    case 'peek':
+      for (const s of anim.slots || []) {
+        const el = tableCardEl(s.playerId, s.cardIndex);
+        if (el) pulseEl(el, 'tbl-peek', 1400);
+      }
+      break;
+    case 'callEnd':
+      pulseEl(document.getElementById('end-banner'), 'card-landed');
+      break;
+  }
+}
+
+function rectOf(id) {
+  const el = document.getElementById(id);
+  return el ? el.getBoundingClientRect() : null;
+}
+
+function pulseEl(el, cls, ms = 700) {
+  if (!el) return;
+  el.classList.add(cls);
+  setTimeout(() => el.classList.remove(cls), ms);
+}
+
+// Wiederholung eines Aufdeckens: gleicher Klon-Flip wie live, danach optional
+// der Flug auf den Ablagestapel.
+function replayFlip(ownerId, cardIndex, card, match) {
+  const el = tableCardEl(ownerId, cardIndex);
+  if (!el || !card) return;
+  animateRaceReveal({
+    ownerId, cardIndex, card, match,
+    uid: el.dataset.uid, revealSeconds: 1.8,
+  }, null);
+}
+
+// Ein neutraler Kartenrücken (oder eine bekannte Karte) fliegt von A nach B.
+function replayFlight(from, to, card) {
+  if (!from || !to || reducedMotion()) return;
+  const clone = document.createElement('div');
+  clone.className = 'card card-flying';
+  clone.style.position = 'fixed';
+  clone.style.left = from.left + 'px';
+  clone.style.top = from.top + 'px';
+  clone.style.width = from.width + 'px';
+  clone.style.height = from.height + 'px';
+  clone.style.transformOrigin = 'top left';
+  clone.style.opacity = '.92';
+  clone.innerHTML = card ? buildCardInner(card, from.width, from.height) : '<div class="card-back"></div>';
+  document.body.appendChild(clone);
+
+  const dx = to.left - from.left, dy = to.top - from.top;
+  const sx = to.width / from.width, sy = to.height / from.height;
+  const len = Math.hypot(dx, dy) || 1;
+  const bow = Math.min(90, len * 0.28);
+  const px = (-dy / len) * bow, py = (dx / len) * bow;
+
+  const a = clone.animate([
+    { transform: 'translate(0,0) scale(1,1) rotate(0deg)', opacity: .2, offset: 0 },
+    { transform: `translate(${dx/2 + px}px, ${dy/2 + py}px) scale(${(sx+1)/2}, ${(sy+1)/2}) rotate(6deg)`, opacity: .95, offset: .5 },
+    { transform: `translate(${dx}px, ${dy}px) scale(${sx}, ${sy}) rotate(0deg)`, opacity: .2, offset: 1 },
+  ], { duration: 900, easing: 'cubic-bezier(.34,.02,.24,1)' });
+  onAnimEnd(a, 900, () => clone.remove());
 }
 
 // ── Swipe ─────────────────────────────────────────────────────────────────────
