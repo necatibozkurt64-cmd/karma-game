@@ -175,8 +175,12 @@ select option { background: #0b0d14; }
 }
 .opp-card { width: 75px; height: 105px; border-radius: 8px; position: relative; }
 
-/* Center zone */
-#center { flex: 1; display: flex; align-items: center; justify-content: center; gap: 30px; }
+/* Center zone.
+   min-height:0 hebt das voreingestellte min-height:auto von Flex-Kindern auf.
+   Sonst wächst die Mitte auf die Höhe der Stapel, statt sich auf den Rest zu
+   beschränken – und schiebt die eigene Hand samt Aktionsleiste aus dem Bild.
+   Die Stapel richten sich stattdessen nach der Resthöhe (pileMetrics). */
+#center { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; gap: 30px; }
 .pile-area { display: flex; flex-direction: column; align-items: center; gap: 8px; }
 .pile-label { font-size: 9px; color: var(--ink-3); text-transform: uppercase; letter-spacing: .28em; }
 
@@ -577,14 +581,47 @@ body[data-cardback="karo"] .card-back::after { border-color: rgba(120,200,160,.2
 
 /* Log-Panel: persistente Ereignisliste zwischen Gegnern und Stapeln.
    Ersetzt die kurzen Toasts während des Spiels – 5 Zeilen sichtbar, Rest scrollbar,
-   damit man Aktionen der Mitspieler nachlesen kann, auch wenn man kurz weggeschaut hat. */
+   damit man Aktionen der Mitspieler nachlesen kann, auch wenn man kurz weggeschaut hat.
+   Die Liste sitzt in #log-box und lässt sich zuklappen; dann bleibt nur die
+   Kopfzeile mit der letzten Meldung stehen. */
+#log-box {
+  width: min(560px, calc(100% - 32px));
+  margin: 4px auto 8px;
+  flex-shrink: 0;
+  display: flex; flex-direction: column; min-height: 0;
+}
+#log-toggle {
+  display: flex; align-items: center; gap: 8px;
+  width: 100%; padding: 6px 12px;
+  border: 1px solid var(--line); border-radius: 12px;
+  background: rgba(0,0,0,.42); color: var(--ink-2);
+  font: inherit; font-size: 13px; font-weight: 300; text-align: left;
+  cursor: pointer; flex-shrink: 0;
+}
+#log-toggle:hover { background: rgba(0,0,0,.55); border-color: var(--line-2); }
+#log-box:not(.collapsed) #log-toggle {
+  border-bottom-left-radius: 0; border-bottom-right-radius: 0;
+  border-bottom-color: transparent; margin-bottom: -1px;
+}
+#log-box:not(.collapsed) #log-panel { border-top-left-radius: 0; border-top-right-radius: 0; }
+#log-box.collapsed #log-panel { display: none; }
+.log-chevron { font-size: 11px; color: var(--ink-3); transition: transform .18s ease; flex-shrink: 0; }
+#log-box:not(.collapsed) .log-chevron { transform: rotate(180deg); }
+.log-toggle-lbl { font-size: 10px; text-transform: uppercase; letter-spacing: .2em; color: var(--ink-3); }
+#log-box.collapsed .log-toggle-lbl { display: none; }
+.log-last { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: rgba(255,255,255,.8); }
+#log-box:not(.collapsed) .log-last { display: none; }
+.log-badge {
+  flex-shrink: 0; margin-left: auto; min-width: 20px; text-align: center;
+  padding: 1px 6px; border-radius: 999px; font-size: 11px; font-weight: 400;
+  background: var(--brand); color: #fff;
+}
 #log-panel {
   --log-line-h: 26px;
-  width: min(560px, calc(100% - 32px));
+  width: 100%;
   height: calc(var(--log-line-h) * 5 + 20px);
-  margin: 4px auto 8px;
   padding: 10px 12px;
-  flex-shrink: 0;
+  flex-shrink: 1; min-height: 0;
   overflow-y: auto;
   overscroll-behavior: contain;
   background: rgba(0,0,0,.42);
@@ -648,7 +685,10 @@ body[data-cardback="karo"] .card-back::after { border-color: rgba(120,200,160,.2
 /* ── Einstellungen ── */
 .gear-btn { background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.15); color: #fff; border-radius: 8px; width: 34px; height: 30px; font-size: 15px; cursor: pointer; line-height: 1; flex-shrink: 0; }
 .gear-btn:hover { background: rgba(255,255,255,.16); }
-#lobby-gear { position: fixed; top: 16px; right: 16px; z-index: 70; width: 40px; height: 36px; font-size: 17px; }
+#lobby-gear { position: fixed; top: 16px; right: 16px; z-index: 70; }
+/* Beide Lobby-Knöpfe gleich groß – sie sitzen in gegenüberliegenden Ecken und
+   fielen mit unterschiedlichen Maßen sofort auf. */
+#lobby-gear, #lobby-help { width: 40px; height: 36px; font-size: 17px; }
 .set-group { margin-bottom: 22px; }
 .set-group > h3 { font-size: 13px; text-transform: uppercase; letter-spacing: 1.5px; color: rgba(255,255,255,.5); margin-bottom: 12px; }
 .swatch-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(88px, 1fr)); gap: 10px; }
@@ -806,6 +846,20 @@ body[data-cardback="karo"] .card-back::after { border-color: rgba(120,200,160,.2
   line-height: 1.3;
 }
 
+/* Kleine Karten (Handkarten auf dem Handy, Gegnerhände): nur das, was auf
+   dieser Fläche noch lesbar ist – Wert, Name, Bild und der Kurzname der
+   Fähigkeit. Chip, Beschreibung und Zitat stehen groß auf Ablagestapel,
+   Peek- und Fähigkeits-Ansicht. */
+.tcg-mini .tcg-ability-label,
+.tcg-mini .tcg-ability-desc,
+.tcg-mini .tcg-flavor-text,
+.tcg-mini .tcg-card-star { display: none; }
+.tcg-mini .tcg-card-info { padding: 4px 6px; gap: 0; }
+.tcg-mini .tcg-card-name { font-size: 8.5px; letter-spacing: .06em; }
+.tcg-mini .tcg-ability-name { font-size: 9px; line-height: 1.25; margin: 0; }
+.tcg-mini .tcg-card-header { padding: 3px 5px; }
+.tcg-mini .tcg-card-value-hex { margin-right: 4px; }
+
 /* Farb-Varianten */
 .tcg-blue { border: 2px solid #1e4d8b; }
 .tcg-blue .tcg-card-header { border-bottom-color: #2a5a9e; }
@@ -858,6 +912,138 @@ body[data-cardback="karo"] .card-back::after { border-color: rgba(120,200,160,.2
 }
 
 .tcg-pop { animation: tcgPopIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); }
+
+/* ── COMPACT: Handy und niedrige Fenster ─────────────────────────────────────
+   Der Tisch ist ein fester 100vh-Block ohne Scrollen. Auf dem Handy passten
+   darin bisher weder alle Hände noch die Aktionsleiste ("Spiel beenden"), und
+   die Stapel ragten seitlich aus dem Bild.
+   Deshalb hier: alles Drumherum wird straffer, das Log ist standardmäßig
+   zugeklappt, die schwebenden Hinweisleisten laufen im Fluss mit.
+   Die Kartenmaße selbst rechnet das JS aus (handMetrics / pileMetrics) – die
+   Schwelle dort (isCompactView) muss zu dieser Media Query passen. */
+@media (max-width: 760px), (max-height: 620px) {
+  /* dvh statt vh: sonst schiebt die Adressleiste von Mobile-Safari die
+     Aktionsleiste unter den Bildschirmrand. */
+  #game { height: 100vh; height: 100dvh; }
+
+  /* Kopfzeile bleibt einreihig: Schriftzug und Phasen-Chip entfallen (die Phase
+     steht ohnehin in der Hinweiszeile), die Punktestände dürfen notfalls
+     seitlich scrollen statt in eine zweite Reihe zu rutschen. */
+  #topbar { gap: 7px; padding: 5px 9px; }
+  .tb-brand { gap: 6px; padding-right: 0; }
+  .tb-brand .brand-mark { width: 18px; }
+  .tb-brand .brand-word { display: none; }
+  #tb-mode, .tb-phase { display: none; }
+  .tb-scores {
+    gap: 4px; flex-wrap: nowrap; margin-left: auto;
+    min-width: 0; overflow-x: auto; scrollbar-width: none;
+  }
+  .tb-scores::-webkit-scrollbar { display: none; }
+  .score-chip { padding: 2px 7px; font-size: 10px; flex-shrink: 0; }
+  #topbar .gear-btn { width: 28px; height: 26px; font-size: 13px; }
+
+  #ability-ticker { margin-top: 3px; min-height: 26px; padding: 4px 11px; font-size: 12px; }
+
+  /* Gegner: eine Reihe pro Hand – bei drei Gegnern als 2×2-Block, sonst passen
+     die Karten nicht mehr nebeneinander (JS setzt data-cols). */
+  #opponents { gap: 8px; padding: 5px 8px 0; }
+  .opponent-zone { gap: 3px; }
+  .opp-name { font-size: 9px; letter-spacing: .12em; }
+  .opp-hand { gap: 3px; }
+  #opponents[data-cols="2"] .opp-hand { display: grid; grid-template-columns: repeat(2, max-content); }
+
+  #log-box { width: calc(100% - 16px); margin: 3px auto 4px; position: relative; z-index: 45; }
+  #log-toggle { padding: 5px 10px; font-size: 12px; border-radius: 10px; }
+  #log-panel { --log-line-h: 22px; height: calc(var(--log-line-h) * 4 + 14px); padding: 7px 10px; border-radius: 10px; }
+  /* Ausgeklappt legt sich die Liste über den Tisch, statt ihn zu stauchen –
+     sonst schrumpfen Stapel und Karten, nur weil man kurz nachliest. */
+  #log-box:not(.collapsed) #log-panel {
+    position: absolute; top: 100%; left: 0; right: 0;
+    height: auto; max-height: 46vh;
+    background: rgba(6,8,14,.97);
+    box-shadow: 0 16px 34px rgba(0,0,0,.65);
+  }
+  .log-line { font-size: 12.5px; gap: 6px; padding-left: 6px; }
+  .log-line .log-time { font-size: 11px; }
+
+  #race-bar { width: calc(100% - 16px); margin: 0 auto 4px; padding: 7px 11px 8px; }
+  .race-title { font-size: 11px; letter-spacing: .14em; }
+  .race-sub { font-size: 11px; }
+
+  #center { gap: 12px; padding: 0 8px; }
+  .pile-area { gap: 4px; }
+  .pile-label { font-size: 8px; letter-spacing: .18em; }
+  /* Der Zähler sitzt jetzt IM Stapel – unter dem Stapel würde er die Höhe
+     kosten, die die eigene Hand braucht. */
+  .deck-count {
+    bottom: 5px; font-size: 10px; padding: 1px 7px; border-radius: 999px;
+    background: rgba(0,0,0,.55); color: rgba(255,255,255,.7);
+  }
+
+  /* Hinweiszeile und Endrunden-Banner: im Fluss statt fixiert über dem Tisch.
+     z-index zurücksetzen – als Flex-Kinder gilt er auch ohne Positionierung,
+     und mit dem alten Wert (60/80) lägen beide über der Ziehen-Ansicht. */
+  #instruct, #end-banner {
+    position: static; transform: none; align-self: center; z-index: auto;
+    max-width: calc(100% - 20px); white-space: normal; text-align: center;
+    margin: 2px auto 0;
+  }
+  #instruct { font-size: 11.5px; padding: 4px 12px; }
+  #end-banner { font-size: 11px; padding: 4px 12px; margin-bottom: 2px; }
+
+  /* Wenn Hinweiszeile und Schnapp-Leiste gleichzeitig auftauchen, kann die
+     Mitte kurz zu eng werden. Dann dürfen die Stapel überstehen – aber nicht
+     über die Hände: die müssen antippbar bleiben. */
+  #opponents, #myzone { position: relative; z-index: 2; }
+
+  #myzone { padding: 4px 8px 8px; }
+  .my-name-row { gap: 8px; margin-bottom: 5px; }
+  .my-name { font-size: 11px; letter-spacing: .14em; }
+  .turn-badge { padding: 2px 9px; font-size: 8px; }
+  #my-hand { gap: 6px; }
+  /* Die Überschrift ist ein Flex-Kind der Handreihe und würde Kartenbreite
+     fressen – auf dem Handy sagt schon der Name, wessen Hand das ist. */
+  #my-hand .hand-heading { display: none; }
+  #action-bar { margin-top: 7px; gap: 8px; }
+  #action-bar .btn { padding: 9px 16px; font-size: 11px; }
+
+  /* Entscheidungsansicht nach dem Ziehen */
+  #drawn-area { gap: 10px; padding: 14px 12px; }
+  #drawn-area .drawn-label { font-size: 11px; }
+  #drawn-card-display .card { width: min(160px, 40vw); }
+  .drawn-hint { font-size: 12px; }
+  #drawn-hand { gap: 7px; }
+  #drawn-hand .card { width: 64px; height: 94px; }
+  #drawn-decision { gap: 9px; }
+
+  /* Modale insgesamt schlanker – der Rahmen darf nicht mehr Platz kosten als
+     der Inhalt. */
+  .overlay { padding: 12px; }
+  .modal { padding: 18px 16px; border-radius: 16px; }
+  .modal h2 { font-size: 18px; }
+  .modal p { font-size: 12.5px; margin-bottom: 12px; }
+  #ability-drawn { margin-bottom: 10px; }
+
+  /* Peek: das 2×2-Grid muss während der 6 Sekunden komplett sichtbar sein –
+     jede Zeile Kopftext geht direkt von der Kartenhöhe ab (renderPeekModal). */
+  #peek-modal h2 { font-size: 17px; }
+  #peek-modal > p { font-size: 12px; line-height: 1.35; margin-bottom: 8px; }
+  #peek-modal .peek-count { font-size: 12px; margin-bottom: 4px; }
+  #peek-modal .reveal-timer { margin: 6px 0 2px; }
+  #peek-modal .reveal-secs { font-size: 24px; }
+  #peek-modal .reveal-timer-lbl { font-size: 11px; }
+  .peek-slot-lbl { font-size: 10px; }
+}
+
+/* Sehr flache Fenster (Handy im Querformat): Selbst kleinste Karten passen
+   nicht mehr übereinander. Statt sie unlesbar zu schrumpfen oder die
+   Aktionsleiste abzuschneiden, darf der Tisch hier scrollen.
+   Schwelle = isShortView() im JS. */
+@media (max-height: 460px) {
+  #game { height: auto; min-height: 100vh; min-height: 100dvh; overflow-y: auto; }
+  #center { flex: 0 0 auto; padding: 4px 8px; }
+  #myzone { padding-bottom: 12px; }
+}
 </style>
 </head>
 <body>
@@ -923,8 +1109,18 @@ body[data-cardback="karo"] .card-back::after { border-color: rgba(120,200,160,.2
 
   <div id="opponents"></div>
 
-  <!-- Ereignis-Log: persistente Meldungen (Züge, Fähigkeiten, Karma-Rufe) statt kurzer Toasts -->
-  <div id="log-panel"></div>
+  <!-- Ereignis-Log: persistente Meldungen (Züge, Fähigkeiten, Karma-Rufe) statt kurzer Toasts.
+       Ein-/ausklappbar: zugeklappt bleibt nur die letzte Meldung als Zeile stehen –
+       auf dem Handy ist das der Platz, den die vier Hände und die Aktionsleiste brauchen. -->
+  <div id="log-box" class="collapsed">
+    <button type="button" id="log-toggle" aria-expanded="false" aria-controls="log-panel" onclick="toggleLog()">
+      <span class="log-chevron" aria-hidden="true">▾</span>
+      <span class="log-toggle-lbl">Verlauf</span>
+      <span class="log-last" id="log-last"></span>
+      <span class="log-badge hidden" id="log-badge"></span>
+    </button>
+    <div id="log-panel"></div>
+  </div>
 
   <!-- Schnapp-Fenster: Countdown + Zeitleiste direkt über den Stapeln.
        Während sie läuft, ist jede Karte am Tisch anklickbar. -->
@@ -954,6 +1150,12 @@ body[data-cardback="karo"] .card-back::after { border-color: rgba(120,200,160,.2
       </div>
     </div>
   </div>
+
+  <!-- Endrunden-Banner und Zug-Hinweis: am Desktop schweben sie oben über dem
+       Tisch, auf dem Handy laufen sie hier im Fluss mit (siehe Compact-Block im
+       CSS) – dort verdecken sie sonst die Karten der Gegner. -->
+  <div id="end-banner"></div>
+  <div id="instruct"></div>
 
   <div id="myzone">
     <div class="my-name-row">
@@ -1219,8 +1421,6 @@ body[data-cardback="karo"] .card-back::after { border-color: rgba(120,200,160,.2
 
 <!-- TOASTS -->
 <div id="toast-container"></div>
-<div id="end-banner"></div>
-<div id="instruct"></div>
 
 <script>
 // ── State ────────────────────────────────────────────────────────────────────
@@ -1569,6 +1769,125 @@ function renderLobby() {
   }
 }
 
+// ── Tischmaße ─────────────────────────────────────────────────────────────────
+// Der Tisch ist ein 100vh-Block ohne Scrollen. Auf dem Handy passen die festen
+// Desktop-Maße (Gegnerkarten 75×105, eigene 130×190, Stapel 190×280) weder in
+// die Breite noch in die Höhe – dann rutschen die eigene Hand und die
+// Aktionsleiste aus dem Bild. Karten und Stapel skalieren deshalb mit dem
+// Viewport. Die Schwelle muss zur Media Query "(max-width: 760px),
+// (max-height: 620px)" im CSS passen.
+const CARD_RATIO = 190 / 130;
+
+function isCompactView() {
+  return window.innerWidth <= 760 || window.innerHeight <= 620;
+}
+
+// So flach, dass auch geschrumpfte Karten nicht mehr übereinander passen
+// (Handy im Querformat): dort darf der Tisch scrollen, siehe CSS.
+function isShortView() {
+  return window.innerHeight <= 460;
+}
+
+function clampNum(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+
+// Höhe, die schon vergeben ist, bevor die Karten an der Reihe sind: Kopfzeile,
+// Laufband und Log (am Desktop mitsamt Liste, auf dem Handy nur die Kopfzeile –
+// dort liegt die ausgeklappte Liste über dem Tisch). Gemessen statt geschätzt,
+// damit ein aufgeklapptes Log die Rechnung nicht stillschweigend verschiebt.
+//
+// Bewusst NICHT dabei: Hinweiszeile, Endrunden-Banner und Schnapp-Leiste. Die
+// erscheinen und verschwinden mitten im Zug – würden sie die Kartengröße
+// bestimmen, wechselten die Karten unter dem Finger ihre Größe, ausgerechnet
+// im Schnapp-Fenster. Sie bekommen auf dem Handy eine pauschale Reserve; den
+// Rest fangen die Stapel ab, die sich ohnehin nach der Resthöhe richten.
+function fixedRowsHeight() {
+  let h = 10;   // Außenabstände, die offsetHeight nicht mitzählt
+  for (const id of ['topbar', 'ability-ticker', 'log-box']) {
+    const el = document.getElementById(id);
+    if (el && el.offsetParent !== null) h += el.offsetHeight;
+  }
+  return h + (isCompactView() ? 30 : 0);
+}
+
+// Karten der Gegner und der eigenen Hand. oppCount = Anzahl Gegner.
+function handMetrics(oppCount) {
+  const compact = isCompactView();
+  const vw = window.innerWidth, vh = window.innerHeight;
+  const n = Math.max(1, oppCount);
+  // Vier Karten nebeneinander gehen auf dem Handy nur bis zwei Gegner auf; bei
+  // dreien wird jede Hand zum 2×2-Block, sonst wären die Karten schmaler als
+  // ihr Rahmen.
+  const oppCols = compact && n >= 3 ? 2 : 4;
+  const oppRows = 4 / oppCols;
+  let oppW = compact ? clampNum(Math.floor((vw - 20 - (n - 1) * 8) / (n * oppCols)) - 4, 22, 60) : 75;
+  let myW = compact ? clampNum(Math.floor((vw - 24) / 4) - 6, 42, 72) : 130;
+  // Zweite Schranke: die Höhe. Bleibt neben den beiden Kartenreihen nicht genug
+  // für einen brauchbaren Stapel, werden beide Reihen gleichmäßig kleiner –
+  // sonst schrumpfen Nachzieh- und Ablagestapel auf Streichholzformat (oder die
+  // Aktionsleiste rutscht aus dem Bild).
+  if (!isShortView()) {
+    // Namen, Aktionsleiste, Stapel-Beschriftung: skaliert nicht mit den Karten.
+    const zoneChrome = compact ? 130 : 170;
+    const minPileH = compact ? 91 : 219;   // 62 bzw. 150 px breit
+    const avail = vh - fixedRowsHeight() - zoneChrome - minPileH;
+    const oppMinW = compact ? 22 : 44, myMinW = compact ? 40 : 70;
+    let oppRowH = oppRows * oppW * CARD_RATIO;
+    let myRowH = myW * CARD_RATIO;
+    let deficit = oppRowH + myRowH - avail;
+    if (avail > 0 && deficit > 0) {
+      // Den größeren Teil trägt die Gegnerreihe: dort liegen fast immer nur
+      // Rückseiten. Die eigene Hand ist die, die man antippt und liest.
+      const oppCut = Math.max(0, Math.min(deficit * 0.7, oppRowH - oppMinW * oppRows * CARD_RATIO));
+      oppRowH -= oppCut;
+      deficit -= oppCut;
+      if (deficit > 0) myRowH = Math.max(myMinW * CARD_RATIO, myRowH - deficit);
+      oppW = Math.max(oppMinW, Math.floor(oppRowH / oppRows / CARD_RATIO));
+      myW = Math.max(myMinW, Math.floor(myRowH / CARD_RATIO));
+    }
+  }
+  return { oppW, oppH: Math.round(oppW * CARD_RATIO), oppCols, myW, myH: Math.round(myW * CARD_RATIO) };
+}
+
+// Die Stapel bekommen, was zwischen Log und eigener Hand übrig bleibt. Deshalb
+// läuft renderCenter() als Letztes – Log, Schnapp-Leiste und Hinweiszeile
+// müssen vorher stehen, sonst misst clientHeight die falsche Resthöhe.
+function pileMetrics() {
+  const center = document.getElementById('center');
+  const compact = isCompactView();
+  const maxW = compact ? Math.floor((window.innerWidth - 40) / 2) : 190;
+  // Im Querformat scrollt der Tisch – dann sagt die Resthöhe nichts mehr aus
+  // (sie hinge an der Stapelgröße, die wir gerade berechnen).
+  if (isShortView()) {
+    const w = clampNum(Math.min(maxW, 130), 62, 190);
+    return { w, h: Math.round(w * CARD_RATIO) };
+  }
+  // Platz für die Beschriftung über dem Stapel (auf dem Handy sitzt der
+  // Kartenzähler im Stapel, am Desktop darunter).
+  const chrome = compact ? 26 : 46;
+  const free = center ? center.clientHeight - chrome : 0;
+  const byHeight = free > 0 ? Math.floor(free / CARD_RATIO) : maxW;
+  const w = clampNum(Math.min(maxW, byHeight), 62, 190);
+  return { w, h: Math.round(w * CARD_RATIO) };
+}
+
+// Ziehen-Ansicht: die gezogene Karte und die vier Handkarten darunter. Die
+// Werte müssen zu den Boxen im CSS passen (#drawn-card-display .card bzw.
+// #drawn-hand .card) – sonst ragt der Karteninhalt aus seinem Rahmen.
+function drawnCardSize() {
+  const w = isCompactView() ? Math.min(160, Math.floor(window.innerWidth * 0.4)) : 190;
+  return { w, h: Math.round(w * CARD_RATIO) };
+}
+
+function drawnHandCardSize() {
+  return isCompactView() ? { w: 64, h: 94 } : { w: 78, h: 114 };
+}
+
+// Fähigkeits-Modal: Auswahlkarten (bis zu 16 Stück – alle Hände am Tisch) und
+// die groß gezeigte Karte. In Handybreite passen sonst keine vier Karten
+// nebeneinander, und die Auswahl wird zur Scrollstrecke.
+function abilityPickSize() { return isCompactView() ? { w: 62, h: 91 } : { w: 100, h: 145 }; }
+function abilityShowSize() { return isCompactView() ? { w: 96, h: 140 } : { w: 120, h: 174 }; }
+
 // ── Main Render ───────────────────────────────────────────────────────────────
 function render() {
   if (state.phase === 'lobby') { removeDrawHold(); renderLobby(); return; }
@@ -1583,13 +1902,15 @@ function render() {
   renderTopBar();
   renderOpponents();
   renderMyZone();
-  renderCenter();
   renderInstruction();
   renderEndBanner();
   renderAbilityModal();
   renderAbilityTicker();
   applyAbilityHighlights();
   renderRaceBar();
+  // Zum Schluss: die Stapelgröße richtet sich nach der Resthöhe, alle anderen
+  // Zeilen des Tisches müssen dafür schon stehen.
+  renderCenter();
 
   runTableFlip(beforeRects);
   // Nach dem Neuaufbau: Anker der Spielerzonen sind jetzt aktuell.
@@ -1632,6 +1953,9 @@ function renderOpponents() {
   zone.innerHTML = '';
   // Zug-Highlight nur in Phasen mit einem klaren "am Zug"-Spieler.
   const showTurn = ['playing', 'ability', 'swap_flight'].includes(state.phase);
+  const m = handMetrics(state.players.filter(p => !p.isMe).length);
+  // Steuert das 2×2-Raster der Gegnerhände auf schmalen Schirmen (CSS).
+  zone.dataset.cols = m.oppCols;
   for (const p of state.players) {
     if (p.isMe) continue;
     const isActive = showTurn && state.players.indexOf(p) === state.currentPlayerIndex;
@@ -1650,6 +1974,8 @@ function renderOpponents() {
       const c = p.hand[i];
       const cardEl = document.createElement('div');
       cardEl.className = 'opp-card';
+      cardEl.style.width = m.oppW + 'px';
+      cardEl.style.height = m.oppH + 'px';
       // uid = Identität der Karte über Neuaufbauten hinweg; Grundlage für FLIP.
       if (c && c.uid) cardEl.dataset.uid = c.uid;
       cardEl.dataset.pid = p.id;
@@ -1658,7 +1984,7 @@ function renderOpponents() {
         // Lücke aus einem Schnapp-Treffer – wird gleich vom Gewinner aufgefüllt.
         cardEl.classList.add('slot-empty');
       } else if (!c.hidden) {
-        cardEl.innerHTML = buildCardInner(c, 52, 75);
+        cardEl.innerHTML = buildCardInner(c, m.oppW, m.oppH);
       } else {
         cardEl.innerHTML = '<div class="card-back"></div>';
       }
@@ -1680,18 +2006,26 @@ function renderOpponents() {
 }
 
 function renderCenter() {
+  // Beide Stapel bekommen dieselbe Größe – sie richtet sich nach dem Platz,
+  // der auf dem Tisch übrig ist (siehe pileMetrics).
+  const pile = pileMetrics();
   // Deck
   const deckEl = document.getElementById('deck-pile');
   const isMyTurn = state.currentPlayerId === state.myId;
   const canDraw = isMyTurn && state.phase === 'playing' && !state.drawnCard;
+  deckEl.style.width = pile.w + 'px';
+  deckEl.style.height = pile.h + 'px';
   deckEl.style.opacity = canDraw ? '1' : '0.5';
   deckEl.style.cursor = canDraw ? 'pointer' : 'default';
   document.getElementById('deck-count').textContent = `${state.deckSize} Karten`;
 
   // Discard – Larger display
   const discardEl = document.getElementById('discard-pile');
+  discardEl.style.width = pile.w + 'px';
+  discardEl.style.height = pile.h + 'px';
   if (state.discardTop) {
-    discardEl.innerHTML = buildCardInner(state.discardTop, 190, 280);
+    // -4px: der 2px-Rahmen des Ablagestapels gehört nicht zur Kartenfläche.
+    discardEl.innerHTML = buildCardInner(state.discardTop, pile.w - 4, pile.h - 4);
     discardEl.style.borderStyle = 'solid';
     discardEl.style.borderColor = state.discardTop.color || 'rgba(255,255,255,.3)';
   } else {
@@ -1705,7 +2039,8 @@ function renderCenter() {
   const drawnDisp = document.getElementById('drawn-card-display');
   if (state.drawnCard && state.phase === 'playing' && state.currentPlayerId === state.myId) {
     showDrawnArea(drawnArea);
-    drawnDisp.innerHTML = `<div class="card tcg-pop">${buildCardInner(state.drawnCard, 190, 278)}</div>`;
+    const dc = drawnCardSize();
+    drawnDisp.innerHTML = `<div class="card tcg-pop" style="width:${dc.w}px;height:${dc.h}px">${buildCardInner(state.drawnCard, dc.w, dc.h)}</div>`;
     renderDrawnHand();
     // Button und Hinweis machen den Flow explizit: Handkarte antippen = tauschen
     // (Fähigkeit wird verworfen). Ablegen = Karte auf den Stapel und Fähigkeit
@@ -1759,6 +2094,7 @@ function renderDrawnHand() {
   const me = state.players.find(p => p.isMe);
   const handEl = document.getElementById('drawn-hand');
   if (!me || !handEl) return;
+  const hs = drawnHandCardSize();
   handEl.innerHTML = '';
   for (let i = 0; i < me.hand.length; i++) {
     const c = me.hand[i];
@@ -1766,7 +2102,9 @@ function renderDrawnHand() {
     slot.className = 'drawn-slot';
     const card = document.createElement('div');
     card.className = 'card';
-    card.innerHTML = (c && !c.hidden) ? buildCardInner(c, 78, 114) : '<div class="card-back"></div>';
+    card.style.width = hs.w + 'px';
+    card.style.height = hs.h + 'px';
+    card.innerHTML = (c && !c.hidden) ? buildCardInner(c, hs.w, hs.h) : '<div class="card-back"></div>';
     card.onclick = () => keepDrawn(i);
     const lbl = document.createElement('div');
     lbl.className = 'drawn-slot-lbl';
@@ -1808,17 +2146,20 @@ function renderMyZone() {
 
   const hand = document.getElementById('my-hand');
   hand.innerHTML = '<div class="hand-heading">Deine Hand</div>';
+  const m = handMetrics(state.players.filter(p => !p.isMe).length);
   for (let i = 0; i < me.hand.length; i++) {
     const c = me.hand[i];
     const card = document.createElement('div');
     card.className = 'card';
+    card.style.width = m.myW + 'px';
+    card.style.height = m.myH + 'px';
     card.dataset.index = i;
     card.dataset.pid = me.id;
     if (c && c.uid) card.dataset.uid = c.uid;
     if (!c) {
       card.classList.add('slot-empty');
     } else if (!c.hidden) {
-      card.innerHTML = buildCardInner(c, 90, 130);
+      card.innerHTML = buildCardInner(c, m.myW, m.myH);
     } else {
       card.innerHTML = '<div class="card-back"></div>';
     }
@@ -1989,7 +2330,10 @@ function renderPeekModal() {
   const maxH = Math.floor((window.innerHeight * 0.9 - 40 - chrome) / 2);
   // Untergrenze: darunter passt das Info-Panel nicht mehr in die Karte. Auf sehr
   // flachen Fenstern lieber das Modal scrollen lassen als unleserlich schrumpfen.
-  const cardH = Math.max(250, Math.min(Math.round(cardW * 322 / 210), maxH));
+  // Auf dem Handy zählt das Gegenteil: dort ist Scrollen während der 6 Sekunden
+  // der eigentliche Fehler – lieber kleinere Karten, dafür alle vier sichtbar.
+  const minCardH = isCompactView() ? 150 : 250;
+  const cardH = Math.max(minCardH, Math.min(Math.round(cardW * 322 / 210), maxH));
   cardW = Math.min(cardW, Math.round(cardH * 210 / 322));
 
   // DOM nur neu aufbauen, wenn sich die Hand-Signatur ändert (Spielerwechsel,
@@ -2427,18 +2771,22 @@ function clampToViewport(a) {
 // anderen vor die Kartenreihe des Spielers, leicht überlappend.
 function drawHoldAnchor(pid) {
   if (pid === state.myId) {
-    const w = 130, h = 190;
+    // Gleiche Größe wie in der Entscheidungsansicht, in die der Flug mündet.
+    const { w, h } = drawnCardSize();
     return clampToViewport({ left: innerWidth / 2 - w / 2, top: innerHeight / 2 - h / 2, w, h });
   }
   // Vor der Kartenreihe des Spielers: etwas größer als seine Rückseiten und
   // unten überstehend, damit die Karte klar davor liegt statt dazwischen. Weiter
-  // nach unten geht nicht – darunter beginnt schon das Log-Panel.
-  const w = 84, h = 122;
+  // nach unten geht nicht – darunter beginnt schon das Log-Panel. Die Größe
+  // folgt den Gegnerkarten, sonst deckt sie auf dem Handy die halbe Hand zu.
+  const om = handMetrics(state.players.filter(p => !p.isMe).length);
+  const w = Math.max(52, Math.round(om.oppW * 1.12));
+  const h = Math.round(w * CARD_RATIO);
   const key = (window.CSS && CSS.escape) ? CSS.escape(pid) : pid;
   const zone = document.querySelector(`#opponents .opponent-zone[data-pid="${key}"]`);
   const r = zone ? zone.getBoundingClientRect() : tableCardEl(pid, 0)?.getBoundingClientRect();
   if (!r || !r.width) return null;
-  return clampToViewport({ left: r.left + r.width / 2 - w / 2, top: r.bottom - h + 22, w, h });
+  return clampToViewport({ left: r.left + r.width / 2 - w / 2, top: r.bottom - h + Math.round(h * 0.18), w, h });
 }
 
 function syncDrawHold() {
@@ -2570,6 +2918,7 @@ function applyAbilityHighlights() {
 // ── Ability Modal ─────────────────────────────────────────────────────────────
 function renderAbilityModal() {
   const overlay = document.getElementById('ability-overlay');
+  const ash = abilityShowSize();
   if (state.phase !== 'ability' || !state.abilityState) {
     overlay.classList.add('hidden');
     return;
@@ -2588,7 +2937,7 @@ function renderAbilityModal() {
   // Show drawn card
   const drawnArea = document.getElementById('ability-drawn');
   if (state.drawnCard) {
-    drawnArea.innerHTML = `<div class="card" style="width:120px;height:174px">${buildCardInner(state.drawnCard, 120, 174)}</div>`;
+    drawnArea.innerHTML = `<div class="card" style="width:${ash.w}px;height:${ash.h}px">${buildCardInner(state.drawnCard, ash.w, ash.h)}</div>`;
   } else {
     drawnArea.innerHTML = '';
   }
@@ -2608,7 +2957,7 @@ function renderAbilityModal() {
     } else {
       desc.innerHTML = 'Du siehst sie <strong>6 Sekunden</strong> – danach wird sie wieder verdeckt:';
       body.innerHTML = revealTimerHtml() + (as.revealedCard
-        ? `<div style="display:flex;justify-content:center;margin:12px 0"><div class="card" style="width:120px;height:174px">${buildCardInner(as.revealedCard, 120, 174)}</div></div>`
+        ? `<div style="display:flex;justify-content:center;margin:12px 0"><div class="card" style="width:${ash.w}px;height:${ash.h}px">${buildCardInner(as.revealedCard, ash.w, ash.h)}</div></div>`
         : '<div style="text-align:center;color:rgba(255,255,255,.4);margin:20px 0">Karte ist wieder verdeckt.</div>');
       addBtn(actions, 'Fertig', '#22c55e', () => _sendAbility({ type: 'ability', done: true }));
     }
@@ -2622,7 +2971,7 @@ function renderAbilityModal() {
     } else {
       desc.innerHTML = 'Du siehst sie <strong>6 Sekunden</strong> – danach wird sie wieder verdeckt:';
       body.innerHTML = revealTimerHtml() + (as.revealedCard
-        ? `<div style="display:flex;justify-content:center;margin:12px 0"><div class="card" style="width:120px;height:174px">${buildCardInner(as.revealedCard, 120, 174)}</div></div>`
+        ? `<div style="display:flex;justify-content:center;margin:12px 0"><div class="card" style="width:${ash.w}px;height:${ash.h}px">${buildCardInner(as.revealedCard, ash.w, ash.h)}</div></div>`
         : '<div style="text-align:center;color:rgba(255,255,255,.4);margin:20px 0">Karte ist wieder verdeckt.</div>');
       addBtn(actions, 'Fertig', '#22c55e', () => _sendAbility({ type: 'ability', done: true }));
     }
@@ -2653,14 +3002,14 @@ function renderAbilityModal() {
         body.innerHTML = revealTimerHtml() + `<div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin:12px 0">` +
           as.revealedCards.map(r => {
             const p = state.players.find(x => x.id === r.playerId);
-            return `<div style="text-align:center"><div style="font-size:11px;color:rgba(255,255,255,.5);margin-bottom:4px">${esc(p?.name||'?')} #${r.cardIndex+1}</div><div class="card" style="width:120px;height:174px">${buildCardInner(r.card, 120, 174)}</div></div>`;
+            return `<div style="text-align:center"><div style="font-size:11px;color:rgba(255,255,255,.5);margin-bottom:4px">${esc(p?.name||'?')} #${r.cardIndex+1}</div><div class="card" style="width:${ash.w}px;height:${ash.h}px">${buildCardInner(r.card, ash.w, ash.h)}</div></div>`;
           }).join('') + '</div>';
       } else {
         desc.textContent = 'Die Karten sind wieder verdeckt. Tauschen – aus dem Gedächtnis?';
         body.innerHTML = `<div style="display:flex;gap:16px;justify-content:center;margin:12px 0">` +
           (as.selectedCards || []).map(sc => {
             const p = state.players.find(x => x.id === sc.playerId);
-            return `<div style="text-align:center"><div style="font-size:11px;color:rgba(255,255,255,.5);margin-bottom:4px">${esc(p?.name||'?')} #${sc.cardIndex+1}</div><div class="card" style="width:120px;height:174px"><div class="card-back"></div></div></div>`;
+            return `<div style="text-align:center"><div style="font-size:11px;color:rgba(255,255,255,.5);margin-bottom:4px">${esc(p?.name||'?')} #${sc.cardIndex+1}</div><div class="card" style="width:${ash.w}px;height:${ash.h}px"><div class="card-back"></div></div></div>`;
           }).join('') + '</div>';
       }
       addBtn(actions, 'Tauschen', '#9C27B0', () => _sendAbility({ type: 'ability', doSwap: true }));
@@ -2680,23 +3029,25 @@ function revealTimerHtml() {
 function buildMyHandForAbility(selected, mode) {
   const me = state.players.find(p => p.isMe);
   if (!me) return '';
+  const aps = abilityPickSize();
   let html = '<div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:12px 0">';
   for (let i = 0; i < me.hand.length; i++) {
     const c = me.hand[i];
     const sel = selected && selected.some(s => s.playerId === state.myId && s.cardIndex === i);
-    html += `<div class="card ${sel?'selected':''}" style="width:100px;height:145px" onclick="abilitySelectCard('${state.myId}',${i})">${c && !c.hidden ? buildCardInner(c,100,145) : '<div class="card-back"></div>'}</div>`;
+    html += `<div class="card ${sel?'selected':''}" style="width:${aps.w}px;height:${aps.h}px" onclick="abilitySelectCard('${state.myId}',${i})">${c && !c.hidden ? buildCardInner(c,aps.w,aps.h) : '<div class="card-back"></div>'}</div>`;
   }
   html += '</div>';
   return html;
 }
 
 function buildOpponentsForAbility() {
+  const aps = abilityPickSize();
   let html = '<div style="display:flex;flex-direction:column;gap:12px;margin:12px 0">';
   for (const p of state.players) {
     if (p.isMe) continue;
     html += `<div><div style="font-size:12px;color:rgba(255,255,255,.5);margin-bottom:4px">${esc(p.name)}</div><div style="display:flex;gap:6px;flex-wrap:wrap">`;
     for (let i = 0; i < p.hand.length; i++) {
-      html += `<div class="card" style="width:100px;height:145px" onclick="abilitySelectOther('${p.id}',${i})"><div class="card-back"></div></div>`;
+      html += `<div class="card" style="width:${aps.w}px;height:${aps.h}px" onclick="abilitySelectOther('${p.id}',${i})"><div class="card-back"></div></div>`;
     }
     html += '</div></div>';
   }
@@ -2705,6 +3056,7 @@ function buildOpponentsForAbility() {
 }
 
 function buildAllCardsForAbility(selected) {
+  const aps = abilityPickSize();
   let html = '<div style="display:flex;flex-direction:column;gap:12px;margin:12px 0">';
   for (const p of state.players) {
     html += `<div><div style="font-size:12px;color:rgba(255,255,255,.5);margin-bottom:4px">${esc(p.name)}${p.isMe?' (Du)':''}</div><div style="display:flex;gap:6px;flex-wrap:wrap">`;
@@ -2712,7 +3064,7 @@ function buildAllCardsForAbility(selected) {
       const c = p.hand[i];
       const sel = selected.some(s => s.playerId === p.id && s.cardIndex === i);
       const fn = `abilitySelectCard('${p.id}',${i})`;
-      html += `<div class="card ${sel?'selected':''}" style="width:100px;height:145px" onclick="${fn}">${c && !c.hidden ? buildCardInner(c,100,145) : '<div class="card-back"></div>'}</div>`;
+      html += `<div class="card ${sel?'selected':''}" style="width:${aps.w}px;height:${aps.h}px" onclick="${fn}">${c && !c.hidden ? buildCardInner(c,aps.w,aps.h) : '<div class="card-back"></div>'}</div>`;
     }
     html += '</div></div>';
   }
@@ -2985,13 +3337,20 @@ function buildCardInner(card, w, h) {
   const hexH = Math.max(11, headerH - 11);
   const hexW = Math.round(hexH * 0.86);
   const avail = Math.max(0, h - headerH);
-  const imgH = Math.round(avail * 0.52);
+  /* Auf dem Handy werden Karten deutlich kleiner als am Desktop. Unter 100px
+     Breite passt der Fähigkeitstext nicht mehr in das Info-Feld und wurde
+     mitten im Wort abgeschnitten; unter ~62px (Gegnerhände) bleibt für Text
+     überhaupt kein Platz. Dann lieber weglassen – der gewonnene Raum geht ans
+     Bild, und Wert und Name stehen weiter in der Kopfzeile. */
+  const mini = w < 100;
+  const tiny = w < 62;
+  const imgH = tiny ? avail : Math.round(avail * 0.52);
   const infoPanelH = avail - imgH;
 
   const abilityName = getAbilityName(card.ability);
   const abilityDesc = getAbilityDesc(card.ability);
 
-  return `<div class="tcg-card-container ${colorClass}" style="width:${w}px;height:${h}px;display:flex;flex-direction:column">
+  return `<div class="tcg-card-container ${colorClass}${mini ? ' tcg-mini' : ''}" style="width:${w}px;height:${h}px;display:flex;flex-direction:column">
     <div class="tcg-card-border"></div>
     <div class="tcg-card-header" style="height:${headerH}px;flex:0 0 auto">
       <div class="tcg-card-value-hex" style="width:${hexW}px;height:${hexH}px;font-size:${Math.max(8, Math.round(hexH * 0.46))}px">${card.value}</div>
@@ -3001,14 +3360,14 @@ function buildCardInner(card, w, h) {
     <div class="tcg-card-image" style="height:${imgH}px">
       <img src="/images/${encodeURIComponent(card.image)}" style="width:100%;height:100%;object-fit:cover;object-position:${cardImageFocus(card.image)}" onerror="this.parentElement.textContent='[Bild]'">
     </div>
-    <div class="tcg-card-info" style="height:${infoPanelH}px">
+    ${infoPanelH <= 0 ? '' : `<div class="tcg-card-info" style="height:${infoPanelH}px">
       <div>
         <div class="tcg-ability-label">${card.ability === 'none' ? 'NORMAL' : 'ABILITY'}</div>
         <div class="tcg-ability-name">${abilityName}</div>
         <div class="tcg-ability-desc">${abilityDesc}</div>
       </div>
       <div class="tcg-flavor-text">"${esc(card.quote || '...')}"</div>
-    </div>
+    </div>`}
   </div>`;
 }
 
@@ -3041,6 +3400,50 @@ function showToast(msg, color = '#333', anim = null) {
   el.textContent = msg;
   container.appendChild(el);
   setTimeout(() => el.remove(), 3100);
+}
+
+// ── Log ein-/ausklappen ───────────────────────────────────────────────────────
+// Ausgeklappt frisst die Liste fünf Zeilen Höhe – auf dem Handy genau der
+// Platz, den die vier Hände und die Aktionsleiste brauchen. Zugeklappt bleibt
+// die letzte Meldung in der Kopfzeile sichtbar, neue Meldungen zählt ein Badge.
+let logUnread = 0;
+
+function setLogOpen(open, persist) {
+  const box = document.getElementById('log-box');
+  if (!box) return;
+  box.classList.toggle('collapsed', !open);
+  document.getElementById('log-toggle').setAttribute('aria-expanded', String(open));
+  if (open) {
+    logUnread = 0;
+    updateLogBadge();
+    const panel = document.getElementById('log-panel');
+    panel.scrollTop = panel.scrollHeight;
+  }
+  if (persist) { try { localStorage.setItem('karma_log_open', open ? '1' : '0'); } catch (e) {} }
+  // Der Tisch teilt sich die Höhe neu auf – die Stapel wachsen bzw. schrumpfen.
+  if (state && state.phase && state.phase !== 'lobby') render();
+}
+
+function toggleLog() {
+  setLogOpen(document.getElementById('log-box').classList.contains('collapsed'), true);
+}
+
+function updateLogBadge() {
+  const badge = document.getElementById('log-badge');
+  if (!badge) return;
+  badge.textContent = logUnread > 9 ? '9+' : String(logUnread);
+  badge.classList.toggle('hidden', logUnread === 0);
+}
+
+function initLogPanel() {
+  let open = null;
+  try {
+    const v = localStorage.getItem('karma_log_open');
+    if (v !== null) open = v === '1';
+  } catch (e) {}
+  // Ohne gespeicherte Vorliebe: am Desktop offen, auf dem Handy zu.
+  if (open === null) open = !isCompactView();
+  setLogOpen(open, false);
 }
 
 function addLog(msg, color = 'rgba(255,255,255,.35)', anim = null) {
@@ -3079,11 +3482,24 @@ function addLog(msg, color = 'rgba(255,255,255,.35)', anim = null) {
   if (atBottom) panel.scrollTop = panel.scrollHeight;
 
   while (panel.children.length > 200) panel.removeChild(panel.firstChild);
+
+  // Zugeklappt: letzte Meldung in die Kopfzeile, Zähler für die ungelesenen.
+  const last = document.getElementById('log-last');
+  if (last) last.textContent = msg;
+  const box = document.getElementById('log-box');
+  if (box && box.classList.contains('collapsed')) {
+    logUnread++;
+    updateLogBadge();
+  }
 }
 
 function clearLog() {
   const panel = document.getElementById('log-panel');
   if (panel) panel.innerHTML = '<div class="log-empty">Noch keine Ereignisse…</div>';
+  const last = document.getElementById('log-last');
+  if (last) last.textContent = 'Noch keine Ereignisse…';
+  logUnread = 0;
+  updateLogBadge();
 }
 
 // ── Log-Replay ────────────────────────────────────────────────────────────────
@@ -3258,9 +3674,21 @@ function copySessionId() {
   }).catch(() => showToast('Fehler beim Kopieren', '#ef4444'));
 }
 
-document.addEventListener('DOMContentLoaded', () => { setupSwipeListeners(); clearLog(); });
+// Drehen des Handys oder Größenänderung des Fensters ändert alle Tischmaße –
+// einmal neu zeichnen, gebündelt über einen Frame.
+let resizeTimer = null;
+window.addEventListener('resize', () => {
+  if (resizeTimer) clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => {
+    resizeTimer = null;
+    if (state && state.phase && state.phase !== 'lobby') render();
+  }, 150);
+});
+
+document.addEventListener('DOMContentLoaded', () => { setupSwipeListeners(); clearLog(); initLogPanel(); });
 setupSwipeListeners();
 clearLog();
+initLogPanel();
 </script>
 </body>
 </html>

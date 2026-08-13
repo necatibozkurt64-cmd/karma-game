@@ -42,6 +42,15 @@ Expect only those 2 path lines to differ. If more differs, the deploy is out of 
 - State sent **back to clients is camelCase** (`send_state`).
 - **Rule when adding a new message field:** read it through `g()`/`gi()` in `dispatch()`/its handler, and if it's part of game state, add it to `send_state()` in camelCase. Miss either side and the field silently disappears.
 
+## Handy-Layout (compact view)
+Der Tisch ist ein `100dvh`-Block ohne Scrollen — auf dem Handy müssen alle vier Hände, beide Stapel **und** die Aktionsleiste („Spiel beenden") gleichzeitig sichtbar sein. Deshalb:
+- **Kartenmaße kommen aus dem JS**, nicht aus dem CSS: `handMetrics(oppCount)` (Gegner-/eigene Karten, bei 3 Gegnern 2×2-Raster via `data-cols`), `pileMetrics()` (Stapel — misst die Resthöhe von `#center`), `drawnCardSize()`, `abilityPickSize()`. Alle setzen Inline-`width`/`height` **und** geben dieselben Zahlen an `buildCardInner()`; Box und Inhalt müssen zusammenpassen.
+- **`isCompactView()` (≤760px breit oder ≤620px hoch) muss zur Media Query `@media (max-width: 760px), (max-height: 620px)` passen** — beide zusammen ändern. Dito `isShortView()` (≤460px hoch) ↔ `@media (max-height: 460px)`, wo der Tisch ausnahmsweise scrollen darf.
+- **Reihenfolge in `render()`:** `renderCenter()` läuft als Letztes, weil `pileMetrics()` die Resthöhe misst. `fixedRowsHeight()` misst nur *stabile* Zeilen (Topbar, Laufband, Log-Kopf) — Hinweiszeile, Endrunden-Banner und Schnapp-Leiste bewusst nicht, sonst wechseln die Karten mitten im Schnapp-Fenster ihre Größe.
+- `#log-panel` sitzt in `#log-box` und ist ein-/ausklappbar (`toggleLog()`, Zustand in `localStorage['karma_log_open']`, auf dem Handy standardmäßig zu). Zugeklappt zeigt die Kopfzeile die letzte Meldung + Zähler; ausgeklappt legt sie sich auf dem Handy **über** den Tisch, statt ihn zu stauchen.
+- `buildCardInner()` schaltet unter 100px Breite auf `.tcg-mini` (ohne Chip/Beschreibung/Zitat) und unter 62px ganz ohne Info-Panel.
+- `#instruct`/`#end-banner` liegen im DOM in `#game`: am Desktop `position: fixed`, auf dem Handy im Fluss (sonst verdecken sie die Gegnerkarten).
+
 ## Card model
 - `CARD_DEFS` (15 cards) lives in both server files: `dict(nr, name, value, ability, quote, count, colors)`.
 - Abilities: `none`, `see_own`, `see_others`, `swap`, `see_swap` (handled in `handle_ability`).
@@ -50,3 +59,15 @@ Expect only those 2 path lines to differ. If more differs, the deploy is out of 
 
 ## Gameplay flow (one glance)
 Lobby (host `create`, others `join`, host `start` with ≥2 players) → **peek** phase (each player secretly peeks 2 of their 4 face-down cards) → **turns**: draw → keep (swap into a hand slot) or discard_drawn; special cards trigger abilities → **racing / reaction_swap** phase (snap matching values) → someone `call_end` → **scoring** (lowest total wins, penalties) → `next_round`. Timing constants: `REVEAL_SECONDS`, `FLIGHT_SECONDS` (must match the client's flight animation).
+
+## E2E tests (Playwright)
+Run them after any change to the server logic or `app/public/index.html`:
+```bash
+npx playwright test
+```
+- Config: `playwright.config.ts`. Playwright boots its **own** `server_render.py` on port **3100** (`E2E_PORT`), so a dev server on 3000 is untouched. Sessions are in-memory — nothing to reset between runs.
+- Specs in `tests/e2e/`: `lobby.spec.ts` (create/join/errors), `game-start.spec.ts` (2 players → peek → table), `server-sync.spec.ts` (**guards the two-server rule above**).
+- Multiplayer tests drive a second player through `browser.newContext()`. `workers` is pinned to 3 — the Playwright default opens too many contexts at once here and tests fall over on timeouts.
+- Two traps worth knowing:
+  - The client uses `alert()`. Handle the dialog **inside** a `page.on('dialog', …)` listener; a bare `waitForEvent('dialog')` disables auto-dismiss and hangs the click.
+  - When the **last** player finishes peeking, the phase flips to `playing` and the peek modal stops re-rendering — its title never reaches "Einprägen abgeschlossen". Assert on a hidden `#peek-overlay` for the last player instead.
