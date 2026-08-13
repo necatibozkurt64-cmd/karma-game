@@ -10,3 +10,10 @@ node_modules/
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+
+# Quellfotos der Karten: nur die optimierten WebP gehen ins Repo, die
+# hochauflösenden Originale bleiben lokal.
+Bilder/originale/
+app/public/Bilder/fotos/*.png
+app/public/Bilder/fotos/*.jpg
+app/public/Bilder/fotos/*.jpeg

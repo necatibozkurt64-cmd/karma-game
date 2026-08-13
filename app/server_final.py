@@ -17,12 +17,12 @@ CARD_DEFS = [
     dict(nr=2,  name='Tupac',                  value=2,  ability='none',       quote='Chill, Alter, es kommen auch gute Zeiten.',  count=4,  colors=['#4CAF50','#9C27B0','#2196F3','#FF9800']),
     dict(nr=3,  name='Arnold',                 value=3,  ability='none',       quote='I choose four',                             count=4,  colors=['#4CAF50','#9C27B0','#2196F3','#FF9800']),
     dict(nr=4,  name='Cartman',                value=4,  ability='none',       quote='Respect My Authority!',                    count=4,  colors=['#4CAF50','#9C27B0','#2196F3','#FF9800']),
-    dict(nr=5,  name='Zidane',                 value=5,  ability='none',       quote='Ciao bella ciao!',                         count=4,  colors=['#4CAF50','#9C27B0','#2196F3','#FF9800']),
-    dict(nr=6,  name='Lee',                    value=6,  ability='none',       quote='Bee water my friend',                      count=4,  colors=['#4CAF50','#9C27B0','#2196F3','#FF9800']),
+    dict(nr=5,  name='Barbie',                 value=5,  ability='none',       quote='Ciao bella ciao!',                         count=4,  colors=['#4CAF50','#9C27B0','#2196F3','#FF9800']),
+    dict(nr=6,  name='Hawk Tuah Girl',         value=6,  ability='none',       quote='Bee water my friend',                      count=4,  colors=['#4CAF50','#9C27B0','#2196F3','#FF9800']),
     dict(nr=7,  name='Ronaldo',                value=7,  ability='see_own',    quote='SUUUI ...your own card!!!',                 count=4,  colors=['#4CAF50','#9C27B0','#2196F3','#FF9800']),
     dict(nr=8,  name='Leo',                     value=8,  ability='see_own',    quote='check this out',                           count=4,  colors=['#4CAF50','#9C27B0','#2196F3','#FF9800']),
-    dict(nr=9,  name='Snowden',                value=9,  ability='see_others', quote='They see everything..',                    count=4,  colors=['#4CAF50','#9C27B0','#2196F3','#FF9800']),
-    dict(nr=10, name='Trump',                  value=10, ability='see_others', quote='Lets fuck up',                             count=4,  colors=['#4CAF50','#9C27B0','#2196F3','#FF9800']),
+    dict(nr=9,  name='Penny',                  value=9,  ability='see_others', quote='They see everything..',                    count=4,  colors=['#4CAF50','#9C27B0','#2196F3','#FF9800']),
+    dict(nr=10, name='Merkel',                 value=10, ability='see_others', quote='Lets fuck up',                             count=4,  colors=['#4CAF50','#9C27B0','#2196F3','#FF9800']),
     dict(nr=11, name='Joker',                  value=11, ability='swap',       quote="Let's do some confusion.",                 count=4,  colors=['#4CAF50','#9C27B0','#2196F3','#FF9800']),
     dict(nr=12, name='Hund',                   value=12, ability='see_swap',   quote='To the moon!',                             count=4,  colors=['#4CAF50','#9C27B0','#2196F3','#FF9800']),
     dict(nr=13, name='Mr Hankey',              value=13, ability='none',       quote='shit happens.',                            count=2,  colors=['#F44336','#F44336']),
@@ -31,9 +31,9 @@ CARD_DEFS = [
 ]
 IMAGE_FILES = {
     1:'01_Olli.png', 2:'02_tupac.jpg', 3:'03_arnold schwarzenegger.jpg',
-    4:'04_Eric Cartman.png', 5:'05_zidane.jpg', 6:'06_bruce lee.jpg',
-    7:'07_Ronaldo.jpeg', 8:'08_Leonardo DiCaprio.jpg', 9:'09_snowden.jpg',
-    10:'10_trump.jpg', 11:'11_joker.jpg', 12:'12_Hund.jpg',
+    4:'04_Eric Cartman.png', 5:'fotos/05-barbie.webp', 6:'fotos/06-hawk-tuah.webp',
+    7:'07_Ronaldo.jpeg', 8:'08_Leonardo DiCaprio.jpg', 9:'fotos/09-penny.webp',
+    10:'fotos/10-merkel.webp', 11:'11_joker.jpg', 12:'12_Hund.jpg',
     13:'13_MrHankey.jpg', 14:'14_Thierry Henry.jpeg', 15:'15_Katze.jpg',
 }
 IMAGES_DIR = Path(__file__).parent / 'public' / 'Bilder'
@@ -452,7 +452,7 @@ async def handle_call_end(s, pid):
         return
     s['end_called_by'] = pid
     s['final_round_left'] = len(s['players']) - 1
-    await broadcast(s, dict(type='toast', msg=f"{cp['name']} beendet das Spiel!", color='#ff9800',
+    await broadcast(s, dict(type='toast', key='log.callEnd', params={'name': cp['name']}, color='#ff9800',
                             anim={'kind': 'callEnd', 'playerId': pid}))
     await advance_turn(s, count_final=False)
 
@@ -467,7 +467,7 @@ async def handle_draw(s, pid):
         return
     card = s['deck'].pop()
     s['drawn_card'] = card
-    await broadcast(s, dict(type='toast', msg=f"{cp['name']} zieht eine Karte", color='#60a5fa',
+    await broadcast(s, dict(type='toast', key='log.draw', params={'name': cp['name']}, color='#60a5fa',
                             anim={'kind': 'draw', 'playerId': cp['id']}))
     await send_state(s)
 
@@ -487,7 +487,8 @@ async def handle_keep(s, pid, hand_index):
     cp['revealed'].pop(str(hand_index), None)
     s['drawn_card'] = None
     s['discard_pile'].append(replaced)
-    await broadcast(s, dict(type='toast', msg=f"{cp['name']} ersetzt Karte {hand_index + 1}", color='#a78bfa',
+    await broadcast(s, dict(type='toast', key='log.keep',
+                            params={'name': cp['name'], 'index': hand_index + 1}, color='#a78bfa',
                             anim={'kind': 'keep', 'playerId': cp['id'], 'cardIndex': hand_index,
                                   'card': card_view(replaced, False)}))
     await start_racing(s)
@@ -512,7 +513,7 @@ async def handle_discard_drawn(s, pid):
         s['drawn_card'] = None
         s['discard_pile'].append(card)
         cp = s['players'][s['current_player_index']]
-        await broadcast(s, dict(type='toast', msg=f"{cp['name']} legt eine Karte ab", color='#60a5fa',
+        await broadcast(s, dict(type='toast', key='log.discard', params={'name': cp['name']}, color='#60a5fa',
                                 anim={'kind': 'deckToDiscard', 'playerId': cp['id'],
                                       'card': card_view(card, False)}))
         await start_racing(s)
@@ -584,8 +585,7 @@ async def _racing_timer(s):
     _clear_race(s)
     s['phase'] = 'playing'
     await broadcast(s, dict(
-        type='toast', msg='Schnapp-Fenster abgelaufen – niemand war schnell genug',
-        color='#64748b',
+        type='toast', key='log.raceTimeout', color='#64748b',
         anim={'kind': 'raceTimeout', 'card': card_view(card, False) if card else None},
     ))
     await advance_turn(s)
@@ -610,7 +610,6 @@ async def handle_race(s, pid, target_pid, card_index):
 
     own = owner['id'] == pid
     match = card['value'] == s['racing_card']['value']
-    where = 'bei sich' if own else f"bei {owner['name']}"
 
     # Wird VOR der Mutation gebaut: der Client braucht den Slot, an dem die Karte
     # in diesem Moment noch liegt, um die Aufdeck-Animation dort zu starten.
@@ -632,7 +631,9 @@ async def handle_race(s, pid, target_pid, card_index):
         await broadcast(s, reveal)
         await broadcast(s, dict(
             type='toast',
-            msg=f"{p['name']} deckt {where} Karte {card_index + 1} auf: {card['name']} ({card['value']}) – kein Treffer, Strafkarte",
+            key='log.raceMissOwn' if own else 'log.raceMissOther',
+            params={'name': p['name'], 'owner': owner['name'], 'index': card_index + 1,
+                    'cardNr': card['nr'], 'value': card['value']},
             color='#f44336',
             anim={'kind': 'raceMiss', 'racerId': pid, 'ownerId': owner['id'],
                   'cardIndex': card_index, 'card': card_view(card, False),
@@ -654,7 +655,9 @@ async def handle_race(s, pid, target_pid, card_index):
         s['phase'] = 'playing'
         await broadcast(s, dict(
             type='toast',
-            msg=f"{p['name']} schnappt Karte {card_index + 1}: {card['name']} ({card['value']}) – Treffer, eine Karte weniger und am Zug",
+            key='log.raceHitOwn',
+            params={'name': p['name'], 'index': card_index + 1,
+                    'cardNr': card['nr'], 'value': card['value']},
             color='#4CAF50',
             anim={'kind': 'raceHit', 'racerId': pid, 'ownerId': owner['id'],
                   'cardIndex': card_index, 'card': card_view(card, False), 'own': True},
@@ -670,7 +673,9 @@ async def handle_race(s, pid, target_pid, card_index):
 
     await broadcast(s, dict(
         type='toast',
-        msg=f"{p['name']} schnappt Karte {card_index + 1} von {owner['name']}: {card['name']} ({card['value']}) – Treffer",
+        key='log.raceHitOther',
+        params={'name': p['name'], 'owner': owner['name'], 'index': card_index + 1,
+                'cardNr': card['nr'], 'value': card['value']},
         color='#9C27B0',
         anim={'kind': 'raceHit', 'racerId': pid, 'ownerId': owner['id'],
               'cardIndex': card_index, 'card': card_view(card, False), 'own': False},
@@ -751,7 +756,8 @@ async def _resolve_race_give(s, hand_index, auto=False):
     await broadcast(s, anim)
     await broadcast(s, dict(
         type='toast',
-        msg=f"{p['name']} gibt Karte {hand_index + 1} an {owner['name']} ab{' (automatisch)' if auto else ''} – am Zug mit einer Karte weniger",
+        key='log.giveAuto' if auto else 'log.give',
+        params={'name': p['name'], 'owner': owner['name'], 'index': hand_index + 1},
         color='#9C27B0',
         anim={'kind': 'give', 'fromPlayerId': p['id'], 'fromCardIndex': hand_index,
               'toPlayerId': owner['id'], 'toCardIndex': slot},
@@ -807,7 +813,8 @@ async def handle_ability(s, pid, data):
             a['selected_cards'] = [{'player_id': pid, 'card_index': idx}]
             a['waiting_for_selection'] = False
             start_ability_reveal(s, a)
-            await broadcast(s, dict(type='toast', msg=f"{p['name']} sieht Karte {idx + 1}", color='#f472b6',
+            await broadcast(s, dict(type='toast', key='log.seeOwn',
+                                    params={'name': p['name'], 'index': idx + 1}, color='#f472b6',
                                     anim={'kind': 'peek', 'slots': [{'playerId': p['id'], 'cardIndex': idx}]}))
             await send_state(s)
         else:
@@ -834,7 +841,8 @@ async def handle_ability(s, pid, data):
             a['selected_cards'] = [{'player_id': tp['id'], 'card_index': idx}]
             a['waiting_for_selection'] = False
             start_ability_reveal(s, a)
-            await broadcast(s, dict(type='toast', msg=f"{activator['name']} sieht Karte {idx + 1} von {tp['name']}", color='#f472b6',
+            await broadcast(s, dict(type='toast', key='log.seeOther',
+                                    params={'name': activator['name'], 'owner': tp['name'], 'index': idx + 1}, color='#f472b6',
                                     anim={'kind': 'peek', 'slots': [{'playerId': tp['id'], 'cardIndex': idx}]}))
             await send_state(s)
         else:
@@ -870,7 +878,9 @@ async def handle_ability(s, pid, data):
                 p2n = next(x for x in s['players'] if x['id'] == c2['player_id'])['name']
                 await broadcast(s, dict(
                     type='toast',
-                    msg=f"{activator['name']} tauscht Karte {c1['card_index']+1} von {p1n} mit Karte {c2['card_index']+1} von {p2n}",
+                    key='log.swap',
+                    params={'name': activator['name'], 'i1': c1['card_index']+1, 'p1': p1n,
+                            'i2': c2['card_index']+1, 'p2': p2n},
                     color='#9C27B0',
                     anim=_swap_anim(c1, c2),
                 ))
@@ -906,7 +916,9 @@ async def handle_ability(s, pid, data):
                 p2n = next(x for x in s['players'] if x['id'] == c2['player_id'])['name']
                 await broadcast(s, dict(
                     type='toast',
-                    msg=f"{activator['name']} sieht Karte {c1['card_index']+1} von {p1n} und Karte {c2['card_index']+1} von {p2n}",
+                    key='log.seeTwo',
+                    params={'name': activator['name'], 'i1': c1['card_index']+1, 'p1': p1n,
+                            'i2': c2['card_index']+1, 'p2': p2n},
                     color='#f472b6',
                     anim={'kind': 'peek', 'slots': [_slot(c1), _slot(c2)]},
                 ))
@@ -927,14 +939,17 @@ async def handle_ability(s, pid, data):
                 _do_swap(s, c1, c2)
                 await broadcast(s, dict(
                     type='toast',
-                    msg=f"{activator['name']} tauscht Karte {c1['card_index']+1} von {p1n} mit Karte {c2['card_index']+1} von {p2n}",
+                    key='log.swap',
+                    params={'name': activator['name'], 'i1': c1['card_index']+1, 'p1': p1n,
+                            'i2': c2['card_index']+1, 'p2': p2n},
                     color='#9C27B0',
                     anim=_swap_anim(c1, c2),
                 ))
             else:
                 # Auch "nicht getauscht" ist öffentliche Information – sonst wüssten
                 # die anderen nicht, ob sich etwas verändert hat.
-                await broadcast(s, dict(type='toast', msg=f"{activator['name']} tauscht nicht", color='#64748b',
+                await broadcast(s, dict(type='toast', key='log.noSwap',
+                                        params={'name': activator['name']}, color='#64748b',
                                         anim={'kind': 'stay', 'slots': [_slot(c1), _slot(c2)]}))
             _forget_uid(s, a['drawn_card']['uid'])
             s['discard_pile'].append(a['drawn_card'])
@@ -994,17 +1009,19 @@ async def end_round(s):
     caller = s['end_called_by']
     if caller and caller in scores:
         caller_score = scores[caller]
+        # Nur die Gruende als Schluessel - den Satz darum baut der Client in der
+        # Sprache des jeweiligen Spielers (siehe penaltyReason() im Frontend).
         reasons = []
         if caller_score != min_score:
-            reasons.append('nicht gewonnen')
+            reasons.append('notWon')
         if caller_score > 7:
-            reasons.append('mehr als 7 Punkte auf der Hand')
+            reasons.append('over7')
         if reasons:
             penalty = 30
             scores[caller] = caller_score + penalty
             score_breakdown[caller]['penalties'].append({
                 'amount': penalty,
-                'reason': 'Spiel beendet, aber ' + ' und '.join(reasons) + ': +30 Strafpunkte'
+                'reasons': reasons,
             })
 
     s['round_scores'] = scores
@@ -1047,7 +1064,8 @@ async def ws_handler(request):
                 p = next((x for x in s['players'] if x['id'] == info.get('player_id')), None)
                 if p:
                     p['connected'] = False
-                    await broadcast(s, dict(type='toast', msg=f"{p['name']} hat die Verbindung getrennt.", color='#ff9800'))
+                    await broadcast(s, dict(type='toast', key='log.disconnected',
+                                            params={'name': p['name']}, color='#ff9800'))
                     await send_state(s)
 
     return ws
@@ -1074,17 +1092,17 @@ async def dispatch(ws, msg):
         sid  = (g('sessionId', 'session_id') or '').upper()
         s = sessions.get(sid)
         if not s:
-            await send(ws, dict(type='error', msg='Session nicht gefunden.')); return
+            await send(ws, dict(type='error', key='err.sessionNotFound')); return
         if s['phase'] != 'lobby':
-            await send(ws, dict(type='error', msg='Spiel bereits gestartet.')); return
+            await send(ws, dict(type='error', key='err.gameStarted')); return
         if len(s['players']) >= 4:
-            await send(ws, dict(type='error', msg='Session ist voll (max. 4 Spieler).')); return
+            await send(ws, dict(type='error', key='err.sessionFull')); return
         if any(p['id'] == pid for p in s['players']):
-            await send(ws, dict(type='error', msg='Bereits in der Session.')); return
+            await send(ws, dict(type='error', key='err.alreadyIn')); return
         _add_player(s, pid, name, ws)
         ws_map[id(ws)].update(player_id=pid, session_id=sid)
         await send(ws, dict(type='joined', sessionId=sid))
-        await broadcast(s, dict(type='toast', msg=f'{name} ist beigetreten!', color='#4CAF50'))
+        await broadcast(s, dict(type='toast', key='log.joined', params={'name': name}, color='#4CAF50'))
         await send_state(s)
         return
 

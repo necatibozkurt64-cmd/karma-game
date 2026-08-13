@@ -1051,42 +1051,42 @@ body[data-cardback="karo"] .card-back::after { border-color: rgba(120,200,160,.2
 <!-- LOBBY -->
 <div id="lobby">
   <div style="position:fixed;top:16px;left:16px;display:flex;gap:8px;z-index:70">
-    <button id="lobby-help" class="gear-btn" onclick="openHelp()" title="Spielregeln">?</button>
-    <button id="lobby-gear" class="gear-btn" onclick="openSettings()" title="Einstellungen">⚙</button>
+    <button id="lobby-help" class="gear-btn" onclick="openHelp()" data-i18n-title="rules">?</button>
+    <button id="lobby-gear" class="gear-btn" onclick="openSettings()" data-i18n-title="settings">⚙</button>
   </div>
   <div class="brand-lockup">
     <svg class="brand-mark" viewBox="0 0 104 100"><path fill="#4b5080" fill-rule="evenodd" d="M24 54a38 38 0 1 0 76 0a38 38 0 1 0-76 0ZM15 54a33 33 0 1 0 66 0a33 33 0 1 0-66 0Z"/><path fill="#ffffff" fill-rule="evenodd" d="M2 48a40 40 0 1 0 80 0a40 40 0 1 0-80 0ZM21 48a35 35 0 1 0 70 0a35 35 0 1 0-70 0Z"/></svg>
     <svg class="brand-word" viewBox="-6 -6 470 112" fill="none" stroke="currentColor" stroke-width="3.4"><path d="M2 0 V100 M2 56 L48 0 M2 56 L48 100"/><path d="M90 100 L120 0 L150 100"/><path d="M192 100 V0 H222 A26 26 0 0 1 222 52 H192 M220 52 L250 100"/><path d="M292 100 V0 L324 72 L356 0 V100"/><path d="M398 100 L428 0 L458 100"/></svg>
   </div>
-  <div class="logo-sub">Das Kartenspiel</div>
+  <div class="logo-sub" data-i18n="tagline">Das Kartenspiel</div>
 
   <div id="lobby-home" class="card-box">
-    <h2>Spieler</h2>
-    <input id="player-name" type="text" placeholder="Dein Name" maxlength="20" autocomplete="off">
-    <div class="divider">als Host</div>
+    <h2 data-i18n="player">Spieler</h2>
+    <input id="player-name" type="text" data-i18n-ph="playerName" placeholder="Dein Name" maxlength="20" autocomplete="off">
+    <div class="divider" data-i18n="host">als Host</div>
     <select id="game-mode">
-      <option value="single">Einzelspiel</option>
-      <option value="best_of_3">Best of 3</option>
-      <option value="best_of_5">Best of 5</option>
-      <option value="best_of_10">Best of 10</option>
+      <option value="single" data-i18n="singleGame">Einzelspiel</option>
+      <option value="best_of_3" data-i18n="bestOf3">Best of 3</option>
+      <option value="best_of_5" data-i18n="bestOf5">Best of 5</option>
+      <option value="best_of_10" data-i18n="bestOf10">Best of 10</option>
     </select>
-    <button class="btn btn-gold" onclick="createSession()">Session erstellen</button>
-    <div class="divider">oder joinen</div>
-    <input id="join-code" type="text" placeholder="Session-Code (z.B. ABC123)" maxlength="6" autocomplete="off" style="text-transform:uppercase;letter-spacing:3px">
-    <button class="btn btn-outline" onclick="joinSession()">Beitreten</button>
+    <button class="btn btn-gold" onclick="createSession()" data-i18n="createSession">Session erstellen</button>
+    <div class="divider" data-i18n="orJoin">oder joinen</div>
+    <input id="join-code" type="text" data-i18n-ph="joinCode" placeholder="Session-Code (z.B. ABC123)" maxlength="6" autocomplete="off" style="text-transform:uppercase;letter-spacing:3px">
+    <button class="btn btn-outline" onclick="joinSession()" data-i18n="join">Beitreten</button>
   </div>
 
   <div id="lobby-waiting" class="card-box hidden">
-    <h2>Session-Code</h2>
+    <h2 data-i18n="sessionCode">Session-Code</h2>
     <div style="display:flex;align-items:center;justify-content:center;gap:12px">
       <div id="session-id-display"></div>
-      <button id="copy-session-btn" class="gear-btn" style="width:36px;height:36px;font-size:16px;padding:0;line-height:1" title="In Zwischenablage kopieren" onclick="copySessionId()">📋</button>
+      <button id="copy-session-btn" class="gear-btn" style="width:36px;height:36px;font-size:16px;padding:0;line-height:1" data-i18n-title="copyToClipboard" onclick="copySessionId()">📋</button>
     </div>
-    <div style="font-size:12px;color:rgba(255,255,255,.4);text-align:center">Zeige diesen Code den anderen Spielern</div>
-    <div style="font-size:13px;color:rgba(255,255,255,.6);margin-top:4px">Spieler in der Session:</div>
+    <div style="font-size:12px;color:rgba(255,255,255,.4);text-align:center" data-i18n="showCode">Zeige diesen Code den anderen Spielern</div>
+    <div style="font-size:13px;color:rgba(255,255,255,.6);margin-top:4px" data-i18n="playersInSession">Spieler in der Session:</div>
     <div id="players-list"></div>
-    <button id="start-btn" class="btn btn-green hidden" onclick="startGame()">Spiel starten</button>
-    <div id="waiting-msg" style="font-size:13px;color:rgba(255,255,255,.4);text-align:center">Warte auf den Host…</div>
+    <button id="start-btn" class="btn btn-green hidden" onclick="startGame()" data-i18n="startGame">Spiel starten</button>
+    <div id="waiting-msg" style="font-size:13px;color:rgba(255,255,255,.4);text-align:center" data-i18n="waitingForHost">Warte auf den Host…</div>
   </div>
 </div>
 
@@ -1100,8 +1100,8 @@ body[data-cardback="karo"] .card-back::after { border-color: rgba(120,200,160,.2
     <div id="tb-mode" class="tb-info"></div>
     <div id="tb-scores" class="tb-scores"></div>
     <div id="tb-phase" class="tb-phase"></div>
-    <button class="gear-btn" onclick="openHelp()" title="Spielregeln">?</button>
-    <button class="gear-btn" onclick="openSettings()" title="Einstellungen">⚙</button>
+    <button class="gear-btn" onclick="openHelp()" data-i18n-title="rules">?</button>
+    <button class="gear-btn" onclick="openSettings()" data-i18n-title="settings">⚙</button>
   </div>
 
   <!-- Beobachter-Laufband: zeigt laufende Fähigkeiten, ohne den Tisch zu verdecken -->
@@ -1115,7 +1115,7 @@ body[data-cardback="karo"] .card-back::after { border-color: rgba(120,200,160,.2
   <div id="log-box" class="collapsed">
     <button type="button" id="log-toggle" aria-expanded="false" aria-controls="log-panel" onclick="toggleLog()">
       <span class="log-chevron" aria-hidden="true">▾</span>
-      <span class="log-toggle-lbl">Verlauf</span>
+      <span class="log-toggle-lbl" data-i18n="logTitle">Verlauf</span>
       <span class="log-last" id="log-last"></span>
       <span class="log-badge hidden" id="log-badge"></span>
     </button>
@@ -1127,7 +1127,7 @@ body[data-cardback="karo"] .card-back::after { border-color: rgba(120,200,160,.2
   <div id="race-bar" class="hidden">
     <div class="race-head">
       <span class="race-icon">⚡</span>
-      <span class="race-title" id="race-title">Schnapp</span>
+      <span class="race-title" id="race-title"></span>
       <span class="race-value" id="race-value"></span>
       <span class="race-secs" id="race-secs">0.0</span>
     </div>
@@ -1137,16 +1137,16 @@ body[data-cardback="karo"] .card-back::after { border-color: rgba(120,200,160,.2
 
   <div id="center">
     <div class="pile-area">
-      <div class="pile-label">Nachziehstapel</div>
+      <div class="pile-label" data-i18n="drawDeck">Nachziehstapel</div>
       <div class="deck-pile" id="deck-pile" onclick="drawCard()">
         <div class="card-back"></div>
         <div class="deck-count" id="deck-count"></div>
       </div>
     </div>
     <div class="pile-area">
-      <div class="pile-label">Ablagestapel</div>
+      <div class="pile-label" data-i18n="discardPile">Ablagestapel</div>
       <div class="discard-pile" id="discard-pile">
-        <div class="discard-empty">Leer</div>
+        <div class="discard-empty" data-i18n="empty">Leer</div>
       </div>
     </div>
   </div>
@@ -1160,7 +1160,7 @@ body[data-cardback="karo"] .card-back::after { border-color: rgba(120,200,160,.2
   <div id="myzone">
     <div class="my-name-row">
       <div id="my-name" class="my-name"></div>
-      <div id="turn-badge" class="turn-badge hidden">Dein Zug</div>
+      <div id="turn-badge" class="turn-badge hidden" data-i18n="yourTurn">Dein Zug</div>
     </div>
     <div id="my-hand"></div>
     <div id="action-bar"></div>
@@ -1169,28 +1169,28 @@ body[data-cardback="karo"] .card-back::after { border-color: rgba(120,200,160,.2
 
 <!-- DRAWN CARD -->
 <div id="drawn-area">
-  <div class="drawn-label">Gezogene Karte</div>
+  <div class="drawn-label" data-i18n="drawnCard">Gezogene Karte</div>
   <div id="drawn-card-display"></div>
   <div id="drawn-decision">
-    <div class="drawn-hint" id="drawn-hint">Tippe eine deiner Karten, um sie zu <strong>ersetzen</strong> – oder lege die gezogene Karte ab.</div>
+    <div class="drawn-hint" id="drawn-hint"></div>
     <div id="drawn-hand"></div>
-    <button class="btn btn-outline" id="drawn-discard-btn" onclick="discardDrawn()">Ablegen</button>
+    <button class="btn btn-outline" id="drawn-discard-btn" onclick="discardDrawn()"></button>
   </div>
 </div>
 
 <!-- PEEK MODAL -->
 <div class="overlay hidden" id="peek-overlay">
   <div class="modal" id="peek-modal">
-    <h2 id="peek-title">Karten ansehen</h2>
-    <p id="peek-desc">Wähle <strong>2</strong> deiner Handkarten aus. Du siehst sie dann <strong>6 Sekunden</strong> lang – danach werden sie wieder verdeckt. Merk sie dir gut!</p>
-    <div class="peek-count" id="peek-count-txt">0 / 2 ausgewählt</div>
+    <h2 id="peek-title"></h2>
+    <p id="peek-desc"></p>
+    <div class="peek-count" id="peek-count-txt"></div>
     <div class="reveal-timer hidden" id="peek-timer">
-      <div class="reveal-timer-head"><span class="reveal-secs">6</span><span class="reveal-timer-lbl">Sekunden – einprägen!</span></div>
+      <div class="reveal-timer-head"><span class="reveal-secs">6</span><span class="reveal-timer-lbl" data-i18n="rememberSecs">Sekunden – einprägen!</span></div>
       <div class="reveal-bar"><div class="reveal-fill"></div></div>
     </div>
     <div class="peek-hand" id="peek-hand"></div>
     <div class="btn-row">
-      <button class="btn btn-gold" id="peek-done-btn" onclick="sendPeekDone()" style="width:100%">Fertig</button>
+      <button class="btn btn-gold" id="peek-done-btn" onclick="sendPeekDone()" style="width:100%"></button>
     </div>
   </div>
 </div>
@@ -1209,10 +1209,10 @@ body[data-cardback="karo"] .card-back::after { border-color: rgba(120,200,160,.2
 <!-- SCORING MODAL -->
 <div class="overlay hidden" id="scoring-overlay">
   <div class="modal" id="scoring-modal">
-    <h2 id="scoring-title">Runde beendet!</h2>
+    <h2 id="scoring-title"></h2>
     <div id="scoring-body"></div>
     <div class="btn-row" style="margin-top:20px">
-      <button class="btn btn-gold" id="next-round-btn" onclick="nextRound()" style="width:100%">Weiter</button>
+      <button class="btn btn-gold" id="next-round-btn" onclick="nextRound()" style="width:100%"></button>
     </div>
   </div>
 </div>
@@ -1220,169 +1220,9 @@ body[data-cardback="karo"] .card-back::after { border-color: rgba(120,200,160,.2
 <!-- HELP MODAL -->
 <div class="overlay hidden" id="help-overlay" onclick="if(event.target===this)closeHelp()">
   <div class="modal" id="help-modal" style="max-width:600px;max-height:85vh;overflow-y:auto">
-    <h2>📖 Spielregeln – Karma</h2>
-
-    <div style="margin-top:20px">
-      <h3 style="font-size:15px;color:#737bc4;margin-bottom:8px">🎯 Ziel des Spiels</h3>
-      <p style="font-size:13px;line-height:1.6">Wer am Ende der Runde die wenigsten Punkte hat, gewinnt die Runde. Der Spieler mit den wenigsten Gesamtpunkten am Ende aller Runden gewinnt das Spiel!</p>
-    </div>
-
-    <div style="margin-top:16px">
-      <h3 style="font-size:15px;color:#737bc4;margin-bottom:8px">🎴 Spielvorbereitung</h3>
-      <ul style="font-size:13px;line-height:1.8;margin-left:20px">
-        <li><strong>2–4 Spieler</strong> können zusammen spielen</li>
-        <li>Jeder Spieler erhält <strong>4 verdeckte Karten</strong> auf die Hand</li>
-        <li>Am Anfang kann jeder Spieler <strong>2 Karten ansehen</strong> und sich ihre Position und ihren Wert merken (6 Sekunden!)</li>
-        <li>Nach dem Einprägen sind die Karten wieder <strong>verdeckt</strong></li>
-      </ul>
-    </div>
-
-    <div style="margin-top:16px">
-      <h3 style="font-size:15px;color:#737bc4;margin-bottom:8px">🔄 Der Spielablauf</h3>
-      <p style="font-size:13px;line-height:1.8;margin-bottom:8px"><strong>Jeder Zug besteht aus:</strong></p>
-      <ol style="font-size:13px;line-height:1.8;margin-left:20px">
-        <li><strong>Ziehe eine Karte</strong> vom Nachziehstapel</li>
-        <li><strong>Entscheide dich:</strong>
-          <ul style="margin-top:4px">
-            <li>👉 <strong>Ersetze eine deiner Karten</strong> mit der gezogenen Karte (die alte Karte geht auf den Ablagestapel)</li>
-            <li>👉 <strong>Lege die gezogene Karte ab & aktiviere ihre Fähigkeit</strong></li>
-          </ul>
-        </li>
-        <li><strong>Dein Zug endet</strong> – der nächste Spieler ist an der Reihe</li>
-      </ol>
-    </div>
-
-    <div style="margin-top:16px">
-      <h3 style="font-size:15px;color:#737bc4;margin-bottom:8px">⚡ Spiel beenden</h3>
-      <p style="font-size:13px;line-height:1.6">Wenn du denkst, du hast die besten Karten oder willst das Risiko eingehen, kannst du jederzeit <strong>„Spiel beenden"</strong> rufen. Danach hat jeder Spieler <strong>noch einen Zug</strong>, dann ist die Runde zu Ende.</p>
-    </div>
-
-    <div style="margin-top:16px">
-      <h3 style="font-size:15px;color:#737bc4;margin-bottom:8px">🎁 Spezielle Karten – Fähigkeiten</h3>
-      <p style="font-size:13px;line-height:1.6;margin-bottom:8px">Manche Karten haben besondere Fähigkeiten:</p>
-      <ul style="font-size:13px;line-height:1.8;margin-left:20px">
-        <li><strong>Eigene Karte sehen:</strong> Schau dir kurz eine deiner verdeckten Karten an</li>
-        <li><strong>Gegner-Karte sehen:</strong> Schau dir eine Karte eines anderen Spielers an</li>
-        <li><strong>Karten tauschen:</strong> Tausche zwei beliebige Karten (deine oder von anderen)</li>
-        <li><strong>Sehen & Tauschen:</strong> Schau dir zwei Karten an und tausche sie dann</li>
-      </ul>
-    </div>
-
-    <div style="margin-top:16px">
-      <h3 style="font-size:15px;color:#737bc4;margin-bottom:8px">🎴 Alle Karten – Werte & Fähigkeiten</h3>
-      <p style="font-size:12px;line-height:1.6;margin-bottom:12px;color:rgba(255,255,255,.7)">Hier ist eine vollständige Übersicht aller Karten im Spiel:</p>
-      <div style="overflow-x:auto">
-        <table style="width:100%;font-size:12px;border-collapse:collapse;background:rgba(0,0,0,.2);border-radius:8px;overflow:hidden">
-          <thead>
-            <tr style="background:rgba(115,123,196,.2);border-bottom:1px solid rgba(115,123,196,.3)">
-              <th style="padding:10px;text-align:left;color:#737bc4;font-weight:700">Karte</th>
-              <th style="padding:10px;text-align:center;color:#737bc4;font-weight:700">Wert</th>
-              <th style="padding:10px;text-align:left;color:#737bc4;font-weight:700">Fähigkeit</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr style="border-bottom:1px solid rgba(255,255,255,.08)">
-              <td style="padding:8px 10px">🐱 Katze</td>
-              <td style="padding:8px 10px;text-align:center;font-weight:700;color:#FFD700"><strong>-1</strong></td>
-              <td style="padding:8px 10px">Glückskarte!</td>
-            </tr>
-            <tr style="border-bottom:1px solid rgba(255,255,255,.08)">
-              <td style="padding:8px 10px">🏆 Titi</td>
-              <td style="padding:8px 10px;text-align:center;font-weight:700;color:#FFD700"><strong>0</strong></td>
-              <td style="padding:8px 10px">Der Beste!</td>
-            </tr>
-            <tr style="border-bottom:1px solid rgba(255,255,255,.08)">
-              <td style="padding:8px 10px">👨 Olli</td>
-              <td style="padding:8px 10px;text-align:center;font-weight:700"><strong>1</strong></td>
-              <td style="padding:8px 10px">Keine</td>
-            </tr>
-            <tr style="border-bottom:1px solid rgba(255,255,255,.08)">
-              <td style="padding:8px 10px">🎤 Tupac</td>
-              <td style="padding:8px 10px;text-align:center;font-weight:700"><strong>2</strong></td>
-              <td style="padding:8px 10px">Keine</td>
-            </tr>
-            <tr style="border-bottom:1px solid rgba(255,255,255,.08)">
-              <td style="padding:8px 10px">💪 Arnold</td>
-              <td style="padding:8px 10px;text-align:center;font-weight:700"><strong>3</strong></td>
-              <td style="padding:8px 10px">Keine</td>
-            </tr>
-            <tr style="border-bottom:1px solid rgba(255,255,255,.08)">
-              <td style="padding:8px 10px">😈 Cartman</td>
-              <td style="padding:8px 10px;text-align:center;font-weight:700"><strong>4</strong></td>
-              <td style="padding:8px 10px">Keine</td>
-            </tr>
-            <tr style="border-bottom:1px solid rgba(255,255,255,.08)">
-              <td style="padding:8px 10px">⚽ Zidane</td>
-              <td style="padding:8px 10px;text-align:center;font-weight:700"><strong>5</strong></td>
-              <td style="padding:8px 10px">Keine</td>
-            </tr>
-            <tr style="border-bottom:1px solid rgba(255,255,255,.08)">
-              <td style="padding:8px 10px">🥋 Lee</td>
-              <td style="padding:8px 10px;text-align:center;font-weight:700"><strong>6</strong></td>
-              <td style="padding:8px 10px">Keine</td>
-            </tr>
-            <tr style="border-bottom:1px solid rgba(255,255,255,.08)">
-              <td style="padding:8px 10px">⚽ Ronaldo</td>
-              <td style="padding:8px 10px;text-align:center;font-weight:700"><strong>7</strong></td>
-              <td style="padding:8px 10px">👁️ Eigene Karte sehen</td>
-            </tr>
-            <tr style="border-bottom:1px solid rgba(255,255,255,.08)">
-              <td style="padding:8px 10px">🎬 Leo</td>
-              <td style="padding:8px 10px;text-align:center;font-weight:700"><strong>8</strong></td>
-              <td style="padding:8px 10px">👁️ Eigene Karte sehen</td>
-            </tr>
-            <tr style="border-bottom:1px solid rgba(255,255,255,.08)">
-              <td style="padding:8px 10px">🕵️ Snowden</td>
-              <td style="padding:8px 10px;text-align:center;font-weight:700"><strong>9</strong></td>
-              <td style="padding:8px 10px">👀 Gegner-Karte sehen</td>
-            </tr>
-            <tr style="border-bottom:1px solid rgba(255,255,255,.08)">
-              <td style="padding:8px 10px">🤔 Trump</td>
-              <td style="padding:8px 10px;text-align:center;font-weight:700"><strong>10</strong></td>
-              <td style="padding:8px 10px">👀 Gegner-Karte sehen</td>
-            </tr>
-            <tr style="border-bottom:1px solid rgba(255,255,255,.08)">
-              <td style="padding:8px 10px">🃏 Joker</td>
-              <td style="padding:8px 10px;text-align:center;font-weight:700"><strong>11</strong></td>
-              <td style="padding:8px 10px">🔀 Karten tauschen</td>
-            </tr>
-            <tr style="border-bottom:1px solid rgba(255,255,255,.08)">
-              <td style="padding:8px 10px">🐕 Hund</td>
-              <td style="padding:8px 10px;text-align:center;font-weight:700"><strong>12</strong></td>
-              <td style="padding:8px 10px">👁️ Sehen & Tauschen</td>
-            </tr>
-            <tr>
-              <td style="padding:8px 10px">💩 Mr Hankey</td>
-              <td style="padding:8px 10px;text-align:center;font-weight:700;color:#ef4444"><strong>13</strong></td>
-              <td style="padding:8px 10px">Penalty-Karte</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <div style="margin-top:16px">
-      <h3 style="font-size:15px;color:#737bc4;margin-bottom:8px">⚡ Schnapp – Schnell reagieren!</h3>
-      <p style="font-size:13px;line-height:1.6">Nach jeder abgelegten Karte läuft ein kurzes Zeitfenster (die Leiste über den Stapeln). Solange sie läuft, darf jeder Spieler auf <strong>eine beliebige Karte am Tisch</strong> tippen – die eigene oder die eines Mitspielers. Die Karte wird für alle sichtbar aufgedeckt:</p>
-      <ul style="font-size:13px;line-height:1.7;margin:8px 0 0 18px">
-        <li><strong>Gleicher Wert?</strong> Die Karte wandert auf den Ablagestapel, das Fenster schließt sofort und du bist am Zug – mit einer Karte weniger.</li>
-        <li>War es eine <strong>gegnerische</strong> Karte, füllst du die entstandene Lücke mit einer deiner eigenen Karten auf. Der Gegner behält seine Handgröße, du verlierst eine.</li>
-        <li><strong>Falscher Wert?</strong> Die Karte geht zurück an ihren Platz, du ziehst eine <strong>Strafkarte</strong> und bist für dieses Fenster raus.</li>
-      </ul>
-      <p style="font-size:12px;line-height:1.6;margin-top:8px;color:rgba(255,255,255,.65)">Jeder hat pro Fenster genau einen Versuch – also nur tippen, wenn du dir die Karte gemerkt hast.</p>
-    </div>
-
-    <div style="margin-top:16px">
-      <h3 style="font-size:15px;color:#737bc4;margin-bottom:8px">🎯 Kartenwerte & Punkte</h3>
-      <p style="font-size:13px;line-height:1.6;margin-bottom:8px">Jede Karte hat einen Wert von -1 bis 13. Je niedriger desto besser. Die Summe aller Werte entspricht deiner aktuellen Gesamtpunkte. Auch hier, je niedriger, desto besser. Also werde die hohen Karten los und beende als erster das Spiel!</p>
-    </div>
-
-    <div style="margin-top:16px;padding:12px;background:rgba(115,123,196,.1);border-left:3px solid #737bc4;border-radius:8px">
-      <p style="font-size:12px;color:rgba(255,255,255,.8);margin:0"><strong>⚠️ Obacht!</strong> Strafpunkte bekommt <strong>nur der Spieler, der das Spiel beendet</strong> – und zwar 30 Punkte, wenn er nicht die wenigsten Punkte hat <strong>oder</strong> wenn seine Hand in dieser Runde mehr als 7 Punkte zählt. Es bleibt immer bei höchstens 30 Strafpunkten, und alle anderen Spieler gehen straffrei aus.</p>
-    </div>
-
+    <div id="help-content"></div>
     <div class="btn-row" style="margin-top:20px">
-      <button class="btn btn-gold" onclick="closeHelp()" style="width:100%">Verstanden!</button>
+      <button class="btn btn-gold" onclick="closeHelp()" style="width:100%" data-i18n="understood">Verstanden!</button>
     </div>
   </div>
 </div>
@@ -1390,8 +1230,8 @@ body[data-cardback="karo"] .card-back::after { border-color: rgba(120,200,160,.2
 <!-- SETTINGS MODAL -->
 <div class="overlay hidden" id="settings-overlay" onclick="if(event.target===this)closeSettings()">
   <div class="modal" id="settings-modal">
-    <h2>Einstellungen</h2>
-    <p>Gilt nur für dich und bleibt gespeichert.</p>
+    <h2 data-i18n="settings">Einstellungen</h2>
+    <p data-i18n="settingsNote">Gilt nur für dich und bleibt gespeichert.</p>
     <div class="set-group">
       <h3 id="lang-label">Sprache</h3>
       <div style="display:flex;gap:8px">
@@ -1414,7 +1254,7 @@ body[data-cardback="karo"] .card-back::after { border-color: rgba(120,200,160,.2
       <div class="back-grid" id="back-grid"></div>
     </div>
     <div class="btn-row">
-      <button class="btn btn-gold" id="settings-done-btn" onclick="closeSettings()" style="width:100%">Fertig</button>
+      <button class="btn btn-gold" id="settings-done-btn" onclick="closeSettings()" style="width:100%"></button>
     </div>
   </div>
 </div>
@@ -1441,8 +1281,8 @@ function connect(cb) {
   ws = new WebSocket(wsUrl);
   ws.onopen = cb;
   ws.onmessage = e => handleMessage(JSON.parse(e.data));
-  ws.onclose = () => showToast('Verbindung unterbrochen', '#ef4444');
-  ws.onerror = () => showToast('WebSocket-Fehler – Verbindung fehlgeschlagen', '#ef4444');
+  ws.onclose = () => showToast({ key: 'disconnect', color: '#ef4444' });
+  ws.onerror = () => showToast({ key: 'wsError', color: '#ef4444' });
 }
 
 function send(msg) {
@@ -1452,7 +1292,7 @@ function send(msg) {
 // ── Lobby ─────────────────────────────────────────────────────────────────────
 function createSession() {
   const name = document.getElementById('player-name').value.trim();
-  if (!name) { alert('Bitte Namen eingeben'); return; }
+  if (!name) { alert(t('alertName')); return; }
   const gameMode = document.getElementById('game-mode').value;
   connect(() => send({ type: 'create', playerId: myId, playerName: name, gameMode }));
 }
@@ -1460,8 +1300,8 @@ function createSession() {
 function joinSession() {
   const name = document.getElementById('player-name').value.trim();
   const code = document.getElementById('join-code').value.trim().toUpperCase();
-  if (!name) { alert('Bitte Namen eingeben'); return; }
-  if (!code) { alert('Bitte Session-Code eingeben'); return; }
+  if (!name) { alert(t('alertName')); return; }
+  if (!code) { alert(t('alertCode')); return; }
   connect(() => send({ type: 'join', playerId: myId, playerName: name, sessionId: code }));
 }
 
@@ -1474,8 +1314,11 @@ function handleMessage(msg) {
     showLobbyWaiting(msg.sessionId);
     return;
   }
-  if (msg.type === 'error') { showToast(msg.msg, '#ef4444'); return; }
-  if (msg.type === 'toast') { showToast(msg.msg, msg.color, msg.anim); return; }
+  // Server-Meldungen kommen als Schlüssel + Parameter, nicht als fertiger Text –
+  // am Tisch können zwei Spieler gleichzeitig verschiedene Sprachen eingestellt
+  // haben. Übersetzt wird deshalb erst hier, beim Anzeigen.
+  if (msg.type === 'error') { showToast({ key: msg.key, params: msg.params, color: '#ef4444' }); return; }
+  if (msg.type === 'toast') { showToast({ key: msg.key, params: msg.params, color: msg.color, anim: msg.anim }); return; }
   // Kommt unmittelbar vor dem State mit den vertauschten Händen: markiert, welche
   // Karten fliegen sollen (bzw. dass bewusst nicht getauscht wurde).
   if (msg.type === 'swap_anim') { noteSwapAnim(msg); return; }
@@ -1527,12 +1370,21 @@ let currentLanguage = localStorage.getItem('karma_language') || 'de';
 
 const TRANSLATIONS = {
   de: {
+    // ── Allgemein / Einstellungen ──
     language: 'Sprache',
     background: 'Hintergrund',
     cardback: 'Kartenrücken',
     done: 'Fertig',
     settings: 'Einstellungen',
+    settingsNote: 'Gilt nur für dich und bleibt gespeichert.',
+    rules: 'Spielregeln',
+    understood: 'Verstanden!',
+    copyToClipboard: 'In Zwischenablage kopieren',
+
+    // ── Lobby ──
+    tagline: 'Das Kartenspiel',
     player: 'Spieler',
+    playerName: 'Dein Name',
     host: 'als Host',
     singleGame: 'Einzelspiel',
     bestOf3: 'Best of 3',
@@ -1541,26 +1393,247 @@ const TRANSLATIONS = {
     createSession: 'Session erstellen',
     orJoin: 'oder joinen',
     join: 'Beitreten',
-    sessionCode: 'Session-Code',
-    playerName: 'Dein Name',
     joinCode: 'Session-Code (z.B. ABC123)',
-    disconnect: 'Verbindung unterbrochen',
-    waitingForHost: 'Warte auf den Host…',
-    playersInSession: 'Spieler in der Session:',
+    sessionCode: 'Session-Code',
     showCode: 'Zeige diesen Code den anderen Spielern',
+    playersInSession: 'Spieler in der Session:',
     startGame: 'Spiel starten',
+    waitingForHost: 'Warte auf den Host…',
+    waitingForPlayers: 'Warte auf weitere Spieler (min. 2)…',
+    you: '(Du)',
+    alertName: 'Bitte Namen eingeben',
+    alertCode: 'Bitte Session-Code eingeben',
+    codeCopied: 'Session-Code kopiert! 📋',
+    copyFailed: 'Fehler beim Kopieren',
+    disconnect: 'Verbindung unterbrochen',
+    wsError: 'WebSocket-Fehler – Verbindung fehlgeschlagen',
+
+    // ── Kopfzeile ──
+    roundOf: 'Runde {n}/{total}',
+    phase: {
+      peek: 'Karten ansehen', playing: 'Spielen', ability: 'Fähigkeit',
+      swap_flight: 'Tausch', racing: 'Schnapp!', race_give: 'Karte abgeben',
+      scoring: 'Wertung', done: 'Fertig',
+    },
+
+    // ── Tisch ──
     drawDeck: 'Nachziehstapel',
     discardPile: 'Ablagestapel',
     empty: 'Leer',
+    deckCount: '{n} Karten',
     yourHand: 'Deine Hand',
     yourTurn: 'Dein Zug',
     endGame: 'Spiel beenden',
-    discardDrawn: 'Ablegen',
-    peek: 'Karten ansehen',
-    peekDesc: 'Wähle <strong>2</strong> deiner Handkarten aus. Du siehst sie dann <strong>6 Sekunden</strong> lang – danach werden sie wieder verdeckt. Merk sie dir gut!',
-    selected: 'ausgewählt',
-    remember: 'Sekunden – einprägen!',
-    rules: 'Spielregeln',
+    logTitle: 'Verlauf',
+    logEmpty: 'Noch keine Ereignisse…',
+    replayHint: 'Animation erneut abspielen',
+    thinking: 'überlegt',
+    away: '(weg)',
+    drawnCard: 'Gezogene Karte',
+    cardN: 'Karte {n}',
+    drawnHintPlain: 'Tippe eine deiner Karten, um sie zu <strong>ersetzen</strong> – oder lege die gezogene Karte ab.',
+    drawnHintAbility: 'Tippe eine Handkarte, um sie zu <strong>tauschen</strong> (Fähigkeit verfällt) – oder <strong>lege ab</strong>, um die Fähigkeit zu nutzen.',
+    discardBtn: 'Ablegen',
+    discardAbilityBtn: 'Ablegen & Fähigkeit nutzen',
+
+    // ── Hinweiszeile ──
+    inst: {
+      drawOrEnd: 'Ziehe eine Karte vom Nachziehstapel oder beende das Spiel',
+      chooseSwapOrDiscard: 'Wähle eine Handkarte zum Tauschen oder lege die gezogene Karte ab',
+      waitFor: 'Warte auf {name}…',
+      see_own: 'Wähle eine deiner Karten',
+      see_others: 'Wähle eine Karte eines Mitspielers',
+      swap: 'Wähle zwei Karten zum Tauschen',
+      see_swap: 'Wähle zwei Karten',
+      swapFlight: 'Achte darauf, wohin die Karten wandern…',
+      giveOwn: 'Wähle eine deiner Karten, die du abgibst',
+    },
+    endBannerOne: '{name} hat das Spiel beendet – noch {n} Zug',
+    endBannerMany: '{name} hat das Spiel beendet – noch {n} Züge',
+
+    // ── Peek-Modal ──
+    peek: {
+      title: 'Karten ansehen',
+      desc: 'Wähle <strong>2</strong> deiner Handkarten aus. Du siehst sie dann <strong>6 Sekunden</strong> lang – danach werden sie wieder verdeckt. Merk sie dir gut!',
+      count: '{n} / 2 ausgewählt',
+      doneTitle: 'Einprägen abgeschlossen',
+      doneDesc: 'Deine Karten sind wieder verdeckt. Warte auf die anderen Spieler…',
+      doneCount: '{n} / {total} Spieler fertig',
+      rememberTitle: 'Merk sie dir!',
+      rememberDesc: 'Diese Karten werden gleich <strong>wieder verdeckt</strong>. Präge dir Position und Wert ein.',
+      viewBtn: 'Diese Karten ansehen',
+      skipBtn: 'Überspringen',
+    },
+    rememberSecs: 'Sekunden – einprägen!',
+
+    // ── Fähigkeits-Modal ──
+    ab: {
+      seeOwnTitle: 'Eigene Karte ansehen',
+      seeOwnPick: 'Wähle eine deiner Handkarten, um sie anzusehen.',
+      seeOthersTitle: 'Gegner-Karte ansehen',
+      seeOthersPick: 'Wähle eine Karte eines Mitspielers.',
+      revealOne: 'Du siehst sie <strong>6 Sekunden</strong> – danach wird sie wieder verdeckt:',
+      hiddenAgain: 'Karte ist wieder verdeckt.',
+      swapTitle: 'Zwei Karten tauschen',
+      pick1: 'Wähle die erste Karte (eigene oder fremde).',
+      pick2: 'Wähle die zweite Karte zum Tauschen.',
+      seeSwapTitle: 'Zwei Karten ansehen & tauschen',
+      pickFirst: 'Wähle die erste Karte.',
+      pickSecond: 'Wähle die zweite Karte.',
+      revealBoth: 'Du siehst beide Karten <strong>6 Sekunden</strong> lang. Tauschen?',
+      memorySwap: 'Die Karten sind wieder verdeckt. Tauschen – aus dem Gedächtnis?',
+      swapBtn: 'Tauschen',
+      noSwapBtn: 'Nicht tauschen',
+    },
+
+    // ── Beobachter-Laufband ──
+    tick: {
+      generic: '{name} nutzt eine Fähigkeit…',
+      looksAt: '{name} sieht sich <strong>{slot}</strong> an',
+      choosesLook: '{name} wählt eine Karte zum Ansehen…',
+      swaps: '{name} tauscht <strong>{a}</strong> ↔ <strong>{b}</strong>',
+      chose1of2: '{name} hat <strong>{slot}</strong> gewählt – zweite Karte folgt…',
+      choosesTwoSwap: '{name} wählt zwei Karten zum Tauschen…',
+      seeSwapDecide: '{name} sieht <strong>{a}</strong> und <strong>{b}</strong> – tauschen oder nicht?',
+      chose1: '{name} hat <strong>{slot}</strong> gewählt…',
+      choosesTwo: '{name} wählt zwei Karten…',
+    },
+
+    // ── Schnapp ──
+    race: {
+      snap: 'Schnapp',
+      give: 'Karte abgeben',
+      hint: 'Tippe eine <strong>beliebige</strong> Karte am Tisch, die denselben Wert hat – auch bei Mitspielern. Ein Versuch, sonst Strafkarte.',
+      missed: 'Daneben – du bist für dieses Fenster raus.',
+      giveSelf: 'Wähle eine deiner Karten – sie füllt die Lücke bei <strong>{owner}</strong>. Danach bist du am Zug.',
+      giveOther: '<strong>{racer}</strong> sucht eine Karte für die Lücke bei <strong>{owner}</strong>…',
+      hit: 'Treffer',
+      miss: 'Daneben',
+    },
+
+    // ── Wertung ──
+    sc: {
+      roundEnded: 'Runde {n} beendet',
+      gameOver: 'Spiel beendet!',
+      cardValues: 'Kartenwerte: {total}',
+      penalty: 'Strafe +{amount}: {reason}',
+      total: 'Gesamt: {n}',
+      winner: '🏆 {name} gewinnt!',
+      newGame: 'Neues Spiel',
+      nextRound: 'Nächste Runde',
+      finalResult: 'Endergebnis',
+    },
+
+    // ── Strafgründe (Server schickt nur die Schlüssel) ──
+    pen: {
+      text: 'Spiel beendet, aber {reasons}: +{amount} Strafpunkte',
+      and: ' und ',
+      notWon: 'nicht gewonnen',
+      over7: 'mehr als 7 Punkte auf der Hand',
+    },
+
+    // ── Kartenfähigkeiten ──
+    abName: {
+      none: 'Keine Fähigkeiten',
+      see_own: 'Eigene Karte sehen',
+      see_others: 'Gegner-Karte sehen',
+      swap: 'Karten tauschen',
+      see_swap: 'Sehen & Tauschen',
+      fallback: 'Fähigkeit',
+    },
+    abDesc: {
+      none: 'Diese Karte hat keine besonderen Fähigkeiten.',
+      see_own: 'Du kannst eine deiner Karten ansehen.',
+      see_others: 'Du kannst eine Karte eines Gegners ansehen.',
+      swap: 'Du kannst zwei Karten mit anderen Spielern tauschen.',
+      see_swap: 'Du kannst zwei Karten ansehen und dann tauschen.',
+    },
+    // Bewusst englisch wie bisher: der Chip ist Teil des Kartendesigns und
+    // 'FÄHIGKEIT' sprengt das schmale Label auf den kleinen Karten.
+    chip: { normal: 'NORMAL', ability: 'ABILITY' },
+    imgFallback: '[Bild]',
+
+    // ── Kartennamen (nr → Anzeigename) ──
+    cardName: {
+      1: 'Olli', 2: 'Tupac', 3: 'Arnold', 4: 'Cartman', 5: 'Barbie',
+      6: 'Hawk Tuah Girl', 7: 'Ronaldo', 8: 'Leo', 9: 'Penny', 10: 'Merkel',
+      11: 'Joker', 12: 'Hund', 13: 'Mr Hankey', 14: 'Titi', 15: 'Katze',
+    },
+    // Zitate stehen in Karten/Karten.csv und kommen vom Server – hier nichts
+    // überschreiben, sonst weicht die deutsche Karte von der Quelle ab.
+    cardQuote: {},
+
+    // ── Server-Meldungen im Ereignis-Log ──
+    log: {
+      joined: '{name} ist beigetreten!',
+      disconnected: '{name} hat die Verbindung getrennt.',
+      callEnd: '{name} beendet das Spiel!',
+      draw: '{name} zieht eine Karte',
+      keep: '{name} ersetzt Karte {index}',
+      discard: '{name} legt eine Karte ab',
+      raceTimeout: 'Schnapp-Fenster abgelaufen – niemand war schnell genug',
+      raceMissOwn: '{name} deckt bei sich Karte {index} auf: {card} ({value}) – kein Treffer, Strafkarte',
+      raceMissOther: '{name} deckt bei {owner} Karte {index} auf: {card} ({value}) – kein Treffer, Strafkarte',
+      raceHitOwn: '{name} schnappt Karte {index}: {card} ({value}) – Treffer, eine Karte weniger und am Zug',
+      raceHitOther: '{name} schnappt Karte {index} von {owner}: {card} ({value}) – Treffer',
+      give: '{name} gibt Karte {index} an {owner} ab – am Zug mit einer Karte weniger',
+      giveAuto: '{name} gibt Karte {index} an {owner} ab (automatisch) – am Zug mit einer Karte weniger',
+      seeOwn: '{name} sieht Karte {index}',
+      seeOther: '{name} sieht Karte {index} von {owner}',
+      swap: '{name} tauscht Karte {i1} von {p1} mit Karte {i2} von {p2}',
+      seeTwo: '{name} sieht Karte {i1} von {p1} und Karte {i2} von {p2}',
+      noSwap: '{name} tauscht nicht',
+    },
+    err: {
+      sessionNotFound: 'Session nicht gefunden.',
+      gameStarted: 'Spiel bereits gestartet.',
+      sessionFull: 'Session ist voll (max. 4 Spieler).',
+      alreadyIn: 'Bereits in der Session.',
+    },
+
+    // ── Spielregeln ──
+    help: {
+      title: '📖 Spielregeln – Karma',
+      goalH: '🎯 Ziel des Spiels',
+      goalP: 'Wer am Ende der Runde die wenigsten Punkte hat, gewinnt die Runde. Der Spieler mit den wenigsten Gesamtpunkten am Ende aller Runden gewinnt das Spiel!',
+      setupH: '🎴 Spielvorbereitung',
+      setup1: '<strong>2–4 Spieler</strong> können zusammen spielen',
+      setup2: 'Jeder Spieler erhält <strong>4 verdeckte Karten</strong> auf die Hand',
+      setup3: 'Am Anfang kann jeder Spieler <strong>2 Karten ansehen</strong> und sich ihre Position und ihren Wert merken (6 Sekunden!)',
+      setup4: 'Nach dem Einprägen sind die Karten wieder <strong>verdeckt</strong>',
+      flowH: '🔄 Der Spielablauf',
+      flowIntro: '<strong>Jeder Zug besteht aus:</strong>',
+      flow1: '<strong>Ziehe eine Karte</strong> vom Nachziehstapel',
+      flow2: '<strong>Entscheide dich:</strong>',
+      flow2a: '👉 <strong>Ersetze eine deiner Karten</strong> mit der gezogenen Karte (die alte Karte geht auf den Ablagestapel)',
+      flow2b: '👉 <strong>Lege die gezogene Karte ab &amp; aktiviere ihre Fähigkeit</strong>',
+      flow3: '<strong>Dein Zug endet</strong> – der nächste Spieler ist an der Reihe',
+      endH: '⚡ Spiel beenden',
+      endP: 'Wenn du denkst, du hast die besten Karten oder willst das Risiko eingehen, kannst du jederzeit <strong>„Spiel beenden"</strong> rufen. Danach hat jeder Spieler <strong>noch einen Zug</strong>, dann ist die Runde zu Ende.',
+      abH: '🎁 Spezielle Karten – Fähigkeiten',
+      abIntro: 'Manche Karten haben besondere Fähigkeiten:',
+      ab1: '<strong>Eigene Karte sehen:</strong> Schau dir kurz eine deiner verdeckten Karten an',
+      ab2: '<strong>Gegner-Karte sehen:</strong> Schau dir eine Karte eines anderen Spielers an',
+      ab3: '<strong>Karten tauschen:</strong> Tausche zwei beliebige Karten (deine oder von anderen)',
+      ab4: '<strong>Sehen &amp; Tauschen:</strong> Schau dir zwei Karten an und tausche sie dann',
+      tableH: '🎴 Alle Karten – Werte & Fähigkeiten',
+      tableIntro: 'Hier ist eine vollständige Übersicht aller Karten im Spiel:',
+      thCard: 'Karte', thValue: 'Wert', thAbility: 'Fähigkeit',
+      luckyCard: 'Glückskarte!',
+      bestCard: 'Der Beste!',
+      noneShort: 'Keine',
+      penaltyCard: 'Penalty-Karte',
+      snapH: '⚡ Schnapp – Schnell reagieren!',
+      snapP: 'Nach jeder abgelegten Karte läuft ein kurzes Zeitfenster (die Leiste über den Stapeln). Solange sie läuft, darf jeder Spieler auf <strong>eine beliebige Karte am Tisch</strong> tippen – die eigene oder die eines Mitspielers. Die Karte wird für alle sichtbar aufgedeckt:',
+      snap1: '<strong>Gleicher Wert?</strong> Die Karte wandert auf den Ablagestapel, das Fenster schließt sofort und du bist am Zug – mit einer Karte weniger.',
+      snap2: 'War es eine <strong>gegnerische</strong> Karte, füllst du die entstandene Lücke mit einer deiner eigenen Karten auf. Der Gegner behält seine Handgröße, du verlierst eine.',
+      snap3: '<strong>Falscher Wert?</strong> Die Karte geht zurück an ihren Platz, du ziehst eine <strong>Strafkarte</strong> und bist für dieses Fenster raus.',
+      snapNote: 'Jeder hat pro Fenster genau einen Versuch – also nur tippen, wenn du dir die Karte gemerkt hast.',
+      pointsH: '🎯 Kartenwerte & Punkte',
+      pointsP: 'Jede Karte hat einen Wert von -1 bis 13. Je niedriger desto besser. Die Summe aller Werte entspricht deiner aktuellen Gesamtpunkte. Auch hier, je niedriger, desto besser. Also werde die hohen Karten los und beende als erster das Spiel!',
+      warn: '<strong>⚠️ Obacht!</strong> Strafpunkte bekommt <strong>nur der Spieler, der das Spiel beendet</strong> – und zwar 30 Punkte, wenn er nicht die wenigsten Punkte hat <strong>oder</strong> wenn seine Hand in dieser Runde mehr als 7 Punkte zählt. Es bleibt immer bei höchstens 30 Strafpunkten, und alle anderen Spieler gehen straffrei aus.',
+    },
+
     BGThemes: {
       onyx: 'Onyx',
       mitter: 'Mitternacht',
@@ -1577,13 +1650,23 @@ const TRANSLATIONS = {
       karo: 'Sternenfeld',
     }
   },
+
   en: {
+    // ── General / settings ──
     language: 'Language',
     background: 'Background',
     cardback: 'Card Back',
     done: 'Done',
     settings: 'Settings',
+    settingsNote: 'Applies only to you and is remembered.',
+    rules: 'Game Rules',
+    understood: 'Got it!',
+    copyToClipboard: 'Copy to clipboard',
+
+    // ── Lobby ──
+    tagline: 'The Card Game',
     player: 'Player',
+    playerName: 'Your Name',
     host: 'as Host',
     singleGame: 'Single Game',
     bestOf3: 'Best of 3',
@@ -1592,26 +1675,249 @@ const TRANSLATIONS = {
     createSession: 'Create Session',
     orJoin: 'or join',
     join: 'Join',
+    joinCode: 'Session code (e.g. ABC123)',
     sessionCode: 'Session Code',
-    playerName: 'Your Name',
-    joinCode: 'Session Code (e.g. ABC123)',
-    disconnect: 'Connection lost',
-    waitingForHost: 'Waiting for host…',
+    showCode: 'Share this code with the other players',
     playersInSession: 'Players in session:',
-    showCode: 'Share this code with other players',
     startGame: 'Start Game',
-    drawDeck: 'Draw Deck',
+    waitingForHost: 'Waiting for the host…',
+    waitingForPlayers: 'Waiting for more players (min. 2)…',
+    you: '(You)',
+    alertName: 'Please enter a name',
+    alertCode: 'Please enter a session code',
+    codeCopied: 'Session code copied! 📋',
+    copyFailed: 'Copying failed',
+    disconnect: 'Connection lost',
+    wsError: 'WebSocket error – connection failed',
+
+    // ── Top bar ──
+    roundOf: 'Round {n}/{total}',
+    phase: {
+      peek: 'Memorise', playing: 'Playing', ability: 'Ability',
+      swap_flight: 'Swap', racing: 'Snap!', race_give: 'Hand over a card',
+      scoring: 'Scoring', done: 'Finished',
+    },
+
+    // ── Table ──
+    drawDeck: 'Draw Pile',
     discardPile: 'Discard Pile',
     empty: 'Empty',
+    deckCount: '{n} cards',
     yourHand: 'Your Hand',
     yourTurn: 'Your Turn',
     endGame: 'End Game',
-    discardDrawn: 'Discard',
-    peek: 'View Cards',
-    peekDesc: 'Choose <strong>2</strong> of your cards. You will see them for <strong>6 seconds</strong> – then they will be hidden again. Remember them well!',
-    selected: 'selected',
-    remember: 'seconds – remember!',
-    rules: 'Game Rules',
+    logTitle: 'History',
+    logEmpty: 'No events yet…',
+    replayHint: 'Play the animation again',
+    thinking: 'thinking',
+    away: '(away)',
+    drawnCard: 'Drawn Card',
+    cardN: 'Card {n}',
+    drawnHintPlain: 'Tap one of your cards to <strong>replace</strong> it – or discard the drawn card.',
+    drawnHintAbility: 'Tap a hand card to <strong>swap</strong> it in (the ability is lost) – or <strong>discard</strong> to use the ability.',
+    discardBtn: 'Discard',
+    discardAbilityBtn: 'Discard & use ability',
+
+    // ── Instruction line ──
+    inst: {
+      drawOrEnd: 'Draw a card from the draw pile or end the game',
+      chooseSwapOrDiscard: 'Pick a hand card to swap, or discard the drawn card',
+      waitFor: 'Waiting for {name}…',
+      see_own: 'Pick one of your own cards',
+      see_others: "Pick a card from another player",
+      swap: 'Pick two cards to swap',
+      see_swap: 'Pick two cards',
+      swapFlight: 'Watch where the cards go…',
+      giveOwn: 'Pick one of your cards to hand over',
+    },
+    endBannerOne: '{name} ended the game – {n} turn left',
+    endBannerMany: '{name} ended the game – {n} turns left',
+
+    // ── Peek modal ──
+    peek: {
+      title: 'Look at your cards',
+      desc: 'Pick <strong>2</strong> of your hand cards. You will see them for <strong>6 seconds</strong> – then they are turned face down again. Memorise them!',
+      count: '{n} / 2 selected',
+      doneTitle: 'Memorising complete',
+      doneDesc: 'Your cards are face down again. Waiting for the other players…',
+      doneCount: '{n} / {total} players ready',
+      rememberTitle: 'Memorise them!',
+      rememberDesc: 'These cards are about to be <strong>turned face down</strong>. Remember their position and value.',
+      viewBtn: 'Look at these cards',
+      skipBtn: 'Skip',
+    },
+    rememberSecs: 'seconds – memorise!',
+
+    // ── Ability modal ──
+    ab: {
+      seeOwnTitle: 'Look at your own card',
+      seeOwnPick: 'Pick one of your hand cards to look at it.',
+      seeOthersTitle: "Look at an opponent's card",
+      seeOthersPick: 'Pick a card from another player.',
+      revealOne: 'You can see it for <strong>6 seconds</strong> – then it is turned face down again:',
+      hiddenAgain: 'The card is face down again.',
+      swapTitle: 'Swap two cards',
+      pick1: "Pick the first card (yours or another player's).",
+      pick2: 'Pick the second card to swap.',
+      seeSwapTitle: 'Look at two cards & swap',
+      pickFirst: 'Pick the first card.',
+      pickSecond: 'Pick the second card.',
+      revealBoth: 'You can see both cards for <strong>6 seconds</strong>. Swap them?',
+      memorySwap: 'The cards are face down again. Swap – from memory?',
+      swapBtn: 'Swap',
+      noSwapBtn: "Don't swap",
+    },
+
+    // ── Spectator ticker ──
+    tick: {
+      generic: '{name} is using an ability…',
+      looksAt: '{name} looks at <strong>{slot}</strong>',
+      choosesLook: '{name} is picking a card to look at…',
+      swaps: '{name} swaps <strong>{a}</strong> ↔ <strong>{b}</strong>',
+      chose1of2: '{name} picked <strong>{slot}</strong> – second card to follow…',
+      choosesTwoSwap: '{name} is picking two cards to swap…',
+      seeSwapDecide: '{name} sees <strong>{a}</strong> and <strong>{b}</strong> – swap or not?',
+      chose1: '{name} picked <strong>{slot}</strong>…',
+      choosesTwo: '{name} is picking two cards…',
+    },
+
+    // ── Snap ──
+    race: {
+      snap: 'Snap',
+      give: 'Hand over a card',
+      hint: 'Tap <strong>any</strong> card on the table with the same value – including other players’ cards. One attempt, otherwise a penalty card.',
+      missed: 'Missed – you are out for this window.',
+      giveSelf: 'Pick one of your cards – it fills the gap at <strong>{owner}</strong>. Then it is your turn.',
+      giveOther: '<strong>{racer}</strong> is picking a card for the gap at <strong>{owner}</strong>…',
+      hit: 'Hit',
+      miss: 'Missed',
+    },
+
+    // ── Scoring ──
+    sc: {
+      roundEnded: 'Round {n} finished',
+      gameOver: 'Game over!',
+      cardValues: 'Card values: {total}',
+      penalty: 'Penalty +{amount}: {reason}',
+      total: 'Total: {n}',
+      winner: '🏆 {name} wins!',
+      newGame: 'New Game',
+      nextRound: 'Next Round',
+      finalResult: 'Final Result',
+    },
+
+    // ── Penalty reasons (server sends keys only) ──
+    pen: {
+      text: 'Ended the game but {reasons}: +{amount} penalty points',
+      and: ' and ',
+      notWon: 'did not win',
+      over7: 'more than 7 points in hand',
+    },
+
+    // ── Card abilities ──
+    abName: {
+      none: 'No ability',
+      see_own: 'See your own card',
+      see_others: "See an opponent's card",
+      swap: 'Swap cards',
+      see_swap: 'See & Swap',
+      fallback: 'Ability',
+    },
+    abDesc: {
+      none: 'This card has no special ability.',
+      see_own: 'You may look at one of your own cards.',
+      see_others: "You may look at one of an opponent's cards.",
+      swap: 'You may swap two cards with other players.',
+      see_swap: 'You may look at two cards and then swap them.',
+    },
+    chip: { normal: 'NORMAL', ability: 'ABILITY' },
+    imgFallback: '[Image]',
+
+    // ── Card names (nr → display name) ──
+    cardName: {
+      1: 'Olli', 2: 'Tupac', 3: 'Arnold', 4: 'Cartman', 5: 'Barbie',
+      6: 'Hawk Tuah Girl', 7: 'Ronaldo', 8: 'Leo', 9: 'Penny', 10: 'Merkel',
+      11: 'Joker', 12: 'Dog', 13: 'Mr Hankey', 14: 'Titi', 15: 'Cat',
+    },
+    // Only the quotes that are actually German get an English line; everything
+    // else in Karten/Karten.csv is already English (or a deliberate quote in
+    // another language, like Barbie's "Ciao bella ciao!") and stays untouched.
+    // Olli keeps "Eier, we need Eier" – that is the Oliver Kahn line verbatim.
+    cardQuote: {
+      2: 'Chill, man, good times are coming too.',
+    },
+
+    // ── Server messages in the event log ──
+    log: {
+      joined: '{name} joined!',
+      disconnected: '{name} disconnected.',
+      callEnd: '{name} ends the game!',
+      draw: '{name} draws a card',
+      keep: '{name} replaces card {index}',
+      discard: '{name} discards a card',
+      raceTimeout: 'Snap window closed – nobody was fast enough',
+      raceMissOwn: '{name} turns over their own card {index}: {card} ({value}) – no match, penalty card',
+      raceMissOther: "{name} turns over {owner}'s card {index}: {card} ({value}) – no match, penalty card",
+      raceHitOwn: '{name} snaps card {index}: {card} ({value}) – hit, one card fewer and now on turn',
+      raceHitOther: "{name} snaps {owner}'s card {index}: {card} ({value}) – hit",
+      give: '{name} hands card {index} to {owner} – on turn with one card fewer',
+      giveAuto: '{name} hands card {index} to {owner} (automatically) – on turn with one card fewer',
+      seeOwn: '{name} looks at card {index}',
+      seeOther: "{name} looks at {owner}'s card {index}",
+      swap: "{name} swaps {p1}'s card {i1} with {p2}'s card {i2}",
+      seeTwo: "{name} sees {p1}'s card {i1} and {p2}'s card {i2}",
+      noSwap: '{name} does not swap',
+    },
+    err: {
+      sessionNotFound: 'Session not found.',
+      gameStarted: 'Game already started.',
+      sessionFull: 'Session is full (max. 4 players).',
+      alreadyIn: 'Already in the session.',
+    },
+
+    // ── Rulebook ──
+    help: {
+      title: '📖 Game Rules – Karma',
+      goalH: '🎯 Goal of the Game',
+      goalP: 'Whoever has the fewest points at the end of a round wins that round. The player with the fewest total points after all rounds wins the game!',
+      setupH: '🎴 Setup',
+      setup1: '<strong>2–4 players</strong> can play together',
+      setup2: 'Every player is dealt <strong>4 face-down cards</strong>',
+      setup3: 'At the start each player may <strong>look at 2 cards</strong> and memorise their position and value (6 seconds!)',
+      setup4: 'After memorising, the cards are <strong>face down</strong> again',
+      flowH: '🔄 How a Turn Works',
+      flowIntro: '<strong>Every turn consists of:</strong>',
+      flow1: '<strong>Draw a card</strong> from the draw pile',
+      flow2: '<strong>Decide:</strong>',
+      flow2a: '👉 <strong>Replace one of your cards</strong> with the drawn card (the old card goes to the discard pile)',
+      flow2b: '👉 <strong>Discard the drawn card &amp; trigger its ability</strong>',
+      flow3: '<strong>Your turn ends</strong> – the next player is up',
+      endH: '⚡ Ending the Game',
+      endP: 'If you think you have the best cards, or you want to take the risk, you can call <strong>“End Game”</strong> at any time. After that every player gets <strong>one more turn</strong>, then the round is over.',
+      abH: '🎁 Special Cards – Abilities',
+      abIntro: 'Some cards have special abilities:',
+      ab1: '<strong>See your own card:</strong> take a quick look at one of your face-down cards',
+      ab2: "<strong>See an opponent's card:</strong> look at a card of another player",
+      ab3: '<strong>Swap cards:</strong> swap any two cards (yours or other players’)',
+      ab4: '<strong>See &amp; Swap:</strong> look at two cards and then swap them',
+      tableH: '🎴 All Cards – Values & Abilities',
+      tableIntro: 'Here is a complete overview of every card in the game:',
+      thCard: 'Card', thValue: 'Value', thAbility: 'Ability',
+      luckyCard: 'Lucky card!',
+      bestCard: 'The best!',
+      noneShort: 'None',
+      penaltyCard: 'Penalty card',
+      snapH: '⚡ Snap – React Fast!',
+      snapP: 'After every discarded card a short window opens (the bar above the piles). While it runs, every player may tap <strong>any card on the table</strong> – their own or another player’s. The card is revealed to everyone:',
+      snap1: '<strong>Same value?</strong> The card goes to the discard pile, the window closes immediately and it is your turn – with one card fewer.',
+      snap2: 'If it was an <strong>opponent’s</strong> card, you fill the resulting gap with one of your own cards. The opponent keeps their hand size, you lose one card.',
+      snap3: '<strong>Wrong value?</strong> The card goes back to its place, you draw a <strong>penalty card</strong> and are out for this window.',
+      snapNote: 'Everyone gets exactly one attempt per window – so only tap if you actually remember the card.',
+      pointsH: '🎯 Card Values & Points',
+      pointsP: 'Every card has a value from -1 to 13. The lower the better. The sum of all your values is your current score. Again, lower is better. So get rid of the high cards and be the first to end the game!',
+      warn: '<strong>⚠️ Careful!</strong> Penalty points go to <strong>the player who ends the game</strong> only – 30 points if they do not have the fewest points <strong>or</strong> if their hand is worth more than 7 points in that round. It never exceeds 30 penalty points, and all other players go penalty-free.',
+    },
+
     BGThemes: {
       onyx: 'Onyx',
       mitter: 'Midnight',
@@ -1630,14 +1936,43 @@ const TRANSLATIONS = {
   }
 };
 
-function t(key) {
-  const keys = key.split('.');
-  let val = TRANSLATIONS[currentLanguage];
-  for (const k of keys) {
-    val = val[k];
-    if (!val) return key;
+// t('a.b', {n: 3}) – liefert den Text der aktuellen Sprache. Fehlt ein Schlüssel,
+// wird auf Deutsch zurückgefallen (statt den rohen Schlüssel zu zeigen), damit ein
+// vergessener Eintrag höchstens unübersetzt, nie kaputt aussieht.
+function t(key, params) {
+  const lookup = lang => {
+    let val = TRANSLATIONS[lang];
+    for (const k of String(key).split('.')) {
+      if (val == null || typeof val !== 'object') return undefined;
+      val = val[k];
+    }
+    return typeof val === 'string' ? val : undefined;
+  };
+  let s = lookup(currentLanguage);
+  if (s === undefined) s = lookup('de');
+  if (s === undefined) return key;
+  if (params) {
+    s = s.replace(/\{(\w+)\}/g, (m, name) => (name in params ? String(params[name]) : m));
   }
-  return val;
+  return s;
+}
+
+// Kartennamen kommen vom Server auf Deutsch; angezeigt wird die Sprachfassung
+// über die Kartennummer. Fällt die Nummer weg (alter State), bleibt der Servername.
+function cardName(card) {
+  if (!card) return '';
+  return (card.nr != null && t('cardName.' + card.nr) !== 'cardName.' + card.nr)
+    ? t('cardName.' + card.nr)
+    : (card.name || '');
+}
+
+// Dasselbe für das Zitat auf der Karte: nur die wenigen Zeilen, die in der
+// Quelle deutsch sind, haben eine englische Fassung – sonst gilt der Servertext.
+function cardQuote(card) {
+  if (!card) return '';
+  const key = 'cardQuote.' + card.nr;
+  const localized = card.nr != null ? t(key) : undefined;
+  return (localized && localized !== key) ? localized : (card.quote || '...');
 }
 
 const BG_THEMES = [
@@ -1678,16 +2013,40 @@ function loadSettings() {
 }
 
 function setLanguage(lang) {
+  if (lang === currentLanguage) return;
   currentLanguage = lang;
   localStorage.setItem('karma_language', lang);
   updateLanguageUI();
   renderSettings();
+  // Alles, was schon auf dem Schirm steht, neu beschriften: statische Texte,
+  // das Regelwerk, das Ereignis-Log (aus den gespeicherten Rohdaten) und – wenn
+  // gerade gespielt wird – der komplette Tisch samt offener Modals.
+  renderHelp();
+  renderLogPanel();
+  if (state && state.phase && state.phase !== 'lobby') render();
+  else if (state) renderLobby();
+}
+
+// Statische Texte im Markup: data-i18n (Inhalt), data-i18n-ph (Platzhalter),
+// data-i18n-title (Tooltip). So muss keine Zeile HTML doppelt gepflegt werden.
+function applyStaticI18n() {
+  document.documentElement.lang = currentLanguage;
+  for (const el of document.querySelectorAll('[data-i18n]')) {
+    el.innerHTML = t(el.dataset.i18n);
+  }
+  for (const el of document.querySelectorAll('[data-i18n-ph]')) {
+    el.placeholder = t(el.dataset.i18nPh);
+  }
+  for (const el of document.querySelectorAll('[data-i18n-title]')) {
+    el.title = t(el.dataset.i18nTitle);
+  }
 }
 
 function updateLanguageUI() {
   document.getElementById('lang-de').classList.toggle('active', currentLanguage === 'de');
   document.getElementById('lang-en').classList.toggle('active', currentLanguage === 'en');
 
+  applyStaticI18n();
   document.getElementById('lang-label').textContent = t('language');
   document.getElementById('bg-label').textContent = t('background');
   document.getElementById('cardback-label').textContent = t('cardback');
@@ -1723,7 +2082,135 @@ function renderSettings() {
     </button>`).join('');
 }
 
+// ── Spielregeln ───────────────────────────────────────────────────────────────
+// Der Regeltext wird aus den Übersetzungen aufgebaut statt zweimal im Markup zu
+// stehen. Die Kartentabelle kommt aus CARD_TABLE – Name und Fähigkeit holt sie
+// sich aus denselben Schlüsseln wie die Karten am Tisch, damit beides zusammen
+// bleibt, wenn sich eine Bezeichnung ändert.
+const CARD_TABLE = [
+  { nr: 15, emoji: '🐱', value: -1, gold: true,  ability: 'help.luckyCard' },
+  { nr: 14, emoji: '🏆', value: 0,  gold: true,  ability: 'help.bestCard' },
+  { nr: 1,  emoji: '👨', value: 1,  ability: 'help.noneShort' },
+  { nr: 2,  emoji: '🎤', value: 2,  ability: 'help.noneShort' },
+  { nr: 3,  emoji: '💪', value: 3,  ability: 'help.noneShort' },
+  { nr: 4,  emoji: '😈', value: 4,  ability: 'help.noneShort' },
+  { nr: 5,  emoji: '💃', value: 5,  ability: 'help.noneShort' },
+  { nr: 6,  emoji: '💁', value: 6,  ability: 'help.noneShort' },
+  { nr: 7,  emoji: '⚽', value: 7,  ability: 'abName.see_own',    icon: '👁️' },
+  { nr: 8,  emoji: '🎬', value: 8,  ability: 'abName.see_own',    icon: '👁️' },
+  { nr: 9,  emoji: '🍸', value: 9,  ability: 'abName.see_others', icon: '👀' },
+  { nr: 10, emoji: '🇩🇪', value: 10, ability: 'abName.see_others', icon: '👀' },
+  { nr: 11, emoji: '🃏', value: 11, ability: 'abName.swap',       icon: '🔀' },
+  { nr: 12, emoji: '🐕', value: 12, ability: 'abName.see_swap',   icon: '👁️' },
+  { nr: 13, emoji: '💩', value: 13, red: true, ability: 'help.penaltyCard' },
+];
+
+function renderHelp() {
+  const el = document.getElementById('help-content');
+  if (!el) return;
+  const h3 = 'style="font-size:15px;color:#737bc4;margin-bottom:8px"';
+  const p13 = 'style="font-size:13px;line-height:1.6"';
+  const ul = 'style="font-size:13px;line-height:1.8;margin-left:20px"';
+
+  const rows = CARD_TABLE.map((c, i) => {
+    const last = i === CARD_TABLE.length - 1;
+    const border = last ? '' : 'border-bottom:1px solid rgba(255,255,255,.08)';
+    const valColor = c.gold ? ';color:#FFD700' : c.red ? ';color:#ef4444' : '';
+    return `<tr style="${border}">
+      <td style="padding:8px 10px">${c.emoji} ${esc(t('cardName.' + c.nr))}</td>
+      <td style="padding:8px 10px;text-align:center;font-weight:700${valColor}"><strong>${c.value}</strong></td>
+      <td style="padding:8px 10px">${c.icon ? c.icon + ' ' : ''}${esc(t(c.ability))}</td>
+    </tr>`;
+  }).join('');
+
+  el.innerHTML = `<h2>${t('help.title')}</h2>
+
+    <div style="margin-top:20px">
+      <h3 ${h3}>${t('help.goalH')}</h3>
+      <p ${p13}>${t('help.goalP')}</p>
+    </div>
+
+    <div style="margin-top:16px">
+      <h3 ${h3}>${t('help.setupH')}</h3>
+      <ul ${ul}>
+        <li>${t('help.setup1')}</li>
+        <li>${t('help.setup2')}</li>
+        <li>${t('help.setup3')}</li>
+        <li>${t('help.setup4')}</li>
+      </ul>
+    </div>
+
+    <div style="margin-top:16px">
+      <h3 ${h3}>${t('help.flowH')}</h3>
+      <p style="font-size:13px;line-height:1.8;margin-bottom:8px">${t('help.flowIntro')}</p>
+      <ol ${ul}>
+        <li>${t('help.flow1')}</li>
+        <li>${t('help.flow2')}
+          <ul style="margin-top:4px">
+            <li>${t('help.flow2a')}</li>
+            <li>${t('help.flow2b')}</li>
+          </ul>
+        </li>
+        <li>${t('help.flow3')}</li>
+      </ol>
+    </div>
+
+    <div style="margin-top:16px">
+      <h3 ${h3}>${t('help.endH')}</h3>
+      <p ${p13}>${t('help.endP')}</p>
+    </div>
+
+    <div style="margin-top:16px">
+      <h3 ${h3}>${t('help.abH')}</h3>
+      <p style="font-size:13px;line-height:1.6;margin-bottom:8px">${t('help.abIntro')}</p>
+      <ul ${ul}>
+        <li>${t('help.ab1')}</li>
+        <li>${t('help.ab2')}</li>
+        <li>${t('help.ab3')}</li>
+        <li>${t('help.ab4')}</li>
+      </ul>
+    </div>
+
+    <div style="margin-top:16px">
+      <h3 ${h3}>${t('help.tableH')}</h3>
+      <p style="font-size:12px;line-height:1.6;margin-bottom:12px;color:rgba(255,255,255,.7)">${t('help.tableIntro')}</p>
+      <div style="overflow-x:auto">
+        <table style="width:100%;font-size:12px;border-collapse:collapse;background:rgba(0,0,0,.2);border-radius:8px;overflow:hidden">
+          <thead>
+            <tr style="background:rgba(115,123,196,.2);border-bottom:1px solid rgba(115,123,196,.3)">
+              <th style="padding:10px;text-align:left;color:#737bc4;font-weight:700">${t('help.thCard')}</th>
+              <th style="padding:10px;text-align:center;color:#737bc4;font-weight:700">${t('help.thValue')}</th>
+              <th style="padding:10px;text-align:left;color:#737bc4;font-weight:700">${t('help.thAbility')}</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    </div>
+
+    <div style="margin-top:16px">
+      <h3 ${h3}>${t('help.snapH')}</h3>
+      <p ${p13}>${t('help.snapP')}</p>
+      <ul style="font-size:13px;line-height:1.7;margin:8px 0 0 18px">
+        <li>${t('help.snap1')}</li>
+        <li>${t('help.snap2')}</li>
+        <li>${t('help.snap3')}</li>
+      </ul>
+      <p style="font-size:12px;line-height:1.6;margin-top:8px;color:rgba(255,255,255,.65)">${t('help.snapNote')}</p>
+    </div>
+
+    <div style="margin-top:16px">
+      <h3 ${h3}>${t('help.pointsH')}</h3>
+      <p style="font-size:13px;line-height:1.6;margin-bottom:8px">${t('help.pointsP')}</p>
+    </div>
+
+    <div style="margin-top:16px;padding:12px;background:rgba(115,123,196,.1);border-left:3px solid #737bc4;border-radius:8px">
+      <p style="font-size:12px;color:rgba(255,255,255,.8);margin:0">${t('help.warn')}</p>
+    </div>`;
+}
+
 function openHelp() {
+  renderHelp();
   document.getElementById('help-overlay').classList.remove('hidden');
 }
 
@@ -1756,7 +2243,7 @@ function renderLobby() {
     const chip = document.createElement('div');
     chip.className = 'player-chip';
     chip.innerHTML = `<span class="dot ${p.connected ? 'online' : 'offline'}"></span>
-      ${p.id === state.myId ? '<strong>' + esc(p.name) + ' (Du)</strong>' : esc(p.name)}
+      ${p.id === state.myId ? '<strong>' + esc(p.name) + ' ' + t('you') + '</strong>' : esc(p.name)}
       ${state.isHost && p.id === state.myId ? '<span class="crown">👑</span>' : ''}`;
     list.appendChild(chip);
   }
@@ -1765,7 +2252,9 @@ function renderLobby() {
   if (state.isHost) {
     startBtn.classList.toggle('hidden', state.players.length < 2);
     waitMsg.classList.toggle('hidden', state.players.length >= 2);
-    waitMsg.textContent = 'Warte auf weitere Spieler (min. 2)…';
+    waitMsg.textContent = t('waitingForPlayers');
+  } else {
+    waitMsg.textContent = t('waitingForHost');
   }
 }
 
@@ -1932,8 +2421,10 @@ function render() {
 }
 
 function renderTopBar() {
-  const modeNames = { single:'Einzelspiel', best_of_3:'Best of 3', best_of_5:'Best of 5', best_of_10:'Best of 10' };
-  document.getElementById('tb-mode').textContent = `${modeNames[state.gameMode] || ''} – Runde ${state.roundNumber}/${state.totalRounds}`;
+  const modeKeys = { single:'singleGame', best_of_3:'bestOf3', best_of_5:'bestOf5', best_of_10:'bestOf10' };
+  const mode = modeKeys[state.gameMode] ? t(modeKeys[state.gameMode]) : '';
+  const round = t('roundOf', { n: state.roundNumber, total: state.totalRounds });
+  document.getElementById('tb-mode').textContent = `${mode} – ${round}`;
 
   const scores = document.getElementById('tb-scores');
   scores.innerHTML = '';
@@ -1944,8 +2435,9 @@ function renderTopBar() {
     scores.appendChild(chip);
   }
 
-  const phaseNames = { peek:'Karten ansehen', playing:'Spielen', ability:'Fähigkeit', swap_flight:'Tausch', racing:'Schnapp!', race_give:'Karte abgeben', scoring:'Wertung', done:'Fertig' };
-  document.getElementById('tb-phase').textContent = phaseNames[state.phase] || state.phase;
+  const phaseKey = 'phase.' + state.phase;
+  const phaseTxt = t(phaseKey);
+  document.getElementById('tb-phase').textContent = phaseTxt === phaseKey ? state.phase : phaseTxt;
 }
 
 function renderOpponents() {
@@ -1966,8 +2458,8 @@ function renderOpponents() {
     const nameEl = document.createElement('div');
     nameEl.className = 'opp-name' + (isActive ? ' active' : '');
     const thinking = state.drawnBy === p.id
-      ? '<span class="opp-thinking">· überlegt<i></i><i></i><i></i></span>' : '';
-    nameEl.innerHTML = `${isActive ? '▶ ' : ''}${esc(p.name)}${!p.connected ? ' (weg)' : ''}${thinking}`;
+      ? `<span class="opp-thinking">· ${t('thinking')}<i></i><i></i><i></i></span>` : '';
+    nameEl.innerHTML = `${isActive ? '▶ ' : ''}${esc(p.name)}${!p.connected ? ' ' + t('away') : ''}${thinking}`;
     const hand = document.createElement('div');
     hand.className = 'opp-hand';
     for (let i = 0; i < p.hand.length; i++) {
@@ -2017,7 +2509,7 @@ function renderCenter() {
   deckEl.style.height = pile.h + 'px';
   deckEl.style.opacity = canDraw ? '1' : '0.5';
   deckEl.style.cursor = canDraw ? 'pointer' : 'default';
-  document.getElementById('deck-count').textContent = `${state.deckSize} Karten`;
+  document.getElementById('deck-count').textContent = t('deckCount', { n: state.deckSize });
 
   // Discard – Larger display
   const discardEl = document.getElementById('discard-pile');
@@ -2029,7 +2521,7 @@ function renderCenter() {
     discardEl.style.borderStyle = 'solid';
     discardEl.style.borderColor = state.discardTop.color || 'rgba(255,255,255,.3)';
   } else {
-    discardEl.innerHTML = '<div class="discard-empty">Leer</div>';
+    discardEl.innerHTML = `<div class="discard-empty">${t('empty')}</div>`;
     discardEl.style.borderStyle = 'dashed';
     discardEl.style.borderColor = 'rgba(255,255,255,.15)';
   }
@@ -2049,13 +2541,13 @@ function renderCenter() {
     const btn = document.getElementById('drawn-discard-btn');
     const hint = document.getElementById('drawn-hint');
     if (hasAbility) {
-      btn.textContent = 'Ablegen & Fähigkeit nutzen';
+      btn.textContent = t('discardAbilityBtn');
       btn.className = 'btn btn-purple';
-      hint.innerHTML = 'Tippe eine Handkarte, um sie zu <strong>tauschen</strong> (Fähigkeit verfällt) – oder <strong>lege ab</strong>, um die Fähigkeit zu nutzen.';
+      hint.innerHTML = t('drawnHintAbility');
     } else {
-      btn.textContent = 'Ablegen';
+      btn.textContent = t('discardBtn');
       btn.className = 'btn btn-outline';
-      hint.innerHTML = 'Tippe eine deiner Karten, um sie zu <strong>ersetzen</strong> – oder lege die gezogene Karte ab.';
+      hint.innerHTML = t('drawnHintPlain');
     }
   } else {
     drawnArea.style.display = 'none';
@@ -2108,7 +2600,7 @@ function renderDrawnHand() {
     card.onclick = () => keepDrawn(i);
     const lbl = document.createElement('div');
     lbl.className = 'drawn-slot-lbl';
-    lbl.textContent = `Karte ${i + 1}`;
+    lbl.textContent = t('cardN', { n: i + 1 });
     slot.appendChild(card);
     slot.appendChild(lbl);
     handEl.appendChild(slot);
@@ -2145,7 +2637,7 @@ function renderMyZone() {
   document.getElementById('myzone').classList.toggle('turn-glow', myTurnGlow);
 
   const hand = document.getElementById('my-hand');
-  hand.innerHTML = '<div class="hand-heading">Deine Hand</div>';
+  hand.innerHTML = `<div class="hand-heading">${t('yourHand')}</div>`;
   const m = handMetrics(state.players.filter(p => !p.isMe).length);
   for (let i = 0; i < me.hand.length; i++) {
     const c = me.hand[i];
@@ -2180,7 +2672,7 @@ function renderActionBar(isMyTurn, me) {
 
   if (state.phase === 'playing' && !state.drawnCard) {
     if (!state.endCalledBy) {
-      addBtn(bar, 'Spiel beenden', '#ef4444', () => send({ type: 'call_end' }));
+      addBtn(bar, t('endGame'), '#ef4444', () => send({ type: 'call_end' }));
     }
   }
 
@@ -2219,27 +2711,24 @@ function renderInstruction() {
   let txt = '';
   if (state.phase === 'playing') {
     if (isMyTurn) {
-      if (!state.drawnCard) txt = 'Ziehe eine Karte vom Nachziehstapel oder beende das Spiel';
-      else txt = 'Wähle eine Handkarte zum Tauschen oder lege die gezogene Karte ab';
+      txt = t(state.drawnCard ? 'inst.chooseSwapOrDiscard' : 'inst.drawOrEnd');
     } else {
       const cp = state.players[state.currentPlayerIndex];
-      txt = `Warte auf ${cp?.name || '?'}…`;
+      txt = t('inst.waitFor', { name: cp?.name || '?' });
     }
   } else if (state.phase === 'ability') {
     const as = state.abilityState;
     if (as?.activatedBy === state.myId) {
-      const hints = { see_own: 'Wähle eine deiner Karten', see_others: 'Wähle eine Karte eines Mitspielers', swap: 'Wähle zwei Karten zum Tauschen', see_swap: 'Wähle zwei Karten' };
-      txt = hints[as.type] || '';
+      const key = 'inst.' + as.type;
+      txt = t(key) === key ? '' : t(key);
     }
     // Für Beobachter übernimmt das Laufband – hier keine zweite Zeile.
   } else if (state.phase === 'swap_flight') {
-    txt = 'Achte darauf, wohin die Karten wandern…';
+    txt = t('inst.swapFlight');
   } else if (state.phase === 'racing') {
     // Die #race-bar sagt schon alles – hier keine zweite Zeile.
   } else if (state.phase === 'race_give') {
-    txt = state.raceGive?.racerId === state.myId
-      ? 'Wähle eine deiner Karten, die du abgibst'
-      : '';
+    txt = state.raceGive?.racerId === state.myId ? t('inst.giveOwn') : '';
   }
   el.textContent = txt;
   el.classList.toggle('hidden', !txt);
@@ -2249,7 +2738,8 @@ function renderEndBanner() {
   const el = document.getElementById('end-banner');
   if (state.endCalledBy && state.phase === 'playing') {
     const caller = state.players.find(p => p.id === state.endCalledBy);
-    el.textContent = `${caller?.name} hat das Spiel beendet – noch ${state.finalRoundLeft} ${state.finalRoundLeft === 1 ? 'Zug' : 'Züge'}`;
+    el.textContent = t(state.finalRoundLeft === 1 ? 'endBannerOne' : 'endBannerMany',
+                       { name: caller?.name || '?', n: state.finalRoundLeft });
     el.style.display = 'block';
   } else {
     el.style.display = 'none';
@@ -2285,21 +2775,22 @@ function renderPeekModal() {
   timerEl.classList.toggle('hidden', !revealing);
 
   if (done) {
-    title.textContent = 'Einprägen abgeschlossen';
-    desc.innerHTML = 'Deine Karten sind wieder verdeckt. Warte auf die anderen Spieler…';
-    countTxt.textContent = state.players.filter(p => p.peekDone).length + ' / ' + state.players.length + ' Spieler fertig';
+    title.textContent = t('peek.doneTitle');
+    desc.innerHTML = t('peek.doneDesc');
+    countTxt.textContent = t('peek.doneCount', {
+      n: state.players.filter(p => p.peekDone).length, total: state.players.length });
     doneBtn.classList.add('hidden');
   } else if (revealing) {
-    title.textContent = 'Merk sie dir!';
-    desc.innerHTML = 'Diese Karten werden gleich <strong>wieder verdeckt</strong>. Präge dir Position und Wert ein.';
+    title.textContent = t('peek.rememberTitle');
+    desc.innerHTML = t('peek.rememberDesc');
     countTxt.textContent = '';
     doneBtn.classList.add('hidden');
   } else {
-    title.textContent = 'Karten ansehen';
-    desc.innerHTML = 'Wähle <strong>2</strong> deiner Handkarten aus. Du siehst sie dann <strong>6 Sekunden</strong> lang – danach werden sie wieder verdeckt. Merk sie dir gut!';
-    countTxt.textContent = `${sel.length} / 2 ausgewählt`;
+    title.textContent = t('peek.title');
+    desc.innerHTML = t('peek.desc');
+    countTxt.textContent = t('peek.count', { n: sel.length });
     doneBtn.classList.remove('hidden');
-    doneBtn.textContent = sel.length ? 'Diese Karten ansehen' : 'Überspringen';
+    doneBtn.textContent = sel.length ? t('peek.viewBtn') : t('peek.skipBtn');
   }
 
   const handEl = document.getElementById('peek-hand');
@@ -2362,7 +2853,7 @@ function renderPeekModal() {
       card.appendChild(inner);
       const lbl = document.createElement('div');
       lbl.className = 'peek-slot-lbl';
-      lbl.textContent = `Karte ${i+1}`;
+      lbl.textContent = t('cardN', { n: i + 1 });
       wrap.appendChild(card);
       wrap.appendChild(lbl);
       handEl.appendChild(wrap);
@@ -2546,7 +3037,7 @@ function animateRaceReveal(msg, beforeRects) {
   flip.style.width = rect.width + 'px';
   flip.style.height = rect.height + 'px';
   flip.innerHTML = `<div class="rf-inner"><div class="rf-face"></div></div>
-    <div class="rf-verdict">${msg.match ? 'Treffer' : 'Daneben'}</div>`;
+    <div class="rf-verdict">${msg.match ? t('race.hit') : t('race.miss')}</div>`;
   const inner = flip.querySelector('.rf-inner');
   const face = flip.querySelector('.rf-face');
   const backHTML = '<div class="card-back"></div>';
@@ -2874,23 +3365,23 @@ function renderAbilityTicker() {
   const slot = s => `${who(s.playerId)} #${s.cardIndex + 1}`;
   const name = `<strong>${who(as.activatedBy)}</strong>`;
   const sel = as.selectedCards || [];
-  let icon = '✨', mode = '', text = `${name} nutzt eine Fähigkeit…`;
+  let icon = '✨', mode = '', text = t('tick.generic', { name });
 
   if (as.type === 'see_own' || as.type === 'see_others') {
     icon = '👁'; mode = 'mode-peek';
     text = sel.length
-      ? `${name} sieht sich <strong>${slot(sel[0])}</strong> an`
-      : `${name} wählt eine Karte zum Ansehen…`;
+      ? t('tick.looksAt', { name, slot: slot(sel[0]) })
+      : t('tick.choosesLook', { name });
   } else if (as.type === 'swap') {
     icon = '↔'; mode = 'mode-swap';
-    if (sel.length === 2) text = `${name} tauscht <strong>${slot(sel[0])}</strong> ↔ <strong>${slot(sel[1])}</strong>`;
-    else if (sel.length === 1) text = `${name} hat <strong>${slot(sel[0])}</strong> gewählt – zweite Karte folgt…`;
-    else text = `${name} wählt zwei Karten zum Tauschen…`;
+    if (sel.length === 2) text = t('tick.swaps', { name, a: slot(sel[0]), b: slot(sel[1]) });
+    else if (sel.length === 1) text = t('tick.chose1of2', { name, slot: slot(sel[0]) });
+    else text = t('tick.choosesTwoSwap', { name });
   } else if (as.type === 'see_swap') {
     icon = '👁'; mode = 'mode-swap';
-    if (sel.length === 2 && as.step === 'decide_swap') text = `${name} sieht <strong>${slot(sel[0])}</strong> und <strong>${slot(sel[1])}</strong> – tauschen oder nicht?`;
-    else if (sel.length === 1) text = `${name} hat <strong>${slot(sel[0])}</strong> gewählt…`;
-    else text = `${name} wählt zwei Karten…`;
+    if (sel.length === 2 && as.step === 'decide_swap') text = t('tick.seeSwapDecide', { name, a: slot(sel[0]), b: slot(sel[1]) });
+    else if (sel.length === 1) text = t('tick.chose1', { name, slot: slot(sel[0]) });
+    else text = t('tick.choosesTwo', { name });
   }
 
   el.className = 'show ' + mode;
@@ -2949,71 +3440,73 @@ function renderAbilityModal() {
   body.innerHTML = '';
   actions.innerHTML = '';
 
+  const hiddenAgainHtml = `<div style="text-align:center;color:rgba(255,255,255,.4);margin:20px 0">${t('ab.hiddenAgain')}</div>`;
+
   if (as.type === 'see_own') {
-    title.textContent = 'Eigene Karte ansehen';
+    title.textContent = t('ab.seeOwnTitle');
     if (as.waitingForSelection) {
-      desc.textContent = 'Wähle eine deiner Handkarten, um sie anzusehen.';
+      desc.textContent = t('ab.seeOwnPick');
       body.innerHTML = buildMyHandForAbility(null, 'own');
     } else {
-      desc.innerHTML = 'Du siehst sie <strong>6 Sekunden</strong> – danach wird sie wieder verdeckt:';
+      desc.innerHTML = t('ab.revealOne');
       body.innerHTML = revealTimerHtml() + (as.revealedCard
         ? `<div style="display:flex;justify-content:center;margin:12px 0"><div class="card" style="width:${ash.w}px;height:${ash.h}px">${buildCardInner(as.revealedCard, ash.w, ash.h)}</div></div>`
-        : '<div style="text-align:center;color:rgba(255,255,255,.4);margin:20px 0">Karte ist wieder verdeckt.</div>');
-      addBtn(actions, 'Fertig', '#22c55e', () => _sendAbility({ type: 'ability', done: true }));
+        : hiddenAgainHtml);
+      addBtn(actions, t('done'), '#22c55e', () => _sendAbility({ type: 'ability', done: true }));
     }
   }
 
   if (as.type === 'see_others') {
-    title.textContent = 'Gegner-Karte ansehen';
+    title.textContent = t('ab.seeOthersTitle');
     if (as.waitingForSelection) {
-      desc.textContent = 'Wähle eine Karte eines Mitspielers.';
+      desc.textContent = t('ab.seeOthersPick');
       body.innerHTML = buildOpponentsForAbility();
     } else {
-      desc.innerHTML = 'Du siehst sie <strong>6 Sekunden</strong> – danach wird sie wieder verdeckt:';
+      desc.innerHTML = t('ab.revealOne');
       body.innerHTML = revealTimerHtml() + (as.revealedCard
         ? `<div style="display:flex;justify-content:center;margin:12px 0"><div class="card" style="width:${ash.w}px;height:${ash.h}px">${buildCardInner(as.revealedCard, ash.w, ash.h)}</div></div>`
-        : '<div style="text-align:center;color:rgba(255,255,255,.4);margin:20px 0">Karte ist wieder verdeckt.</div>');
-      addBtn(actions, 'Fertig', '#22c55e', () => _sendAbility({ type: 'ability', done: true }));
+        : hiddenAgainHtml);
+      addBtn(actions, t('done'), '#22c55e', () => _sendAbility({ type: 'ability', done: true }));
     }
   }
 
   if (as.type === 'swap') {
-    title.textContent = 'Zwei Karten tauschen';
+    title.textContent = t('ab.swapTitle');
     if (as.step === 'select1') {
-      desc.textContent = 'Wähle die erste Karte (eigene oder fremde).';
+      desc.textContent = t('ab.pick1');
       body.innerHTML = buildAllCardsForAbility(as.selectedCards || []);
     } else if (as.step === 'select2') {
-      desc.textContent = 'Wähle die zweite Karte zum Tauschen.';
+      desc.textContent = t('ab.pick2');
       body.innerHTML = buildAllCardsForAbility(as.selectedCards || []);
     }
   }
 
   if (as.type === 'see_swap') {
-    title.textContent = 'Zwei Karten ansehen & tauschen';
+    title.textContent = t('ab.seeSwapTitle');
     if (as.step === 'select1') {
-      desc.textContent = 'Wähle die erste Karte.';
+      desc.textContent = t('ab.pickFirst');
       body.innerHTML = buildAllCardsForAbility(as.selectedCards || []);
     } else if (as.step === 'select2') {
-      desc.textContent = 'Wähle die zweite Karte.';
+      desc.textContent = t('ab.pickSecond');
       body.innerHTML = buildAllCardsForAbility(as.selectedCards || []);
     } else if (as.step === 'decide_swap') {
       if (as.revealedCards) {
-        desc.innerHTML = 'Du siehst beide Karten <strong>6 Sekunden</strong> lang. Tauschen?';
+        desc.innerHTML = t('ab.revealBoth');
         body.innerHTML = revealTimerHtml() + `<div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin:12px 0">` +
           as.revealedCards.map(r => {
             const p = state.players.find(x => x.id === r.playerId);
             return `<div style="text-align:center"><div style="font-size:11px;color:rgba(255,255,255,.5);margin-bottom:4px">${esc(p?.name||'?')} #${r.cardIndex+1}</div><div class="card" style="width:${ash.w}px;height:${ash.h}px">${buildCardInner(r.card, ash.w, ash.h)}</div></div>`;
           }).join('') + '</div>';
       } else {
-        desc.textContent = 'Die Karten sind wieder verdeckt. Tauschen – aus dem Gedächtnis?';
+        desc.textContent = t('ab.memorySwap');
         body.innerHTML = `<div style="display:flex;gap:16px;justify-content:center;margin:12px 0">` +
           (as.selectedCards || []).map(sc => {
             const p = state.players.find(x => x.id === sc.playerId);
             return `<div style="text-align:center"><div style="font-size:11px;color:rgba(255,255,255,.5);margin-bottom:4px">${esc(p?.name||'?')} #${sc.cardIndex+1}</div><div class="card" style="width:${ash.w}px;height:${ash.h}px"><div class="card-back"></div></div></div>`;
           }).join('') + '</div>';
       }
-      addBtn(actions, 'Tauschen', '#9C27B0', () => _sendAbility({ type: 'ability', doSwap: true }));
-      addBtn(actions, 'Nicht tauschen', '#64748b', () => _sendAbility({ type: 'ability', doSwap: false }));
+      addBtn(actions, t('ab.swapBtn'), '#9C27B0', () => _sendAbility({ type: 'ability', doSwap: true }));
+      addBtn(actions, t('ab.noSwapBtn'), '#64748b', () => _sendAbility({ type: 'ability', doSwap: false }));
     }
   }
   tickReveal();
@@ -3021,7 +3514,7 @@ function renderAbilityModal() {
 
 function revealTimerHtml() {
   return `<div class="reveal-timer">
-    <div class="reveal-timer-head"><span class="reveal-secs">6</span><span class="reveal-timer-lbl">Sekunden – einprägen!</span></div>
+    <div class="reveal-timer-head"><span class="reveal-secs">6</span><span class="reveal-timer-lbl">${t('rememberSecs')}</span></div>
     <div class="reveal-bar"><div class="reveal-fill"></div></div>
   </div>`;
 }
@@ -3059,7 +3552,7 @@ function buildAllCardsForAbility(selected) {
   const aps = abilityPickSize();
   let html = '<div style="display:flex;flex-direction:column;gap:12px;margin:12px 0">';
   for (const p of state.players) {
-    html += `<div><div style="font-size:12px;color:rgba(255,255,255,.5);margin-bottom:4px">${esc(p.name)}${p.isMe?' (Du)':''}</div><div style="display:flex;gap:6px;flex-wrap:wrap">`;
+    html += `<div><div style="font-size:12px;color:rgba(255,255,255,.5);margin-bottom:4px">${esc(p.name)}${p.isMe ? ' ' + t('you') : ''}</div><div style="display:flex;gap:6px;flex-wrap:wrap">`;
     for (let i = 0; i < p.hand.length; i++) {
       const c = p.hand[i];
       const sel = selected.some(s => s.playerId === p.id && s.cardIndex === i);
@@ -3164,24 +3657,24 @@ function renderRaceBar() {
     const g = state.raceGive;
     const racer = state.players.find(p => p.id === g.racerId);
     const owner = state.players.find(p => p.id === g.ownerId);
-    title.textContent = 'Karte abgeben';
+    title.textContent = t('race.give');
     value.textContent = '';
     value.style.display = 'none';
     secs.textContent = Math.ceil(g.secondsLeft || 0) + 's';
     sub.innerHTML = g.racerId === state.myId
-      ? `Wähle eine deiner Karten – sie füllt die Lücke bei <strong>${esc(owner?.name || '?')}</strong>. Danach bist du am Zug.`
-      : `<strong>${esc(racer?.name || '?')}</strong> sucht eine Karte für die Lücke bei <strong>${esc(owner?.name || '?')}</strong>…`;
+      ? t('race.giveSelf', { owner: esc(owner?.name || '?') })
+      : t('race.giveOther', { racer: esc(racer?.name || '?'), owner: esc(owner?.name || '?') });
     return;
   }
 
   const rc = state.racingCard;
-  title.textContent = 'Schnapp';
+  title.textContent = t('race.snap');
   value.style.display = '';
-  value.textContent = rc ? `${rc.value} · ${rc.name}` : '';
+  value.textContent = rc ? `${rc.value} · ${cardName(rc)}` : '';
   if (state.raceMissed) {
-    sub.textContent = 'Daneben – du bist für dieses Fenster raus.';
+    sub.textContent = t('race.missed');
   } else {
-    sub.innerHTML = 'Tippe eine <strong>beliebige</strong> Karte am Tisch, die denselben Wert hat – auch bei Mitspielern. Ein Versuch, sonst Strafkarte.';
+    sub.innerHTML = t('race.hint');
   }
 }
 
@@ -3211,7 +3704,8 @@ function renderScoringModal() {
   overlay.classList.remove('hidden');
 
   const isDone = state.phase === 'done';
-  document.getElementById('scoring-title').textContent = isDone ? 'Spiel beendet!' : `Runde ${state.roundNumber} beendet`;
+  document.getElementById('scoring-title').textContent =
+    isDone ? t('sc.gameOver') : t('sc.roundEnded', { n: state.roundNumber });
 
   const body = document.getElementById('scoring-body');
   const scores = state.roundScores;
@@ -3231,16 +3725,16 @@ function renderScoringModal() {
       <div>
         <div class="score-name">${esc(p.name)}${p.id === state.endCalledBy ? ' 🏁' : ''}</div>
         <div style="font-size:12px;color:rgba(255,255,255,.5);margin:6px 0">
-          Kartenwerte: ${bd.card_total ?? 0}${bd.cards?.length ? ' (' + bd.cards.join(', ') + ')' : ''}
+          ${t('sc.cardValues', { total: (bd.card_total ?? 0) + (bd.cards?.length ? ' (' + bd.cards.join(', ') + ')' : '') })}
         </div>`;
     if (bd.penalties && bd.penalties.length > 0) {
       for (const pen of bd.penalties) {
         html += `<div style="font-size:11px;color:#ef4444;margin:4px 0">
-          Strafe +${pen.amount}: ${esc(pen.reason)}
+          ${esc(t('sc.penalty', { amount: pen.amount, reason: penaltyReason(pen) }))}
         </div>`;
       }
     }
-    html += `<div class="match-total">Gesamt: ${ts}</div>
+    html += `<div class="match-total">${t('sc.total', { n: ts })}</div>
         <div class="hand-reveal">${p.hand.map(c => c && !c.hidden ? `<div class="card" style="width:50px;height:72px;font-size:.7em">${buildCardInner(c,50,72)}</div>` : '').join('')}</div>
       </div>
       <div class="score-val ${isWinner ? 'winner' : ''}">${rs}${isWinner ? ' ★' : ''}</div>
@@ -3250,14 +3744,22 @@ function renderScoringModal() {
 
   if (isDone) {
     const winner = state.players.reduce((a, b) => (totals[a.id] || 0) <= (totals[b.id] || 0) ? a : b);
-    html += `<div style="text-align:center;margin-top:16px;font-size:18px;font-weight:700;color:#737bc4">🏆 ${esc(winner.name)} gewinnt!</div>`;
-    document.getElementById('next-round-btn').textContent = 'Neues Spiel';
+    html += `<div style="text-align:center;margin-top:16px;font-size:18px;font-weight:700;color:#737bc4">${t('sc.winner', { name: esc(winner.name) })}</div>`;
+    document.getElementById('next-round-btn').textContent = t('sc.newGame');
   } else {
     const hasMore = state.roundNumber < state.totalRounds;
-    document.getElementById('next-round-btn').textContent = hasMore ? 'Nächste Runde' : 'Endergebnis';
+    document.getElementById('next-round-btn').textContent = hasMore ? t('sc.nextRound') : t('sc.finalResult');
   }
 
   body.innerHTML = html;
+}
+
+// Der Server schickt nur die Gründe als Schlüssel ('notWon', 'over7') – der Satz
+// darum herum entsteht erst hier, in der Sprache des jeweiligen Spielers.
+function penaltyReason(pen) {
+  if (!pen.reasons || !pen.reasons.length) return pen.reason || '';
+  const reasons = pen.reasons.map(r => t('pen.' + r)).join(t('pen.and'));
+  return t('pen.text', { reasons, amount: pen.amount });
 }
 
 // ── Card Rendering ─────────────────────────────────────────────────────────────
@@ -3275,25 +3777,13 @@ function getColorClass(hexColor) {
 }
 
 function getAbilityName(ability) {
-  const names = {
-    'none': 'Keine Fähigkeiten',
-    'see_own': 'Eigene Karte sehen',
-    'see_others': 'Gegner-Karte sehen',
-    'swap': 'Karten tauschen',
-    'see_swap': 'Sehen & Tauschen',
-  };
-  return names[ability] || 'Fähigkeit';
+  const key = 'abName.' + ability;
+  return t(key) === key ? t('abName.fallback') : t(key);
 }
 
 function getAbilityDesc(ability) {
-  const descs = {
-    'none': 'Diese Karte hat keine besonderen Fähigkeiten.',
-    'see_own': 'Du kannst eine deiner Karten ansehen.',
-    'see_others': 'Du kannst eine Karte eines Gegners ansehen.',
-    'swap': 'Du kannst zwei Karten mit anderen Spielern tauschen.',
-    'see_swap': 'Du kannst zwei Karten ansehen und dann tauschen.',
-  };
-  return descs[ability] || '';
+  const key = 'abDesc.' + ability;
+  return t(key) === key ? '' : t(key);
 }
 
 /* ── Bild-Ausschnitt pro Karte ────────────────────────────────────────────────
@@ -3309,12 +3799,12 @@ const CARD_IMAGE_FOCUS = {
   '02_tupac.jpg':                '54% 18%',
   '03_arnold schwarzenegger.jpg':'45% 8%',
   '04_Eric Cartman.png':         '50% 36%',
-  '05_zidane.jpg':               '48% 12%',  // Kopfstoß: beide Köpfe im Bild halten
-  '06_bruce lee.jpg':            '42% 42%',
+  'fotos/05-barbie.webp':        '50% 74%',  // Puppengesicht sitzt tief im Bild
+  'fotos/06-hawk-tuah.webp':     '44% 32%',  // Gesicht sitzt links der Mitte
   '07_Ronaldo.jpeg':             '50% 28%',
   '08_Leonardo DiCaprio.jpg':    '56% 17%',
-  '09_snowden.jpg':              '47% 38%',
-  '10_trump.jpg':                '44% 34%',
+  'fotos/09-penny.webp':         '50% 30%',  // Kopf-Schulter-Ausschnitt
+  'fotos/10-merkel.webp':        '50% 42%',  // Brille auf halber Höhe
   '11_joker.jpg':                '47% 40%',
   '12_Hund.jpg':                 '50% 30%',
   '13_MrHankey.jpg':             '47% 12%',
@@ -3354,19 +3844,19 @@ function buildCardInner(card, w, h) {
     <div class="tcg-card-border"></div>
     <div class="tcg-card-header" style="height:${headerH}px;flex:0 0 auto">
       <div class="tcg-card-value-hex" style="width:${hexW}px;height:${hexH}px;font-size:${Math.max(8, Math.round(hexH * 0.46))}px">${card.value}</div>
-      <div class="tcg-card-name">${esc(card.name)}</div>
+      <div class="tcg-card-name">${esc(cardName(card))}</div>
       <div class="tcg-card-star">✦</div>
     </div>
     <div class="tcg-card-image" style="height:${imgH}px">
-      <img src="/images/${encodeURIComponent(card.image)}" style="width:100%;height:100%;object-fit:cover;object-position:${cardImageFocus(card.image)}" onerror="this.parentElement.textContent='[Bild]'">
+      <img src="/images/${encodeURIComponent(card.image)}" style="width:100%;height:100%;object-fit:cover;object-position:${cardImageFocus(card.image)}" onerror="this.parentElement.textContent=t('imgFallback')">
     </div>
     ${infoPanelH <= 0 ? '' : `<div class="tcg-card-info" style="height:${infoPanelH}px">
       <div>
-        <div class="tcg-ability-label">${card.ability === 'none' ? 'NORMAL' : 'ABILITY'}</div>
+        <div class="tcg-ability-label">${card.ability === 'none' ? t('chip.normal') : t('chip.ability')}</div>
         <div class="tcg-ability-name">${abilityName}</div>
         <div class="tcg-ability-desc">${abilityDesc}</div>
       </div>
-      <div class="tcg-flavor-text">"${esc(card.quote || '...')}"</div>
+      <div class="tcg-flavor-text">"${esc(cardQuote(card))}"</div>
     </div>`}
   </div>`;
 }
@@ -3385,19 +3875,37 @@ function drawCard() {
 // Panel (noch) nicht sichtbar ist – etwa in der Lobby oder bei Verbindungsfehlern
 // vor Spielstart – wird auf den alten Toast zurückgefallen, damit die Nachricht
 // überhaupt jemand sieht.
-function showToast(msg, color = '#333', anim = null) {
+// Eine Meldung ist ein Datensatz, kein fertiger Satz: {key, params, color, anim}.
+// Erst beim Anzeigen wird übersetzt – deshalb kann das Log nach einem
+// Sprachwechsel komplett neu beschriftet werden, auch rückwirkend.
+function entryText(e) {
+  if (!e.key) return e.text || '';
+  // Kartennamen schickt der Server als Nummer, nicht als Text – sonst stünde in
+  // einer englischen Meldung plötzlich „Katze".
+  const params = (e.params && e.params.cardNr != null)
+    ? { ...e.params, card: t('cardName.' + e.params.cardNr) }
+    : e.params;
+  return t(e.key, params);
+}
+
+function showToast(entry, color, anim) {
+  // Altform showToast('Text', color) bleibt für rein lokale Meldungen erlaubt.
+  const e = (typeof entry === 'string')
+    ? { text: entry, color: color || '#333', anim: anim || null }
+    : { color: '#333', ...entry };
+
   const panel = document.getElementById('log-panel');
   const gameVisible = document.getElementById('game')?.style.display === 'flex';
   if (panel && gameVisible) {
-    addLog(msg, color, anim);
+    addLog(e);
     return;
   }
   const container = document.getElementById('toast-container');
   const el = document.createElement('div');
   el.className = 'toast';
-  el.style.borderLeftColor = color;
-  el.style.borderLeft = `3px solid ${color}`;
-  el.textContent = msg;
+  el.style.borderLeftColor = e.color;
+  el.style.borderLeft = `3px solid ${e.color}`;
+  el.textContent = entryText(e);
   container.appendChild(el);
   setTimeout(() => el.remove(), 3100);
 }
@@ -3446,35 +3954,65 @@ function initLogPanel() {
   setLogOpen(open, false);
 }
 
-function addLog(msg, color = 'rgba(255,255,255,.35)', anim = null) {
-  const panel = document.getElementById('log-panel');
-  if (!panel) return;
-  const empty = panel.querySelector('.log-empty');
-  if (empty) empty.remove();
-  panel.querySelectorAll('.is-new').forEach(el => el.classList.remove('is-new'));
+// Die Rohdaten aller Meldungen dieser Sitzung. Das Panel ist nur ihre Anzeige –
+// nach einem Sprachwechsel wird daraus komplett neu gezeichnet.
+let logEntries = [];
 
-  const now = new Date();
-  const time = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
-
+function logLineEl(e) {
   const line = document.createElement('div');
-  line.className = 'log-line is-new';
-  line.style.borderLeftColor = color;
+  line.className = 'log-line';
+  line.style.borderLeftColor = e.color || 'rgba(255,255,255,.35)';
   line.innerHTML = '<span class="log-time"></span><span class="log-msg"></span><span class="log-replay"></span>';
-  line.querySelector('.log-time').textContent = time;
-  line.querySelector('.log-msg').textContent = msg;
+  line.querySelector('.log-time').textContent = e.time;
+  line.querySelector('.log-msg').textContent = entryText(e);
 
   // Jede Zeile mit Animationsbeschreibung lässt sich anklicken und spielt das
   // Ereignis noch einmal ab – nützlich, wenn man gerade weggeschaut hat.
-  if (anim) {
+  if (e.anim) {
     line.classList.add('replayable');
-    line.title = 'Animation erneut abspielen';
+    line.title = t('replayHint');
     line.querySelector('.log-replay').textContent = '▶';
     line.onclick = () => {
       line.classList.add('replaying');
       setTimeout(() => line.classList.remove('replaying'), 900);
-      replayAnim(anim);
+      replayAnim(e.anim);
     };
   }
+  return line;
+}
+
+// Nach einem Sprachwechsel: alle Zeilen aus logEntries neu aufbauen. Die
+// Scrollposition bleibt am Ende, weil dort die aktuellen Ereignisse stehen.
+function renderLogPanel() {
+  const panel = document.getElementById('log-panel');
+  if (!panel) return;
+  if (!logEntries.length) {
+    panel.innerHTML = `<div class="log-empty">${t('logEmpty')}</div>`;
+  } else {
+    panel.innerHTML = '';
+    for (const e of logEntries) panel.appendChild(logLineEl(e));
+    panel.lastElementChild?.classList.add('is-new');
+    panel.scrollTop = panel.scrollHeight;
+  }
+  const last = document.getElementById('log-last');
+  if (last) last.textContent = logEntries.length ? entryText(logEntries[logEntries.length - 1]) : t('logEmpty');
+}
+
+function addLog(entry) {
+  const panel = document.getElementById('log-panel');
+  if (!panel) return;
+  const now = new Date();
+  const e = { ...entry, time: String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0') };
+
+  logEntries.push(e);
+  while (logEntries.length > 200) logEntries.shift();
+
+  const empty = panel.querySelector('.log-empty');
+  if (empty) empty.remove();
+  panel.querySelectorAll('.is-new').forEach(el => el.classList.remove('is-new'));
+
+  const line = logLineEl(e);
+  line.classList.add('is-new');
   panel.appendChild(line);
 
   // Auto-scroll nur, wenn der Spieler nicht gerade selbst hochgescrollt hat.
@@ -3485,7 +4023,7 @@ function addLog(msg, color = 'rgba(255,255,255,.35)', anim = null) {
 
   // Zugeklappt: letzte Meldung in die Kopfzeile, Zähler für die ungelesenen.
   const last = document.getElementById('log-last');
-  if (last) last.textContent = msg;
+  if (last) last.textContent = entryText(e);
   const box = document.getElementById('log-box');
   if (box && box.classList.contains('collapsed')) {
     logUnread++;
@@ -3494,10 +4032,8 @@ function addLog(msg, color = 'rgba(255,255,255,.35)', anim = null) {
 }
 
 function clearLog() {
-  const panel = document.getElementById('log-panel');
-  if (panel) panel.innerHTML = '<div class="log-empty">Noch keine Ereignisse…</div>';
-  const last = document.getElementById('log-last');
-  if (last) last.textContent = 'Noch keine Ereignisse…';
+  logEntries = [];
+  renderLogPanel();
   logUnread = 0;
   updateLogBadge();
 }
@@ -3667,11 +4203,11 @@ function copySessionId() {
   const sessionId = document.getElementById('session-id-display').textContent;
   if (!sessionId) return;
   navigator.clipboard.writeText(sessionId).then(() => {
-    showToast('Session-Code kopiert! 📋', '#22c55e');
+    showToast({ key: 'codeCopied', color: '#22c55e' });
     const btn = document.getElementById('copy-session-btn');
     btn.textContent = '✓';
     setTimeout(() => { btn.textContent = '📋'; }, 2000);
-  }).catch(() => showToast('Fehler beim Kopieren', '#ef4444'));
+  }).catch(() => showToast({ key: 'copyFailed', color: '#ef4444' }));
 }
 
 // Drehen des Handys oder Größenänderung des Fensters ändert alle Tischmaße –
