@@ -6,7 +6,7 @@ const ROOT = path.join(__dirname, '..', '..');
 // Nach jeder gewollten Änderung an CARD_DEFS neu setzen:
 //   python3 -c "import hashlib,json,runpy;c=runpy.run_path('server_render.py')['CARD_DEFS'];\
 //     print(hashlib.sha256(json.dumps(c,sort_keys=True,separators=(',',':')).encode()).hexdigest())"
-const CARD_DEFS_SHA256 = '435bcf571297478c25077c7e2a973b12291bb63601d51decf10e1bcb8402f6d4';
+const CARD_DEFS_SHA256 = '93e6f2dddb0fc8fb4c34e00c000dce999e0d76d52498057e98c15da3c2940bf8';
 
 type ArtworkManifest = {
   cardDefsHash: string;
@@ -41,10 +41,12 @@ test('Kartendaten unverändert und alle 15 Kartenbilder werden ausgeliefert', as
   expect(manifest.deckSize).toBe(52);
   expect(manifest.images).toHaveLength(15);
   expect(new Set(manifest.images).size).toBe(15);
-  // Die vier ausgetauschten Karten (Barbie 5, Hawk Tuah Girl 6, Penny 9,
-  // Merkel 10) liegen als optimiertes WebP unter fotos/; der Rest sind die
-  // Originalbilder im Wurzelverzeichnis von Bilder/.
-  for (const nr of [5, 6, 9, 10]) {
+  // Jedes ausgetauschte Motiv liegt als optimiertes WebP unter fotos/ (Willy 1,
+  // Fabrice 2, Tom 3, Ugur 4, Barbie 5, Carlin 6, Penny 9, Merkel 10,
+  // Murat Abi 13); der Rest sind die Originalbilder im Wurzelverzeichnis von
+  // Bilder/. HEIC aus der Fotomediathek darf dabei nie durchrutschen – das
+  // zeigt kein Browser an.
+  for (const nr of [1, 2, 3, 4, 5, 6, 9, 10, 13]) {
     expect(manifest.images[nr - 1], `Karte ${nr}`).toMatch(/^fotos\/\d{2}-[a-z0-9-]+\.webp$/);
   }
 

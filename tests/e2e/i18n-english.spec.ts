@@ -44,7 +44,7 @@ test.describe('Englische Fassung', () => {
     await expect(page.locator('.logo-sub')).toHaveText('The Card Game');
     await expect(page.locator('#lobby-home h2')).toHaveText('Player');
     await expect(page.locator('#player-name')).toHaveAttribute('placeholder', 'Your Name');
-    await expect(page.locator('#join-code')).toHaveAttribute('placeholder', 'Session code (e.g. ABC123)');
+    await expect(page.locator('#join-code')).toHaveAttribute('placeholder', 'Session code (e.g. 1234)');
     await expect(page.getByRole('button', { name: 'Create Session' })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Join' })).toBeVisible();
     await expect(page.locator('#game-mode option').first()).toHaveText('Single Game');
@@ -77,7 +77,7 @@ test.describe('Englische Fassung', () => {
     await expect.poll(() => messages).toEqual(['Please enter a name']);
 
     await page.locator('#player-name').fill('Stranger');
-    await page.locator('#join-code').fill('ZZZZZZ');
+    await page.locator('#join-code').fill('XXXX');
     await page.getByRole('button', { name: 'Join' }).click();
     await expect(page.locator('#toast-container .toast')).toContainText('Session not found');
   });
@@ -147,8 +147,19 @@ test.describe('Englische Fassung', () => {
     // Server-Meldung landet übersetzt im Log des Gegenübers.
     await onTurn.locator('#deck-pile').click();
     await expect(onTurn.locator('.drawn-label')).toHaveText('Drawn Card');
-    await expect(onTurn.locator('#drawn-card-display .tcg-ability-name')).toHaveText(
-      /^(No ability|See your own card|See an opponent's card|Swap cards|See & Swap)$/);
+    // Karten ohne Fähigkeit zeigen nur den NORMAL-Chip – keine Überschrift und
+    // keinen Erklärsatz. Welche Karte kommt, entscheidet der Stapel, also beide
+    // Fälle abdecken.
+    const chip = onTurn.locator('#drawn-card-display .tcg-ability-label');
+    await expect(chip).toHaveText(/^(NORMAL|ABILITY)$/);
+    const abName = onTurn.locator('#drawn-card-display .tcg-ability-name');
+    if ((await chip.innerText()) === 'ABILITY') {
+      await expect(abName).toHaveText(
+        /^(See your own card|See an opponent's card|Swap cards|See & Swap)$/);
+    } else {
+      await expect(abName).toHaveCount(0);
+      await expect(onTurn.locator('#drawn-card-display .tcg-ability-desc')).toHaveCount(0);
+    }
     await expect(onTurn.locator('#drawn-discard-btn')).toHaveText(/^(Discard|Discard & use ability)$/);
     await expect(waiting.locator('#log-panel')).toContainText('draws a card');
     await expect(waiting.locator('.opp-thinking')).toContainText('thinking');

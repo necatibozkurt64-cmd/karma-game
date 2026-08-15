@@ -13,28 +13,28 @@ from aiohttp import web
 
 # ── Card Definitions ──────────────────────────────────────────────────────────
 CARD_DEFS = [
-    dict(nr=1,  name='Olli',                  value=1,  ability='none',       quote='Eier, we need Eier',                       count=4,  colors=['#4CAF50','#9C27B0','#2196F3','#FF9800']),
-    dict(nr=2,  name='Tupac',                  value=2,  ability='none',       quote='Chill, Alter, es kommen auch gute Zeiten.',  count=4,  colors=['#4CAF50','#9C27B0','#2196F3','#FF9800']),
-    dict(nr=3,  name='Arnold',                 value=3,  ability='none',       quote='I choose four',                             count=4,  colors=['#4CAF50','#9C27B0','#2196F3','#FF9800']),
-    dict(nr=4,  name='Cartman',                value=4,  ability='none',       quote='Respect My Authority!',                    count=4,  colors=['#4CAF50','#9C27B0','#2196F3','#FF9800']),
-    dict(nr=5,  name='Barbie',                 value=5,  ability='none',       quote='Ciao bella ciao!',                         count=4,  colors=['#4CAF50','#9C27B0','#2196F3','#FF9800']),
-    dict(nr=6,  name='Hawk Tuah Girl',         value=6,  ability='none',       quote='Bee water my friend',                      count=4,  colors=['#4CAF50','#9C27B0','#2196F3','#FF9800']),
-    dict(nr=7,  name='Ronaldo',                value=7,  ability='see_own',    quote='SUUUI ...your own card!!!',                 count=4,  colors=['#4CAF50','#9C27B0','#2196F3','#FF9800']),
-    dict(nr=8,  name='Leo',                     value=8,  ability='see_own',    quote='check this out',                           count=4,  colors=['#4CAF50','#9C27B0','#2196F3','#FF9800']),
-    dict(nr=9,  name='Penny',                  value=9,  ability='see_others', quote='They see everything..',                    count=4,  colors=['#4CAF50','#9C27B0','#2196F3','#FF9800']),
-    dict(nr=10, name='Merkel',                 value=10, ability='see_others', quote='Lets fuck up',                             count=4,  colors=['#4CAF50','#9C27B0','#2196F3','#FF9800']),
-    dict(nr=11, name='Joker',                  value=11, ability='swap',       quote="Let's do some confusion.",                 count=4,  colors=['#4CAF50','#9C27B0','#2196F3','#FF9800']),
-    dict(nr=12, name='Hund',                   value=12, ability='see_swap',   quote='To the moon!',                             count=4,  colors=['#4CAF50','#9C27B0','#2196F3','#FF9800']),
-    dict(nr=13, name='Mr Hankey',              value=13, ability='none',       quote='shit happens.',                            count=2,  colors=['#F44336','#F44336']),
-    dict(nr=14, name='Titi',                    value=0,  ability='none',       quote='Congratulations, you got me.',             count=1,  colors=['#9E9E9E']),
-    dict(nr=15, name='Katze',                  value=-1, ability='none',       quote='You lucky bastard.',                       count=1,  colors=['#FFD700']),
+    dict(nr=1,  name='Willy',             value=1,   ability='none',         quote='Was los, Meister?!',               count=4,  colors=['#4CAF50','#9C27B0','#2196F3','#FF9800']),
+    dict(nr=2,  name='Fabrice',           value=2,   ability='none',         quote='No Risk, no Story.',               count=4,  colors=['#4CAF50','#9C27B0','#2196F3','#FF9800']),
+    dict(nr=3,  name='Tom',               value=3,   ability='none',         quote='ham wir noch pep?',                count=4,  colors=['#4CAF50','#9C27B0','#2196F3','#FF9800']),
+    dict(nr=4,  name='Ugur',              value=4,   ability='none',         quote='einmal zwei döner',                count=4,  colors=['#4CAF50','#9C27B0','#2196F3','#FF9800']),
+    dict(nr=5,  name='Barbie',            value=5,   ability='none',         quote='Ciao bella ciao!',                 count=4,  colors=['#4CAF50','#9C27B0','#2196F3','#FF9800']),
+    dict(nr=6,  name='Carlin',            value=6,   ability='none',         quote='guys, I lost my phone..',          count=4,  colors=['#4CAF50','#9C27B0','#2196F3','#FF9800']),
+    dict(nr=7,  name='Ronaldo',           value=7,   ability='see_own',      quote='SUUUI ...your own card!!!',        count=4,  colors=['#4CAF50','#9C27B0','#2196F3','#FF9800']),
+    dict(nr=8,  name='Leo',               value=8,   ability='see_own',      quote='check this out',                   count=4,  colors=['#4CAF50','#9C27B0','#2196F3','#FF9800']),
+    dict(nr=9,  name='Penny',             value=9,   ability='see_others',   quote='They see everything..',            count=4,  colors=['#4CAF50','#9C27B0','#2196F3','#FF9800']),
+    dict(nr=10, name='Merkel',            value=10,  ability='see_others',   quote='alles Neuland.',                   count=4,  colors=['#4CAF50','#9C27B0','#2196F3','#FF9800']),
+    dict(nr=11, name='Joker',             value=11,  ability='swap',         quote="Let's do some confusion.",         count=4,  colors=['#4CAF50','#9C27B0','#2196F3','#FF9800']),
+    dict(nr=12, name='Hund',              value=12,  ability='see_swap',     quote='To the moon!',                     count=4,  colors=['#4CAF50','#9C27B0','#2196F3','#FF9800']),
+    dict(nr=13, name='Murat Abi',         value=13,  ability='none',         quote='Batterie abgeklemmt!',             count=2,  colors=['#F44336','#F44336']),
+    dict(nr=14, name='Titi',              value=0,   ability='none',         quote='Cheers!',                          count=1,  colors=['#9E9E9E']),
+    dict(nr=15, name='Katze',             value=-1,  ability='none',         quote='You lucky bastard.',               count=1,  colors=['#FFD700']),
 ]
 IMAGE_FILES = {
-    1:'01_Olli.png', 2:'02_tupac.jpg', 3:'03_arnold schwarzenegger.jpg',
-    4:'04_Eric Cartman.png', 5:'fotos/05-barbie.webp', 6:'fotos/06-hawk-tuah.webp',
+    1:'fotos/01-willy.webp', 2:'fotos/02-fabrice.webp', 3:'fotos/03-tom.webp',
+    4:'fotos/04-ugur.webp', 5:'fotos/05-barbie.webp', 6:'fotos/06-carlin.webp',
     7:'07_Ronaldo.jpeg', 8:'08_Leonardo DiCaprio.jpg', 9:'fotos/09-penny.webp',
     10:'fotos/10-merkel.webp', 11:'11_joker.jpg', 12:'12_Hund.jpg',
-    13:'13_MrHankey.jpg', 14:'14_Thierry Henry.jpeg', 15:'15_Katze.jpg',
+    13:'fotos/13-murat-abi.webp', 14:'14_Thierry Henry.jpeg', 15:'15_Katze.jpg',
 }
 IMAGES_DIR = Path(__file__).parent / 'app' / 'public' / 'Bilder'
 PUBLIC_DIR = Path(__file__).parent / 'app' / 'public'
@@ -71,17 +71,27 @@ def make_deck():
     random.shuffle(deck)
     return deck
 
-def gen_session_id():
-    chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
-    return ''.join(random.choices(chars, k=6))
-
 sessions = {}
 ws_map = {}
 
+def gen_session_id():
+    """Vierstelliger Zahlencode (0000-9999) - kurz genug zum Vorlesen und auf
+    der Handy-Zahlentastatur einzutippen. Es gibt aber nur 10 000 davon und
+    Sessions werden nie aufgeraeumt: der Vorrat kann theoretisch ausgehen.
+    Deshalb liefert die Funktion einen *freien* Code bzw. None, wenn alle
+    vergeben sind - ein 'while sid in sessions'-Retry wuerde den Server haengen.
+    """
+    for _ in range(50):
+        sid = f'{random.randrange(10000):04d}'
+        if sid not in sessions:
+            return sid
+    free = [f'{n:04d}' for n in range(10000) if f'{n:04d}' not in sessions]
+    return random.choice(free) if free else None
+
 def new_session(host_id, host_name, host_ws, game_mode):
     sid = gen_session_id()
-    while sid in sessions:
-        sid = gen_session_id()
+    if sid is None:
+        return None
     rounds = {'single':1,'best_of_3':3,'best_of_5':5,'best_of_10':10}.get(game_mode, 1)
     s = dict(
         id=sid, host_id=host_id, game_mode=game_mode, total_rounds=rounds,
@@ -97,6 +107,11 @@ def new_session(host_id, host_name, host_ws, game_mode):
         end_called_by=None, final_round_left=0,
         round_number=1, match_scores={}, round_scores={},
         score_breakdown={},
+        # Ein Eintrag je beendeter Runde. Der Endstand baut daraus die Tabelle
+        # "wie kam die Gesamtpunktzahl zustande" - match_scores allein ist nur
+        # die Summe und verrät nicht, welche Runde teuer war. Wird nie geleert:
+        # eine Session spielt genau ein Match.
+        round_history=[],
         reveal_all=False, ability_reveal_task=None,
         swap_flight=None, swap_flight_task=None,
     )
@@ -359,6 +374,7 @@ async def send_state(s):
             matchScores=s['match_scores'],
             roundScores=s['round_scores'],
             scoreBreakdown=s.get('score_breakdown', {}),
+            roundHistory=s.get('round_history', []),
             sessionId=s['id'],
             revealSecondsLeft=round(max(0.0, viewer['reveal_until'] - now), 1),
             revealTotalSeconds=REVEAL_SECONDS,
@@ -1029,6 +1045,21 @@ async def end_round(s):
     for pid, sc in scores.items():
         s['match_scores'][pid] = s['match_scores'].get(pid, 0) + sc
 
+    # Rundenzeile für die Endstands-Tabelle. 'penalties' trägt nur die Summe je
+    # Spieler - der Client markiert damit die Zelle mit '*', die Begründung steht
+    # weiterhin ausformuliert in score_breakdown. Der Schutz gegen einen zweiten
+    # Eintrag ist billig und hält die Tabelle auch dann ehrlich, wenn end_round
+    # jemals doppelt ausgelöst würde.
+    if not any(r['round'] == s['round_number'] for r in s['round_history']):
+        s['round_history'].append({
+            'round': s['round_number'],
+            'scores': dict(scores),
+            'penalties': {
+                pid: sum(pen['amount'] for pen in bd['penalties'])
+                for pid, bd in score_breakdown.items() if bd['penalties']
+            },
+        })
+
     s['reveal_all'] = True
     await send_state(s)
 
@@ -1081,6 +1112,8 @@ async def dispatch(ws, msg):
         name = g('playerName', 'player_name')
         mode = g('gameMode', 'game_mode') or 'single'
         s = new_session(pid, name, ws, mode)
+        if s is None:
+            await send(ws, dict(type='error', key='err.noFreeCode')); return
         ws_map[id(ws)].update(player_id=pid, session_id=s['id'])
         await send(ws, dict(type='created', sessionId=s['id']))
         await send_state(s)

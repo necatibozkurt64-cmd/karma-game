@@ -17,3 +17,7 @@ Bilder/originale/
 app/public/Bilder/fotos/*.png
 app/public/Bilder/fotos/*.jpg
 app/public/Bilder/fotos/*.jpeg
+
+# Ablage für ein laufendes Karten-Update (Originalfotos + Excel-Vorgabe).
+# Was davon gebraucht wird, landet als WebP bzw. in Karten/Karten.csv im Repo.
+_update/

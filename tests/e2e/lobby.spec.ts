@@ -1,6 +1,6 @@
 import { test, expect, Page } from '@playwright/test';
 
-/** Erstellt eine Session und gibt den 6-stelligen Code zurück. */
+/** Erstellt eine Session und gibt den vierstelligen Zahlencode zurück. */
 async function hostSession(page: Page, name: string, mode = 'single'): Promise<string> {
   await page.goto('/');
   await page.locator('#player-name').fill(name);
@@ -9,7 +9,7 @@ async function hostSession(page: Page, name: string, mode = 'single'): Promise<s
 
   await expect(page.locator('#lobby-waiting')).toBeVisible();
   const code = (await page.locator('#session-id-display').innerText()).trim();
-  expect(code).toMatch(/^[A-Z0-9]{6}$/);
+  expect(code).toMatch(/^[0-9]{4}$/);
   return code;
 }
 
@@ -59,7 +59,10 @@ test.describe('Lobby', () => {
   });
 
   test('unbekannter Code liefert eine Fehlermeldung', async ({ page }) => {
-    await joinSession(page, 'Fremder', 'ZZZZZZ');
+    // Buchstaben statt Ziffern: Codes sind vierstellig numerisch, 'XXXX' kann
+    // also nie vergeben sein. Eine Zahl wie '0000' könnte dagegen zufällig zu
+    // einer Session eines parallel laufenden Tests gehören.
+    await joinSession(page, 'Fremder', 'XXXX');
     await expect(page.locator('#toast-container .toast')).toContainText('Session nicht gefunden');
     await expect(page.locator('#lobby-waiting')).toBeHidden();
   });
@@ -87,14 +90,7 @@ test.describe('Lobby', () => {
     await guestCtx.close();
   });
 
-  test('Beitritt zu kleingeschriebenem Code funktioniert', async ({ page, browser }) => {
-    const code = await hostSession(page, 'Host');
-
-    const guestCtx = await browser.newContext();
-    const guest = await guestCtx.newPage();
-    await joinSession(guest, 'Gast', code.toLowerCase());
-
-    await expect(guest.locator('#session-id-display')).toHaveText(code);
-    await guestCtx.close();
-  });
+  // Hier stand einmal "Beitritt zu kleingeschriebenem Code": bei reinen Ziffern
+  // prüft das nichts mehr, und Leerzeichen o.ä. lässt maxlength="4" gar nicht
+  // erst ins Feld. Der normale Beitritt oben deckt den Weg ab.
 });

@@ -573,6 +573,27 @@ body[data-cardback="karo"] .card-back::after { border-color: rgba(120,200,160,.2
 #scoring-modal .match-total { font-size: 12px; color: rgba(255,255,255,.5); }
 #scoring-modal .hand-reveal { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
 
+/* Endstand-Kopf: Snoop-GIF + Gewinnerzeile. Steht über der Überschrift, damit es
+   beim Aufklappen des Modals als Erstes ins Auge fällt. */
+#scoring-hero { text-align: center; margin-bottom: 16px; }
+#scoring-hero img { display: block; width: 100%; max-width: 280px; margin: 0 auto; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,.45); }
+#scoring-hero .hero-line { margin-top: 12px; font-size: 22px; font-weight: 900; line-height: 1.2; color: var(--gold); text-shadow: 0 2px 12px rgba(115,123,196,.5); }
+
+/* Punkte je Runde. Runden stehen untereinander, Spieler nebeneinander – bei
+   Best of 10 wächst die Tabelle damit nach unten (das Modal scrollt ohnehin)
+   statt nach rechts aus dem Handy heraus. */
+#scoring-modal .round-table-wrap { margin-top: 20px; overflow-x: auto; }
+#scoring-modal .round-table { width: 100%; border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; }
+#scoring-modal .round-table th, #scoring-modal .round-table td { padding: 6px 8px; text-align: right; white-space: nowrap; }
+#scoring-modal .round-table th:first-child, #scoring-modal .round-table td:first-child { text-align: left; color: rgba(255,255,255,.5); font-weight: 400; }
+#scoring-modal .round-table thead th { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: rgba(255,255,255,.6); font-weight: 700; border-bottom: 1px solid rgba(255,255,255,.15); }
+#scoring-modal .round-table tbody tr:nth-child(even) { background: rgba(255,255,255,.035); }
+#scoring-modal .round-table td.pen { color: #ef4444; font-weight: 700; }
+#scoring-modal .round-table tfoot td { border-top: 1px solid rgba(255,255,255,.15); padding-top: 10px; font-size: 16px; font-weight: 900; }
+#scoring-modal .round-table tfoot td.win { color: var(--gold); }
+#scoring-modal .round-legend { margin-top: 8px; font-size: 11px; color: rgba(255,255,255,.5); }
+#scoring-modal .round-legend .star { color: #ef4444; font-weight: 700; }
+
 /* Toast (Fallback für Lobby/Verbindungsfehler – im Spiel läuft alles über #log-panel) */
 #toast-container { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; gap: 8px; z-index: 200; align-items: center; pointer-events: none; }
 .toast { background: rgba(0,0,0,.9); border-radius: 20px; padding: 8px 18px; font-size: 13px; font-weight: 600; border: 1px solid rgba(255,255,255,.15); animation: toastin .3s ease, toastout .3s ease 2.7s forwards; }
@@ -1024,6 +1045,16 @@ body[data-cardback="karo"] .card-back::after { border-color: rgba(120,200,160,.2
   .modal p { font-size: 12.5px; margin-bottom: 12px; }
   #ability-drawn { margin-bottom: 10px; }
 
+  /* Rundentabelle: bei 4 Spielern ist die Breite knapp. Die Zahlenspalten
+     bleiben schmal und einzeilig, nur die Namen im Kopf dürfen umbrechen –
+     sonst schiebt „spieler 2" die letzte Spalte aus dem Bild. */
+  #scoring-hero img { max-width: 220px; }
+  #scoring-hero .hero-line { font-size: 18px; }
+  #scoring-modal .round-table { font-size: 12px; }
+  #scoring-modal .round-table th, #scoring-modal .round-table td { padding: 5px 4px; }
+  #scoring-modal .round-table thead th { font-size: 10px; letter-spacing: 0; text-transform: none; white-space: normal; word-break: break-word; }
+  #scoring-modal .round-table tfoot td { font-size: 14px; }
+
   /* Peek: das 2×2-Grid muss während der 6 Sekunden komplett sichtbar sein –
      jede Zeile Kopftext geht direkt von der Kartenhöhe ab (renderPeekModal). */
   #peek-modal h2 { font-size: 17px; }
@@ -1072,7 +1103,7 @@ body[data-cardback="karo"] .card-back::after { border-color: rgba(120,200,160,.2
     </select>
     <button class="btn btn-gold" onclick="createSession()" data-i18n="createSession">Session erstellen</button>
     <div class="divider" data-i18n="orJoin">oder joinen</div>
-    <input id="join-code" type="text" data-i18n-ph="joinCode" placeholder="Session-Code (z.B. ABC123)" maxlength="6" autocomplete="off" style="text-transform:uppercase;letter-spacing:3px">
+    <input id="join-code" type="text" inputmode="numeric" pattern="[0-9]*" data-i18n-ph="joinCode" placeholder="Session-Code (z.B. 1234)" maxlength="4" autocomplete="off" style="letter-spacing:3px">
     <button class="btn btn-outline" onclick="joinSession()" data-i18n="join">Beitreten</button>
   </div>
 
@@ -1209,6 +1240,7 @@ body[data-cardback="karo"] .card-back::after { border-color: rgba(120,200,160,.2
 <!-- SCORING MODAL -->
 <div class="overlay hidden" id="scoring-overlay">
   <div class="modal" id="scoring-modal">
+    <div id="scoring-hero" class="hidden"></div>
     <h2 id="scoring-title"></h2>
     <div id="scoring-body"></div>
     <div class="btn-row" style="margin-top:20px">
@@ -1386,7 +1418,7 @@ const TRANSLATIONS = {
     createSession: 'Session erstellen',
     orJoin: 'oder joinen',
     join: 'Beitreten',
-    joinCode: 'Session-Code (z.B. ABC123)',
+    joinCode: 'Session-Code (z.B. 1234)',
     sessionCode: 'Session-Code',
     showCode: 'Zeige diesen Code den anderen Spielern',
     playersInSession: 'Spieler in der Session:',
@@ -1515,6 +1547,12 @@ const TRANSLATIONS = {
       newGame: 'Neues Spiel',
       nextRound: 'Nächste Runde',
       finalResult: 'Endergebnis',
+      tblRound: 'Runde',
+      tblTotal: 'Gesamt',
+      tblLegend: 'enthält Strafpunkte',
+      // Fester englischer Schlachtruf zum Snoop-GIF – steht bewusst in jeder
+      // Sprache gleich da (siehe Ausnahme in tests/e2e/i18n-keys.spec.ts).
+      youAreTheBest: 'You are the best, {name}',
     },
 
     // ── Strafgründe (Server schickt nur die Schlüssel) ──
@@ -1526,8 +1564,9 @@ const TRANSLATIONS = {
     },
 
     // ── Kartenfähigkeiten ──
+    // Karten ohne Fähigkeit haben hier bewusst keinen Eintrag: sie zeigen nur
+    // den NORMAL-Chip, kein „Keine Fähigkeiten" und keinen Erklärsatz.
     abName: {
-      none: 'Keine Fähigkeiten',
       see_own: 'Eigene Karte sehen',
       see_others: 'Gegner-Karte sehen',
       swap: 'Karten tauschen',
@@ -1535,7 +1574,6 @@ const TRANSLATIONS = {
       fallback: 'Fähigkeit',
     },
     abDesc: {
-      none: 'Diese Karte hat keine besonderen Fähigkeiten.',
       see_own: 'Du kannst eine deiner Karten ansehen.',
       see_others: 'Du kannst eine Karte eines Gegners ansehen.',
       swap: 'Du kannst zwei Karten mit anderen Spielern tauschen.',
@@ -1548,9 +1586,9 @@ const TRANSLATIONS = {
 
     // ── Kartennamen (nr → Anzeigename) ──
     cardName: {
-      1: 'Olli', 2: 'Tupac', 3: 'Arnold', 4: 'Cartman', 5: 'Barbie',
-      6: 'Hawk Tuah Girl', 7: 'Ronaldo', 8: 'Leo', 9: 'Penny', 10: 'Merkel',
-      11: 'Joker', 12: 'Hund', 13: 'Mr Hankey', 14: 'Titi', 15: 'Katze',
+      1: 'Willy', 2: 'Fabrice', 3: 'Tom', 4: 'Ugur', 5: 'Barbie',
+      6: 'Carlin', 7: 'Ronaldo', 8: 'Leo', 9: 'Penny', 10: 'Merkel',
+      11: 'Joker', 12: 'Hund', 13: 'Murat Abi', 14: 'Titi', 15: 'Katze',
     },
     // Zitate stehen in Karten/Karten.csv und kommen vom Server – hier nichts
     // überschreiben, sonst weicht die deutsche Karte von der Quelle ab.
@@ -1579,6 +1617,7 @@ const TRANSLATIONS = {
     },
     err: {
       sessionNotFound: 'Session nicht gefunden.',
+      noFreeCode: 'Gerade ist kein Session-Code frei. Bitte gleich nochmal versuchen.',
       gameStarted: 'Spiel bereits gestartet.',
       sessionFull: 'Session ist voll (max. 4 Spieler).',
       alreadyIn: 'Bereits in der Session.',
@@ -1668,7 +1707,7 @@ const TRANSLATIONS = {
     createSession: 'Create Session',
     orJoin: 'or join',
     join: 'Join',
-    joinCode: 'Session code (e.g. ABC123)',
+    joinCode: 'Session code (e.g. 1234)',
     sessionCode: 'Session Code',
     showCode: 'Share this code with the other players',
     playersInSession: 'Players in session:',
@@ -1797,6 +1836,10 @@ const TRANSLATIONS = {
       newGame: 'New Game',
       nextRound: 'Next Round',
       finalResult: 'Final Result',
+      tblRound: 'Round',
+      tblTotal: 'Total',
+      tblLegend: 'includes penalty points',
+      youAreTheBest: 'You are the best, {name}',
     },
 
     // ── Penalty reasons (server sends keys only) ──
@@ -1809,7 +1852,6 @@ const TRANSLATIONS = {
 
     // ── Card abilities ──
     abName: {
-      none: 'No ability',
       see_own: 'See your own card',
       see_others: "See an opponent's card",
       swap: 'Swap cards',
@@ -1817,7 +1859,6 @@ const TRANSLATIONS = {
       fallback: 'Ability',
     },
     abDesc: {
-      none: 'This card has no special ability.',
       see_own: 'You may look at one of your own cards.',
       see_others: "You may look at one of an opponent's cards.",
       swap: 'You may swap two cards with other players.',
@@ -1828,17 +1869,15 @@ const TRANSLATIONS = {
 
     // ── Card names (nr → display name) ──
     cardName: {
-      1: 'Olli', 2: 'Tupac', 3: 'Arnold', 4: 'Cartman', 5: 'Barbie',
-      6: 'Hawk Tuah Girl', 7: 'Ronaldo', 8: 'Leo', 9: 'Penny', 10: 'Merkel',
-      11: 'Joker', 12: 'Dog', 13: 'Mr Hankey', 14: 'Titi', 15: 'Cat',
+      1: 'Willy', 2: 'Fabrice', 3: 'Tom', 4: 'Ugur', 5: 'Barbie',
+      6: 'Carlin', 7: 'Ronaldo', 8: 'Leo', 9: 'Penny', 10: 'Merkel',
+      11: 'Joker', 12: 'Dog', 13: 'Murat Abi', 14: 'Titi', 15: 'Cat',
     },
-    // Only the quotes that are actually German get an English line; everything
-    // else in Karten/Karten.csv is already English (or a deliberate quote in
-    // another language, like Barbie's "Ciao bella ciao!") and stays untouched.
-    // Olli keeps "Eier, we need Eier" – that is the Oliver Kahn line verbatim.
-    cardQuote: {
-      2: 'Chill, man, good times are coming too.',
-    },
+    // Quotes are NEVER translated – every card shows the line exactly as it
+    // stands in Karten/Karten.csv, in whatever language it was said. This
+    // dictionary stays empty on purpose; cardQuote() then falls through to the
+    // server text.
+    cardQuote: {},
 
     // ── Server messages in the event log ──
     log: {
@@ -1863,6 +1902,7 @@ const TRANSLATIONS = {
     },
     err: {
       sessionNotFound: 'Session not found.',
+      noFreeCode: 'No session code is free right now. Please try again in a moment.',
       gameStarted: 'Game already started.',
       sessionFull: 'Session is full (max. 4 players).',
       alreadyIn: 'Already in the session.',
@@ -1954,7 +1994,7 @@ const TRANSLATIONS = {
     createSession: 'Oturum oluştur',
     orJoin: 'ya da katıl',
     join: 'Katıl',
-    joinCode: 'Oturum kodu (örn. ABC123)',
+    joinCode: 'Oturum kodu (örn. 1234)',
     sessionCode: 'Oturum kodu',
     showCode: 'Bu kodu diğer oyunculara göster',
     playersInSession: 'Oturumdaki oyuncular:',
@@ -2085,6 +2125,10 @@ const TRANSLATIONS = {
       newGame: 'Yeni oyun',
       nextRound: 'Sonraki tur',
       finalResult: 'Nihai sonuç',
+      tblRound: 'Tur',
+      tblTotal: 'Toplam',
+      tblLegend: 'ceza puanı içerir',
+      youAreTheBest: 'You are the best, {name}',
     },
 
     // ── Ceza gerekçeleri (sunucu yalnızca anahtar gönderir) ──
@@ -2097,7 +2141,6 @@ const TRANSLATIONS = {
 
     // ── Kart yetenekleri ──
     abName: {
-      none: 'Yetenek yok',
       see_own: 'Kendi kartına bak',
       see_others: 'Rakibin kartına bak',
       swap: 'Kartları takas et',
@@ -2105,7 +2148,6 @@ const TRANSLATIONS = {
       fallback: 'Yetenek',
     },
     abDesc: {
-      none: 'Bu kartın özel bir yeteneği yok.',
       see_own: 'Kendi kartlarından birine bakabilirsin.',
       see_others: 'Bir rakibin kartına bakabilirsin.',
       swap: 'İki kartı diğer oyuncularla takas edebilirsin.',
@@ -2118,27 +2160,15 @@ const TRANSLATIONS = {
 
     // ── Kart adları (nr → görünen ad) ──
     cardName: {
-      1: 'Olli', 2: 'Tupac', 3: 'Arnold', 4: 'Cartman', 5: 'Barbie',
-      6: 'Hawk Tuah Girl', 7: 'Ronaldo', 8: 'Leo', 9: 'Penny', 10: 'Merkel',
-      11: 'Joker', 12: 'Köpek', 13: 'Mr Hankey', 14: 'Titi', 15: 'Kedi',
+      1: 'Willy', 2: 'Fabrice', 3: 'Tom', 4: 'Ugur', 5: 'Barbie',
+      6: 'Carlin', 7: 'Ronaldo', 8: 'Leo', 9: 'Penny', 10: 'Merkel',
+      11: 'Joker', 12: 'Köpek', 13: 'Murat Abi', 14: 'Titi', 15: 'Kedi',
     },
-    // Übersetzt werden die Zitate, die einfache Sätze sind. Die festen Zitate
-    // der Figuren bleiben stehen (Kahns „Eier, we need Eier“, Arnolds Wortspiel
-    // auf den Kartenwert, Barbies „Ciao bella ciao!“, „Bee water my friend“) –
-    // sie sind Teil der Figur, nicht Text, den man liest.
-    cardQuote: {
-      2: 'Sakin ol dostum, iyi günler de gelecek.',
-      4: 'Otoriteme saygı duyun!',
-      7: 'SUUUI ...kendi kartına bak!!!',
-      8: 'Şuna bir bak.',
-      9: 'Her şeyi görüyorlar..',
-      10: 'Hadi batıralım şu işi.',
-      11: 'Biraz kafa karıştıralım.',
-      12: 'Aya doğru!',
-      13: 'Boktan şeyler olur.',
-      14: 'Tebrikler, beni yakaladın.',
-      15: 'Seni şanslı köftehor.',
-    },
+    // Zitate werden NIE übersetzt – jede Karte zeigt den Spruch genau so, wie er
+    // in Karten/Karten.csv steht, in der Sprache, in der er gesagt wurde. Das
+    // Wörterbuch bleibt deshalb absichtlich leer; cardQuote() nimmt dann den
+    // Servertext.
+    cardQuote: {},
 
     // ── Sunucu mesajları (olay geçmişi) ──
     log: {
@@ -2163,6 +2193,7 @@ const TRANSLATIONS = {
     },
     err: {
       sessionNotFound: 'Oturum bulunamadı.',
+      noFreeCode: 'Şu anda boş oturum kodu yok. Lütfen birazdan tekrar dene.',
       gameStarted: 'Oyun zaten başladı.',
       sessionFull: 'Oturum dolu (en fazla 4 oyuncu).',
       alreadyIn: 'Zaten oturumdasın.',
@@ -2268,8 +2299,10 @@ function cardName(card) {
     : (card.name || '');
 }
 
-// Dasselbe für das Zitat auf der Karte: nur die wenigen Zeilen, die in der
-// Quelle deutsch sind, haben eine englische Fassung – sonst gilt der Servertext.
+// Beim Zitat ist es anders: Sprüche werden NIE übersetzt, jede Sprache zeigt
+// den Originalsatz aus Karten/Karten.csv. Die cardQuote-Wörterbücher sind
+// deshalb leer und es gilt immer der Servertext; der Schlüsselweg bleibt nur
+// stehen, damit ein einzelner Sonderfall nachrüstbar wäre.
 function cardQuote(card) {
   if (!card) return '';
   const key = 'cardQuote.' + card.nr;
@@ -2401,19 +2434,19 @@ function renderSettings() {
 const CARD_TABLE = [
   { nr: 15, emoji: '🐱', value: -1, gold: true,  ability: 'help.luckyCard' },
   { nr: 14, emoji: '🏆', value: 0,  gold: true,  ability: 'help.bestCard' },
-  { nr: 1,  emoji: '👨', value: 1,  ability: 'help.noneShort' },
-  { nr: 2,  emoji: '🎤', value: 2,  ability: 'help.noneShort' },
-  { nr: 3,  emoji: '💪', value: 3,  ability: 'help.noneShort' },
-  { nr: 4,  emoji: '😈', value: 4,  ability: 'help.noneShort' },
+  { nr: 1,  emoji: '👓', value: 1,  ability: 'help.noneShort' },
+  { nr: 2,  emoji: '🎩', value: 2,  ability: 'help.noneShort' },
+  { nr: 3,  emoji: '🤳', value: 3,  ability: 'help.noneShort' },
+  { nr: 4,  emoji: '🥙', value: 4,  ability: 'help.noneShort' },
   { nr: 5,  emoji: '💃', value: 5,  ability: 'help.noneShort' },
-  { nr: 6,  emoji: '💁', value: 6,  ability: 'help.noneShort' },
+  { nr: 6,  emoji: '📱', value: 6,  ability: 'help.noneShort' },
   { nr: 7,  emoji: '⚽', value: 7,  ability: 'abName.see_own',    icon: '👁️' },
   { nr: 8,  emoji: '🎬', value: 8,  ability: 'abName.see_own',    icon: '👁️' },
   { nr: 9,  emoji: '🍸', value: 9,  ability: 'abName.see_others', icon: '👀' },
   { nr: 10, emoji: '🇩🇪', value: 10, ability: 'abName.see_others', icon: '👀' },
   { nr: 11, emoji: '🃏', value: 11, ability: 'abName.swap',       icon: '🔀' },
   { nr: 12, emoji: '🐕', value: 12, ability: 'abName.see_swap',   icon: '👁️' },
-  { nr: 13, emoji: '💩', value: 13, red: true, ability: 'help.penaltyCard' },
+  { nr: 13, emoji: '🔋', value: 13, red: true, ability: 'help.penaltyCard' },
 ];
 
 function renderHelp() {
@@ -4053,8 +4086,12 @@ function renderScoringModal() {
   }
   html += '</div>';
 
+  // Punkte je Runde – erklärt, wie die Gesamtpunktzahl zustande kam. Bei einer
+  // einzigen gespielten Runde sagt sie nichts, was nicht schon oben steht.
+  html += renderRoundTable();
+
+  const winner = state.players.reduce((a, b) => (totals[a.id] ?? 0) <= (totals[b.id] ?? 0) ? a : b);
   if (isDone) {
-    const winner = state.players.reduce((a, b) => (totals[a.id] || 0) <= (totals[b.id] || 0) ? a : b);
     html += `<div style="text-align:center;margin-top:16px;font-size:18px;font-weight:700;color:#737bc4">${t('sc.winner', { name: esc(winner.name) })}</div>`;
     document.getElementById('next-round-btn').textContent = t('sc.newGame');
   } else {
@@ -4062,7 +4099,68 @@ function renderScoringModal() {
     document.getElementById('next-round-btn').textContent = hasMore ? t('sc.nextRound') : t('sc.finalResult');
   }
 
+  renderScoringHero(isDone ? winner : null);
   body.innerHTML = html;
+}
+
+// Snoop-Dogg-GIF, liegt im Repo unter app/public/ und wird vom eigenen Server
+// ausgeliefert – kein Abruf bei Tenor, damit der Endstand auch offline und ohne
+// fremdes CDN steht. Der onerror-Rückfall bleibt trotzdem: fehlt die Datei mal,
+// verschwindet nur das Bild, die Gewinnerzeile bleibt.
+const SNOOP_GIF_URL = '/snoop-dogg-dancing.gif';
+
+function renderScoringHero(winner) {
+  const hero = document.getElementById('scoring-hero');
+  if (!winner) {
+    hero.classList.add('hidden');
+    hero.innerHTML = '';
+    return;
+  }
+  hero.classList.remove('hidden');
+  hero.innerHTML = `
+    <img src="${SNOOP_GIF_URL}" alt="" onerror="this.remove()">
+    <div class="hero-line">${t('sc.youAreTheBest', { name: esc(winner.name) })}</div>`;
+}
+
+// Tabelle: eine Zeile je gespielter Runde, eine Spalte je Spieler, darunter die
+// Gesamtsumme. Eine Runde mit Strafpunkten trägt ein '*' an der Zahl – die
+// Begründung im Klartext steht weiterhin oben in der Runden-Aufschlüsselung.
+function renderRoundTable() {
+  const history = state.roundHistory || [];
+  if (history.length < 2) return '';
+
+  const totals = state.matchScores || {};
+  const minTotal = Math.min(...state.players.map(p => totals[p.id] ?? 0));
+  let anyPenalty = false;
+
+  let head = `<th>${esc(t('sc.tblRound'))}</th>`;
+  for (const p of state.players) head += `<th>${esc(p.name)}</th>`;
+
+  let rows = '';
+  for (const r of history) {
+    rows += `<tr><td>${esc(String(r.round))}</td>`;
+    for (const p of state.players) {
+      const pen = (r.penalties || {})[p.id] || 0;
+      if (pen) anyPenalty = true;
+      rows += `<td class="${pen ? 'pen' : ''}">${r.scores?.[p.id] ?? 0}${pen ? '*' : ''}</td>`;
+    }
+    rows += '</tr>';
+  }
+
+  let foot = `<td>${esc(t('sc.tblTotal'))}</td>`;
+  for (const p of state.players) {
+    const ts = totals[p.id] ?? 0;
+    foot += `<td class="${ts === minTotal ? 'win' : ''}">${ts}</td>`;
+  }
+
+  return `<div class="round-table-wrap">
+      <table class="round-table">
+        <thead><tr>${head}</tr></thead>
+        <tbody>${rows}</tbody>
+        <tfoot><tr>${foot}</tr></tfoot>
+      </table>
+    </div>` +
+    (anyPenalty ? `<div class="round-legend"><span class="star">*</span> ${esc(t('sc.tblLegend'))}</div>` : '');
 }
 
 // Der Server schickt nur die Gründe als Schlüssel ('notWon', 'over7') – der Satz
@@ -4087,12 +4185,19 @@ function getColorClass(hexColor) {
   return colorMap[hexColor?.toUpperCase()] || 'tcg-blue';
 }
 
+// Karten ohne Fähigkeit bekommen keinen Text: früher stand dort „Keine
+// Fähigkeiten" plus Erklärsatz – zwei Zeilen, die nichts sagen. Der NORMAL-Chip
+// allein reicht, das Info-Feld bleibt sonst leer und die Karte wirkt ruhiger.
+function cardHasAbility(ability) { return !!ability && ability !== 'none'; }
+
 function getAbilityName(ability) {
+  if (!cardHasAbility(ability)) return '';
   const key = 'abName.' + ability;
   return t(key) === key ? t('abName.fallback') : t(key);
 }
 
 function getAbilityDesc(ability) {
+  if (!cardHasAbility(ability)) return '';
   const key = 'abDesc.' + ability;
   return t(key) === key ? '' : t(key);
 }
@@ -4106,19 +4211,19 @@ function getAbilityDesc(ability) {
    (x% y% des Originals), damit auf jeder Karte das Gesicht im Ausschnitt liegt.
    Neues Bild ohne Eintrag → FACE_FALLBACK (leicht nach oben versetzt). */
 const CARD_IMAGE_FOCUS = {
-  '01_Olli.png':                 '47% 22%',  // Kahn im Sprung, Kopf oben mittig
-  '02_tupac.jpg':                '54% 18%',
-  '03_arnold schwarzenegger.jpg':'45% 8%',
-  '04_Eric Cartman.png':         '50% 36%',
+  'fotos/01-willy.webp':         '29% 24%',  // Brille links der Mitte, oberes Drittel
+  'fotos/02-fabrice.webp':       '48% 30%',  // beide Gesichter liegen auf einer Höhe
+  'fotos/03-tom.webp':           '36% 40%',  // zwei Gesichter, versetzt – Mitte dazwischen
+  'fotos/04-ugur.webp':          '55% 30%',
   'fotos/05-barbie.webp':        '50% 74%',  // Puppengesicht sitzt tief im Bild
-  'fotos/06-hawk-tuah.webp':     '44% 32%',  // Gesicht sitzt links der Mitte
+  'fotos/06-carlin.webp':        '65% 30%',  // Motiv sitzt rechts, Kopf im oberen Drittel
   '07_Ronaldo.jpeg':             '50% 28%',
   '08_Leonardo DiCaprio.jpg':    '56% 17%',
   'fotos/09-penny.webp':         '50% 30%',  // Kopf-Schulter-Ausschnitt
   'fotos/10-merkel.webp':        '50% 42%',  // Brille auf halber Höhe
   '11_joker.jpg':                '47% 40%',
   '12_Hund.jpg':                 '50% 30%',
-  '13_MrHankey.jpg':             '47% 12%',
+  'fotos/13-murat-abi.webp':     '33% 40%',  // Gesicht im Vordergrund links
   '14_Thierry Henry.jpeg':       '45% 42%',
   '15_Katze.jpg':                '52% 28%',
 };
@@ -4148,6 +4253,7 @@ function buildCardInner(card, w, h) {
   const imgH = tiny ? avail : Math.round(avail * 0.52);
   const infoPanelH = avail - imgH;
 
+  const withAbility = cardHasAbility(card.ability);
   const abilityName = getAbilityName(card.ability);
   const abilityDesc = getAbilityDesc(card.ability);
 
@@ -4163,9 +4269,9 @@ function buildCardInner(card, w, h) {
     </div>
     ${infoPanelH <= 0 ? '' : `<div class="tcg-card-info" style="height:${infoPanelH}px">
       <div>
-        <div class="tcg-ability-label">${card.ability === 'none' ? t('chip.normal') : t('chip.ability')}</div>
-        <div class="tcg-ability-name">${abilityName}</div>
-        <div class="tcg-ability-desc">${abilityDesc}</div>
+        <div class="tcg-ability-label">${withAbility ? t('chip.ability') : t('chip.normal')}</div>
+        ${withAbility ? `<div class="tcg-ability-name">${abilityName}</div>
+        <div class="tcg-ability-desc">${abilityDesc}</div>` : ''}
       </div>
       <div class="tcg-flavor-text">"${esc(cardQuote(card))}"</div>
     </div>`}

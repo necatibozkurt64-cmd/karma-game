@@ -41,7 +41,7 @@ test.describe('Türkische Fassung', () => {
     await expect(page.locator('.logo-sub')).toHaveText('Kart Oyunu');
     await expect(page.locator('#lobby-home h2')).toHaveText('Oyuncu');
     await expect(page.locator('#player-name')).toHaveAttribute('placeholder', 'Adın');
-    await expect(page.locator('#join-code')).toHaveAttribute('placeholder', 'Oturum kodu (örn. ABC123)');
+    await expect(page.locator('#join-code')).toHaveAttribute('placeholder', 'Oturum kodu (örn. 1234)');
     await expect(page.getByRole('button', { name: 'Oturum oluştur' })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Katıl' })).toBeVisible();
     await expect(page.locator('#game-mode option').first()).toHaveText('Tek oyun');
@@ -78,7 +78,7 @@ test.describe('Türkische Fassung', () => {
     await expect.poll(() => messages).toEqual(['Lütfen bir ad gir']);
 
     await page.locator('#player-name').fill('Yabancı');
-    await page.locator('#join-code').fill('ZZZZZZ');
+    await page.locator('#join-code').fill('XXXX');
     await page.getByRole('button', { name: 'Katıl' }).click();
     await expect(page.locator('#toast-container .toast')).toContainText('Oturum bulunamadı');
   });
@@ -149,9 +149,19 @@ test.describe('Türkische Fassung', () => {
     // landet übersetzt im Log des Gegenübers.
     await onTurn.locator('#deck-pile').click();
     await expect(onTurn.locator('.drawn-label')).toHaveText('Çekilen kart');
-    await expect(onTurn.locator('#drawn-card-display .tcg-ability-label')).toHaveText(/^(NORMAL|YETENEK)$/);
-    await expect(onTurn.locator('#drawn-card-display .tcg-ability-name')).toHaveText(
-      /^(Yetenek yok|Kendi kartına bak|Rakibin kartına bak|Kartları takas et|Bak & Takas et)$/);
+    // Karten ohne Fähigkeit zeigen nur den NORMAL-Chip – keine Überschrift und
+    // keinen Erklärsatz. Welche Karte kommt, entscheidet der Stapel, also beide
+    // Fälle abdecken.
+    const chip = onTurn.locator('#drawn-card-display .tcg-ability-label');
+    await expect(chip).toHaveText(/^(NORMAL|YETENEK)$/);
+    const abName = onTurn.locator('#drawn-card-display .tcg-ability-name');
+    if ((await chip.innerText()) === 'YETENEK') {
+      await expect(abName).toHaveText(
+        /^(Kendi kartına bak|Rakibin kartına bak|Kartları takas et|Bak & Takas et)$/);
+    } else {
+      await expect(abName).toHaveCount(0);
+      await expect(onTurn.locator('#drawn-card-display .tcg-ability-desc')).toHaveCount(0);
+    }
     await expect(onTurn.locator('#drawn-discard-btn')).toHaveText(/^(At|At & yeteneği kullan)$/);
     await expect(waiting.locator('#log-panel')).toContainText('bir kart çekiyor');
     await expect(waiting.locator('.opp-thinking')).toContainText('düşünüyor');
