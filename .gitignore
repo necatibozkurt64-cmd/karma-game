@@ -11,13 +11,14 @@ node_modules/
 /blob-report/
 /playwright/.cache/
 
-# Quellfotos der Karten: nur die optimierten WebP gehen ins Repo, die
-# hochauflösenden Originale bleiben lokal.
+# Bildquellen: ins Repo geht nur, was der Browser wirklich lädt. Die
+# hochauflösenden Originale (Handyfotos, mehrere MB) bleiben lokal unter
+# Bilder/originale/ — karten/ für die Motive, legalpics/ für Lizenzmaterial.
+# Siehe CLAUDE.md, „Wo die Bilder liegen".
 Bilder/originale/
+
+# Schutz gegen versehentlich abgelegte Originale im ausgelieferten Ordner:
+# dort gehören nur die optimierten WebP hin.
 app/public/Bilder/fotos/*.png
 app/public/Bilder/fotos/*.jpg
 app/public/Bilder/fotos/*.jpeg
-
-# Ablage für ein laufendes Karten-Update (Originalfotos + Excel-Vorgabe).
-# Was davon gebraucht wird, landet als WebP bzw. in Karten/Karten.csv im Repo.
-_update/

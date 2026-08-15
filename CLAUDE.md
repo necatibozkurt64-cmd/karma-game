@@ -26,9 +26,23 @@ Expect only those 2 path lines to differ. If more differs, the deploy is out of 
 - `app/public/index.html` — **entire frontend**, all CSS + JS inline (~2500 lines). Connects to `ws://<host>/ws`. Card rendering: `buildCardInner(card, w, h)`.
 - `.claude/launch.json` — `karma` preview config (points at `server_render.py`).
 - `Procfile` — Railway deploy entrypoint (points at `app/server_final.py`). Railway builds from the GitHub repo; pushing `main` triggers the deploy. There is no `railway.json`/`railway.toml` in the repo — the service is configured in the Railway dashboard.
-- `Karten/Karten.csv` — source card data (names/quotes). `Karten/Karten.xlsx`, `regeln/*.docx` — design docs.
-- `app/public/Bilder/` — card face images (served at `/images/...`). `Bilder/` (root) + `Bilder.zip` are the originals.
-- `requirements.txt` — `aiohttp>=3.10.0`. `README.md` is a stub.
+- `Karten/Karten.csv` — source card data (names/quotes). `Karten/*.xlsx`, `regeln/*.docx` — design docs.
+- `tools/make_avatars.py` — erzeugt `app/public/Bilder/avatare/` aus den Motiven. Reproduzierbar: zweimal laufen lassen gibt byte-gleiche Dateien.
+- `requirements.txt` — `aiohttp>=3.10.0`. `AGENTS.md` ist nur ein Zeiger hierher.
+
+### Wo die Bilder liegen
+Alles unter `app/public/Bilder/` wird als `/images/...` **ausgeliefert**, alles unter `Bilder/` bleibt **lokal** (gitignored).
+
+| Ort | Inhalt | Im Repo? |
+|---|---|---|
+| `app/public/Bilder/*.jpg\|jpeg` | die 6 Kartenmotive, die noch als Original-Datei dienen | ja |
+| `app/public/Bilder/fotos/*.webp` | die 10 optimierten Kartenmotive | ja |
+| `app/public/Bilder/legacy/` | 9 Motive, die **früher** auf Karten standen — heute nur noch Quelle für die Legacy-Avatare | ja |
+| `app/public/Bilder/avatare/*.webp` | die 25 Profilbilder, 160×160 | ja |
+| `Bilder/originale/karten/` | hochauflösende Quellfotos (HEIC/PNG/JPG, mehrere MB) | **nein** |
+| `Bilder/originale/legalpics/` | lizenziertes Fremdmaterial | **nein** |
+
+Die Regel dahinter: **ins Repo geht nur, was der Browser wirklich lädt.** Ein 5-MB-Handyfoto gehört nach `Bilder/originale/`, der daraus erzeugte WebP-Streifen nach `app/public/Bilder/fotos/`. Ausgeliefert wird nie ein Original.
 
 ## Backend architecture
 - Routes (`create_app`): `GET /ws` (WebSocket), `GET /` (index), `GET /{path:.*}` (static; `images/*` → `IMAGES_DIR`, else `PUBLIC_DIR`).
@@ -77,7 +91,7 @@ Der Tisch ist ein `100dvh`-Block ohne Scrollen — auf dem Handy müssen alle vi
 - `CARD_DEFS` (15 cards) lives in both server files: `dict(nr, name, value, ability, quote, count, colors)`.
 - Abilities: `none`, `see_own`, `see_others`, `swap`, `see_swap` (handled in `handle_ability`).
 - Notable values: Titi = 0, Katze = -1 (lucky), Murat Abi = 13 (penalty-ish). Quotes must match `Karten/Karten.csv` — that CSV is the source of truth for names *and* quotes, so update it in the same breath as `CARD_DEFS`.
-- Image mapping: `IMAGE_FILES` (nr → filename in `Bilder/`). **Neues Motiv ⇒ drei Schritte:** Bild als verkleinertes WebP nach `app/public/Bilder/fotos/NN-name.webp` (lange Kante ≤ 900px, `quality=82` — die Handy-Originale sind mehrere MB groß und der Kartenstreifen ist ein paar hundert Pixel breit), Eintrag in `IMAGE_FILES` in **beiden** Servern, Eintrag in `CARD_IMAGE_FOCUS` im Client (ohne den landet der Ausschnitt auf `FACE_FALLBACK` und schneidet Köpfe ab). **HEIC geht nicht** — kein Browser zeigt es an; per `sips -s format png` umwandeln. Schwarze Balken von Screenshots/abfotografierten Bildschirmen vorher wegschneiden, sie stehen sonst als Streifen auf der Karte. Soll die Figur auch als Profilbild wählbar sein, kommt ein vierter Schritt dazu: quadratischer 160px-Schnitt nach `app/public/Bilder/avatare/card-<nr>.webp` und ein Eintrag in `AVATAR_CARD_NRS` (siehe „Profilbilder").
+- Image mapping: `IMAGE_FILES` (nr → filename in `Bilder/`). **Neues Motiv ⇒ drei Schritte:** Bild als verkleinertes WebP nach `app/public/Bilder/fotos/NN-name.webp` (lange Kante ≤ 900px, `quality=82` — die Handy-Originale sind mehrere MB groß und der Kartenstreifen ist ein paar hundert Pixel breit), Eintrag in `IMAGE_FILES` in **beiden** Servern, Eintrag in `CARD_IMAGE_FOCUS` im Client (ohne den landet der Ausschnitt auf `FACE_FALLBACK` und schneidet Köpfe ab). **HEIC geht nicht** — kein Browser zeigt es an; per `sips -s format png` umwandeln. Schwarze Balken von Screenshots/abfotografierten Bildschirmen vorher wegschneiden, sie stehen sonst als Streifen auf der Karte. Das Originalfoto wandert dabei nach `Bilder/originale/karten/` und bleibt lokal. Soll die Figur auch als Profilbild wählbar sein, kommt ein vierter Schritt dazu: Eintrag in `FIGURES` in `tools/make_avatars.py` und einmal laufen lassen — das schreibt `app/public/Bilder/avatare/card-<nr>.webp` — plus ein Eintrag in `AVATAR_CARD_NRS` (siehe „Profilbilder"). **Ein Motiv, das von einer Karte verschwindet**, wird nicht gelöscht: es zieht nach `app/public/Bilder/legacy/` und bleibt über `AVATAR_LEGACY` als Profilbild wählbar.
 
 ## Gameplay flow (one glance)
 Lobby (host `create`, others `join`, host `start` with ≥2 players) → **peek** phase (each player secretly peeks 2 of their 4 face-down cards) → **turns**: draw → keep (swap into a hand slot) or discard_drawn; special cards trigger abilities → **racing / reaction_swap** phase (snap matching values) → someone `call_end` → **scoring** (lowest total wins, penalties) → `next_round`. Timing constants: `REVEAL_SECONDS`, `FLIGHT_SECONDS` (must match the client's flight animation).

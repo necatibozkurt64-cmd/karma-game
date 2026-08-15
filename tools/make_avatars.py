@@ -35,17 +35,18 @@ FIGURES = {
     'card-13': ('fotos/13-murat-abi.webp',  0.33, 0.40, 0.86),
     'card-14': ('14_Thierry Henry.jpeg',    0.45, 0.42, 0.86),
     'card-15': ('15_Katze.jpg',             0.52, 0.28, 0.86),
-    # Legacy - Figuren, die frueher auf den Karten standen
-    'legacy-olli':     ('01_Olli.png',                  0.39, 0.20, 0.37),
-    'legacy-tupac':    ('02_tupac.jpg',                 0.50, 0.30, 0.86),
-    'legacy-arnold':   ('03_arnold schwarzenegger.jpg', 0.50, 0.25, 0.86),
-    'legacy-cartman':  ('04_Eric Cartman.png',          0.50, 0.30, 0.86),
-    'legacy-zidane':   ('05_zidane.jpg',                0.55, 0.22, 0.80),
-    'legacy-brucelee': ('06_bruce lee.jpg',             0.50, 0.30, 0.86),
+    # Legacy - Figuren, die frueher auf den Karten standen. Sie liegen in
+    # app/public/Bilder/legacy/ und sind nur noch Quelle fuer diese Avatare.
+    'legacy-olli':     ('legacy/01_Olli.png',                  0.39, 0.20, 0.37),
+    'legacy-tupac':    ('legacy/02_tupac.jpg',                 0.50, 0.30, 0.86),
+    'legacy-arnold':   ('legacy/03_arnold schwarzenegger.jpg', 0.50, 0.25, 0.86),
+    'legacy-cartman':  ('legacy/04_Eric Cartman.png',          0.50, 0.30, 0.86),
+    'legacy-zidane':   ('legacy/05_zidane.jpg',                0.55, 0.22, 0.80),
+    'legacy-brucelee': ('legacy/06_bruce lee.jpg',             0.50, 0.30, 0.86),
     'legacy-hawktuah': ('fotos/06-hawk-tuah.webp',      0.50, 0.30, 0.86),
-    'legacy-snowden':  ('09_snowden.jpg',               0.50, 0.30, 0.86),
-    'legacy-trump':    ('10_trump.jpg',                 0.42, 0.35, 0.40),
-    'legacy-hankey':   ('13_MrHankey.jpg',              0.50, 0.38, 0.62),
+    'legacy-snowden':  ('legacy/09_snowden.jpg',               0.50, 0.30, 0.86),
+    'legacy-trump':    ('legacy/10_trump.jpg',                 0.42, 0.35, 0.40),
+    'legacy-hankey':   ('legacy/13_MrHankey.jpg',              0.50, 0.38, 0.62),
 }
 
 
