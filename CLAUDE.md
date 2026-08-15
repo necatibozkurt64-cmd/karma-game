@@ -42,16 +42,19 @@ Expect only those 2 path lines to differ. If more differs, the deploy is out of 
 - State sent **back to clients is camelCase** (`send_state`).
 - **Rule when adding a new message field:** read it through `g()`/`gi()` in `dispatch()`/its handler, and if it's part of game state, add it to `send_state()` in camelCase. Miss either side and the field silently disappears.
 
-## i18n (Deutsch / English)
-Die Sprache ist **pro Browser**, nicht pro Session — zwei Spieler am selben Tisch dürfen unterschiedliche Sprachen fahren. Gespeichert in `localStorage['karma_language']` (`'de'` Default, `'en'`), umgeschaltet über `setLanguage()` in den Einstellungen.
+## i18n (Deutsch / English / Türkçe)
+Die Sprache ist **pro Browser**, nicht pro Session — zwei Spieler am selben Tisch dürfen unterschiedliche Sprachen fahren. Gespeichert in `localStorage['karma_language']` (`'de'` Default, `'en'`, `'tr'`), umgeschaltet über `setLanguage()` in den Einstellungen.
 
-- **Alle Texte stehen in `TRANSLATIONS = { de: {…}, en: {…} }`** in `app/public/index.html`. `t('a.b', {n: 3})` liest den Schlüssel der aktuellen Sprache und ersetzt `{platzhalter}`; fehlt ein Schlüssel, fällt `t()` auf Deutsch zurück. **Neuer Text ⇒ Eintrag in BEIDE Dicts.**
+- **Alle Texte stehen in `TRANSLATIONS = { de: {…}, en: {…}, tr: {…} }`** in `app/public/index.html`. `t('a.b', {n: 3})` liest den Schlüssel der aktuellen Sprache und ersetzt `{platzhalter}`; fehlt ein Schlüssel, fällt `t()` auf Deutsch zurück. **Neuer Text ⇒ Eintrag in ALLE Dicts.**
+- **Eine neue Sprache braucht genau zwei Schritte:** einen Block in `TRANSLATIONS` und eine Zeile in `LANGUAGES` (`{id, flag, label}`, direkt darunter). Der Umschalter in den Einstellungen (`updateLanguageUI()` baut `#lang-grid`) und die Gültigkeitsprüfung in `loadSettings()` lesen beide aus dieser Liste — kein Markup und keine Sonderbehandlung nötig.
 - **Statisches Markup** trägt `data-i18n` (innerHTML), `data-i18n-ph` (placeholder), `data-i18n-title` (Tooltip) — `applyStaticI18n()` setzt sie. Kein deutscher Text darf hart im JS stehen.
 - **Server-Meldungen sind Schlüssel, kein fertiger Satz:** `dict(type='toast', key='log.draw', params={'name': …})` bzw. `type='error', key='err.sessionFull'`. Übersetzt wird erst beim Anzeigen (`entryText()`), sonst bekäme ein englischer Spieler deutsche Log-Zeilen. Dasselbe bei Strafpunkten: `score_breakdown[…]['penalties']` trägt `reasons: ['notWon','over7']`, den Satz baut `penaltyReason()` im Client.
-- **Kartennamen und -zitate** kommen über die Kartennummer, nicht über `card.name`: `cardName(card)` → `t('cardName.<nr>')` (nur `Hund→Dog`, `Katze→Cat` unterscheiden sich), `cardQuote(card)` → `t('cardQuote.<nr>')` mit Fallback auf den Servertext. Deshalb schickt jede Log-Meldung mit Karte ein `cardNr`, keinen Namen. Die deutsche Fassung bleibt damit deckungsgleich mit `Karten/Karten.csv`.
+- **Kartennamen und -zitate** kommen über die Kartennummer, nicht über `card.name`: `cardName(card)` → `t('cardName.<nr>')` (nur `Hund→Dog/Köpek`, `Katze→Cat/Kedi` unterscheiden sich), `cardQuote(card)` → `t('cardQuote.<nr>')` mit Fallback auf den Servertext. Deshalb schickt jede Log-Meldung mit Karte ein `cardNr`, keinen Namen. Die deutsche Fassung bleibt damit deckungsgleich mit `Karten/Karten.csv`.
+- **Die Kartenfähigkeit ist ein Schlüssel, kein Text:** der Server schickt `ability: 'see_swap'`, `getAbilityName()`/`getAbilityDesc()` machen daraus `t('abName.<ability>')` / `t('abDesc.<ability>')`. Auch der Chip (`chip.ability`) und die Fähigkeitsspalte im Regelwerk (`CARD_TABLE`) hängen an denselben Schlüsseln.
+- **`cardQuote` ist bewusst dünn besetzt** — überschrieben wird nur, was in der Zielsprache nicht schon passt; feste Figurenzitate („Eier, we need Eier", „Ciao bella ciao!") bleiben in jeder Sprache stehen. Der Vollständigkeitstest nimmt diesen Zweig deshalb aus.
 - **Das Regelwerk wird gerendert, nicht dupliziert:** `renderHelp()` baut `#help-content` aus `help.*`; die Kartentabelle kommt aus `CARD_TABLE` und zieht Namen/Fähigkeiten aus denselben Schlüsseln wie die Karten am Tisch.
 - **Das Log speichert Rohdaten** (`logEntries` = `{key, params, color, anim, time}`), nicht fertige Zeilen — `renderLogPanel()` zeichnet nach einem Sprachwechsel auch alte Meldungen neu. `showToast()` nimmt entweder ein solches Objekt oder (für rein lokale Meldungen) einen String.
-- Abgedeckt von `tests/e2e/i18n-english.spec.ts`.
+- Abgedeckt von `tests/e2e/i18n-english.spec.ts` und `tests/e2e/i18n-turkish.spec.ts`. **`tests/e2e/i18n-keys.spec.ts` ist der Wächter:** er prüft, dass jede Sprache aus `LANGUAGES` jeden Schlüssel der deutschen Fassung hat und keinen längeren Satz unübersetzt stehen lässt — sonst fällt `t()` still auf Deutsch zurück und niemand merkt es.
 
 ## Handy-Layout (compact view)
 Der Tisch ist ein `100dvh`-Block ohne Scrollen — auf dem Handy müssen alle vier Hände, beide Stapel **und** die Aktionsleiste („Spiel beenden") gleichzeitig sichtbar sein. Deshalb:
@@ -77,7 +80,7 @@ Run them after any change to the server logic or `app/public/index.html`:
 npx playwright test
 ```
 - Config: `playwright.config.ts`. Playwright boots its **own** `server_render.py` on port **3100** (`E2E_PORT`), so a dev server on 3000 is untouched. Sessions are in-memory — nothing to reset between runs.
-- Specs in `tests/e2e/`: `lobby.spec.ts` (create/join/errors), `game-start.spec.ts` (2 players → peek → table), `server-sync.spec.ts` (**guards the two-server rule above**).
+- Specs in `tests/e2e/`: `lobby.spec.ts` (create/join/errors), `game-start.spec.ts` (2 players → peek → table), `server-sync.spec.ts` (**guards the two-server rule above**), `card-artwork.spec.ts` (card data + images), `i18n-english.spec.ts` / `i18n-turkish.spec.ts` / `i18n-keys.spec.ts` (see the i18n section).
 - Multiplayer tests drive a second player through `browser.newContext()`. `workers` is pinned to 3 — the Playwright default opens too many contexts at once here and tests fall over on timeouts.
 - Two traps worth knowing:
   - The client uses `alert()`. Handle the dialog **inside** a `page.on('dialog', …)` listener; a bare `waitForEvent('dialog')` disables auto-dismiss and hangs the click.

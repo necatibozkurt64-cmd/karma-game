@@ -1234,16 +1234,9 @@ body[data-cardback="karo"] .card-back::after { border-color: rgba(120,200,160,.2
     <p data-i18n="settingsNote">Gilt nur für dich und bleibt gespeichert.</p>
     <div class="set-group">
       <h3 id="lang-label">Sprache</h3>
-      <div style="display:flex;gap:8px">
-        <button class="swatch active" id="lang-de" onclick="setLanguage('de')" style="flex:1">
-          <div style="font-size:24px;margin-bottom:4px">🇩🇪</div>
-          <div class="swatch-lbl">Deutsch</div>
-        </button>
-        <button class="swatch" id="lang-en" onclick="setLanguage('en')" style="flex:1">
-          <div style="font-size:24px;margin-bottom:4px">🇬🇧</div>
-          <div class="swatch-lbl">English</div>
-        </button>
-      </div>
+      <!-- Die Knöpfe baut updateLanguageUI() aus LANGUAGES – eine neue Sprache
+           braucht hier keine Zeile Markup. -->
+      <div style="display:flex;gap:8px" id="lang-grid"></div>
     </div>
     <div class="set-group">
       <h3 id="bg-label">Hintergrund</h3>
@@ -1933,8 +1926,317 @@ const TRANSLATIONS = {
       wellen: 'Guilloche',
       karo: 'Starfield',
     }
+  },
+
+  tr: {
+    // ── Genel / ayarlar ──
+    language: 'Dil',
+    background: 'Arka plan',
+    cardback: 'Kart arkası',
+    done: 'Tamam',
+    settings: 'Ayarlar',
+    settingsNote: 'Yalnızca senin için geçerlidir ve kaydedilir.',
+    rules: 'Oyun kuralları',
+    understood: 'Anladım!',
+    copyToClipboard: 'Panoya kopyala',
+
+    // ── Lobi ──
+    tagline: 'Kart Oyunu',
+    player: 'Oyuncu',
+    playerName: 'Adın',
+    host: 'kurucu olarak',
+    singleGame: 'Tek oyun',
+    // Die Modi spielen 3/5/10 Runden – im Türkischen als „Serie über N Runden“
+    // klarer als eine wörtliche Übernahme von „Best of“.
+    bestOf3: '3 turluk seri',
+    bestOf5: '5 turluk seri',
+    bestOf10: '10 turluk seri',
+    createSession: 'Oturum oluştur',
+    orJoin: 'ya da katıl',
+    join: 'Katıl',
+    joinCode: 'Oturum kodu (örn. ABC123)',
+    sessionCode: 'Oturum kodu',
+    showCode: 'Bu kodu diğer oyunculara göster',
+    playersInSession: 'Oturumdaki oyuncular:',
+    startGame: 'Oyunu başlat',
+    waitingForHost: 'Kurucu bekleniyor…',
+    waitingForPlayers: 'Daha fazla oyuncu bekleniyor (en az 2)…',
+    you: '(Sen)',
+    alertName: 'Lütfen bir ad gir',
+    alertCode: 'Lütfen oturum kodunu gir',
+    codeCopied: 'Oturum kodu kopyalandı! 📋',
+    copyFailed: 'Kopyalama başarısız',
+    disconnect: 'Bağlantı kesildi',
+    wsError: 'WebSocket hatası – bağlantı kurulamadı',
+
+    // ── Üst çubuk ──
+    roundOf: 'Tur {n}/{total}',
+    phase: {
+      peek: 'Kartlara bak', playing: 'Oyun', ability: 'Yetenek',
+      swap_flight: 'Takas', racing: 'Kap!', race_give: 'Kart ver',
+      scoring: 'Puanlama', done: 'Bitti',
+    },
+
+    // ── Masa ──
+    drawDeck: 'Çekme destesi',
+    discardPile: 'Iskarta destesi',
+    empty: 'Boş',
+    deckCount: '{n} kart',
+    yourHand: 'Elin',
+    yourTurn: 'Sıra sende',
+    endGame: 'Oyunu bitir',
+    logTitle: 'Geçmiş',
+    logEmpty: 'Henüz olay yok…',
+    replayHint: 'Animasyonu tekrar oynat',
+    thinking: 'düşünüyor',
+    away: '(yok)',
+    drawnCard: 'Çekilen kart',
+    cardN: 'Kart {n}',
+    drawnHintPlain: 'Kartlarından birine dokunup <strong>değiştir</strong> – ya da çektiğin kartı at.',
+    drawnHintAbility: 'Bir el kartına dokunup <strong>takas et</strong> (yetenek kaybolur) – ya da <strong>at</strong> ve yeteneği kullan.',
+    discardBtn: 'At',
+    discardAbilityBtn: 'At & yeteneği kullan',
+
+    // ── Yönerge satırı ──
+    inst: {
+      drawOrEnd: 'Çekme destesinden bir kart çek ya da oyunu bitir',
+      chooseSwapOrDiscard: 'Takas için bir el kartı seç ya da çektiğin kartı at',
+      waitFor: '{name} bekleniyor…',
+      see_own: 'Kendi kartlarından birini seç',
+      see_others: 'Başka bir oyuncunun kartını seç',
+      swap: 'Takas için iki kart seç',
+      see_swap: 'İki kart seç',
+      swapFlight: 'Kartların nereye gittiğine dikkat et…',
+      giveOwn: 'Vereceğin kartı seç',
+    },
+    endBannerOne: '{name} oyunu bitirdi – {n} hamle kaldı',
+    endBannerMany: '{name} oyunu bitirdi – {n} hamle kaldı',
+
+    // ── Ezberleme penceresi ──
+    peek: {
+      title: 'Kartlarına bak',
+      desc: 'El kartlarından <strong>2</strong> tanesini seç. Onları <strong>6 saniye</strong> göreceksin – sonra tekrar kapanacaklar. İyi aklında tut!',
+      count: '{n} / 2 seçildi',
+      doneTitle: 'Ezberleme tamamlandı',
+      doneDesc: 'Kartların tekrar kapandı. Diğer oyuncular bekleniyor…',
+      doneCount: '{n} / {total} oyuncu hazır',
+      rememberTitle: 'Aklında tut!',
+      rememberDesc: 'Bu kartlar birazdan <strong>tekrar kapanacak</strong>. Yerlerini ve değerlerini aklında tut.',
+      viewBtn: 'Bu kartlara bak',
+      skipBtn: 'Atla',
+    },
+    rememberSecs: 'saniye – aklında tut!',
+
+    // ── Yetenek penceresi ──
+    ab: {
+      seeOwnTitle: 'Kendi kartına bak',
+      seeOwnPick: 'Bakmak için el kartlarından birini seç.',
+      seeOthersTitle: 'Rakibin kartına bak',
+      seeOthersPick: 'Başka bir oyuncunun kartını seç.',
+      revealOne: 'Kartı <strong>6 saniye</strong> göreceksin – sonra tekrar kapanacak:',
+      hiddenAgain: 'Kart tekrar kapandı.',
+      swapTitle: 'İki kartı takas et',
+      pick1: 'İlk kartı seç (kendi kartın ya da başkasınınki).',
+      pick2: 'Takas için ikinci kartı seç.',
+      seeSwapTitle: 'İki karta bak & takas et',
+      pickFirst: 'İlk kartı seç.',
+      pickSecond: 'İkinci kartı seç.',
+      revealBoth: 'Her iki kartı <strong>6 saniye</strong> göreceksin. Takas edilsin mi?',
+      memorySwap: 'Kartlar tekrar kapandı. Takas – hafızandan?',
+      swapBtn: 'Takas et',
+      noSwapBtn: 'Takas etme',
+    },
+
+    // ── İzleyici şeridi ──
+    tick: {
+      generic: '{name} bir yetenek kullanıyor…',
+      looksAt: '{name} <strong>{slot}</strong> kartına bakıyor',
+      choosesLook: '{name} bakmak için kart seçiyor…',
+      swaps: '{name} <strong>{a}</strong> ↔ <strong>{b}</strong> takas ediyor',
+      chose1of2: '{name} <strong>{slot}</strong> kartını seçti – ikinci kart geliyor…',
+      choosesTwoSwap: '{name} takas için iki kart seçiyor…',
+      seeSwapDecide: '{name} <strong>{a}</strong> ve <strong>{b}</strong> kartlarını görüyor – takas mı, değil mi?',
+      chose1: '{name} <strong>{slot}</strong> kartını seçti…',
+      choosesTwo: '{name} iki kart seçiyor…',
+    },
+
+    // ── Kap (Schnapp) ──
+    // „Treffer“ heißt hier auf Wunsch „yapıştır“ – der Ausruf, mit dem am
+    // türkischen Kartentisch die passende Karte hingeklatscht wird.
+    race: {
+      snap: 'Kap',
+      give: 'Kart ver',
+      hint: 'Masadaki <strong>herhangi bir</strong> aynı değerdeki karta dokun – diğer oyuncularınkine de. Tek hakkın var, yoksa ceza kartı.',
+      missed: 'Iska – bu pencerede hakkın bitti.',
+      giveSelf: 'Kendi kartlarından birini seç – <strong>{owner}</strong> oyuncusundaki boşluğu dolduracak. Sonra sıra sende.',
+      giveOther: '<strong>{racer}</strong>, <strong>{owner}</strong> oyuncusundaki boşluk için kart seçiyor…',
+      hit: 'Yapıştır',
+      miss: 'Iska',
+    },
+
+    // ── Puanlama ──
+    sc: {
+      roundEnded: '{n}. tur bitti',
+      gameOver: 'Oyun bitti!',
+      cardValues: 'Kart değerleri: {total}',
+      penalty: 'Ceza +{amount}: {reason}',
+      total: 'Toplam: {n}',
+      winner: '🏆 {name} kazandı!',
+      newGame: 'Yeni oyun',
+      nextRound: 'Sonraki tur',
+      finalResult: 'Nihai sonuç',
+    },
+
+    // ── Ceza gerekçeleri (sunucu yalnızca anahtar gönderir) ──
+    pen: {
+      text: 'Oyunu bitirdi ama {reasons}: +{amount} ceza puanı',
+      and: ' ve ',
+      notWon: 'kazanamadı',
+      over7: 'elinde 7 puandan fazlası vardı',
+    },
+
+    // ── Kart yetenekleri ──
+    abName: {
+      none: 'Yetenek yok',
+      see_own: 'Kendi kartına bak',
+      see_others: 'Rakibin kartına bak',
+      swap: 'Kartları takas et',
+      see_swap: 'Bak & Takas et',
+      fallback: 'Yetenek',
+    },
+    abDesc: {
+      none: 'Bu kartın özel bir yeteneği yok.',
+      see_own: 'Kendi kartlarından birine bakabilirsin.',
+      see_others: 'Bir rakibin kartına bakabilirsin.',
+      swap: 'İki kartı diğer oyuncularla takas edebilirsin.',
+      see_swap: 'İki karta bakıp sonra takas edebilirsin.',
+    },
+    // 'YETENEK' ist genauso lang wie 'ABILITY' und passt damit in den schmalen
+    // Chip – anders als das deutsche 'FÄHIGKEIT', das dort bewusst englisch bleibt.
+    chip: { normal: 'NORMAL', ability: 'YETENEK' },
+    imgFallback: '[Görsel]',
+
+    // ── Kart adları (nr → görünen ad) ──
+    cardName: {
+      1: 'Olli', 2: 'Tupac', 3: 'Arnold', 4: 'Cartman', 5: 'Barbie',
+      6: 'Hawk Tuah Girl', 7: 'Ronaldo', 8: 'Leo', 9: 'Penny', 10: 'Merkel',
+      11: 'Joker', 12: 'Köpek', 13: 'Mr Hankey', 14: 'Titi', 15: 'Kedi',
+    },
+    // Übersetzt werden die Zitate, die einfache Sätze sind. Die festen Zitate
+    // der Figuren bleiben stehen (Kahns „Eier, we need Eier“, Arnolds Wortspiel
+    // auf den Kartenwert, Barbies „Ciao bella ciao!“, „Bee water my friend“) –
+    // sie sind Teil der Figur, nicht Text, den man liest.
+    cardQuote: {
+      2: 'Sakin ol dostum, iyi günler de gelecek.',
+      4: 'Otoriteme saygı duyun!',
+      7: 'SUUUI ...kendi kartına bak!!!',
+      8: 'Şuna bir bak.',
+      9: 'Her şeyi görüyorlar..',
+      10: 'Hadi batıralım şu işi.',
+      11: 'Biraz kafa karıştıralım.',
+      12: 'Aya doğru!',
+      13: 'Boktan şeyler olur.',
+      14: 'Tebrikler, beni yakaladın.',
+      15: 'Seni şanslı köftehor.',
+    },
+
+    // ── Sunucu mesajları (olay geçmişi) ──
+    log: {
+      joined: '{name} katıldı!',
+      disconnected: '{name} bağlantıyı kesti.',
+      callEnd: '{name} oyunu bitiriyor!',
+      draw: '{name} bir kart çekiyor',
+      keep: '{name} {index}. kartı değiştiriyor',
+      discard: '{name} bir kart atıyor',
+      raceTimeout: 'Kapma süresi doldu – kimse yeterince hızlı değildi',
+      raceMissOwn: '{name} kendi {index}. kartını açıyor: {card} ({value}) – ıska, ceza kartı',
+      raceMissOther: '{name}, {owner} oyuncusunun {index}. kartını açıyor: {card} ({value}) – ıska, ceza kartı',
+      raceHitOwn: '{name} {index}. kartı kapıyor: {card} ({value}) – yapıştır, bir kart eksik ve sıra onda',
+      raceHitOther: '{name}, {owner} oyuncusunun {index}. kartını kapıyor: {card} ({value}) – yapıştır',
+      give: '{name} {index}. kartı {owner} oyuncusuna veriyor – bir kart eksikle sıra onda',
+      giveAuto: '{name} {index}. kartı {owner} oyuncusuna veriyor (otomatik) – bir kart eksikle sıra onda',
+      seeOwn: '{name} {index}. karta bakıyor',
+      seeOther: '{name}, {owner} oyuncusunun {index}. kartına bakıyor',
+      swap: '{name}, {p1} oyuncusunun {i1}. kartını {p2} oyuncusunun {i2}. kartıyla takas ediyor',
+      seeTwo: '{name}, {p1} oyuncusunun {i1}. kartını ve {p2} oyuncusunun {i2}. kartını görüyor',
+      noSwap: '{name} takas etmiyor',
+    },
+    err: {
+      sessionNotFound: 'Oturum bulunamadı.',
+      gameStarted: 'Oyun zaten başladı.',
+      sessionFull: 'Oturum dolu (en fazla 4 oyuncu).',
+      alreadyIn: 'Zaten oturumdasın.',
+    },
+
+    // ── Kural kitabı ──
+    help: {
+      title: '📖 Oyun kuralları – Karma',
+      goalH: '🎯 Oyunun amacı',
+      goalP: 'Turun sonunda en az puanı olan turu kazanır. Tüm turların sonunda en az toplam puana sahip oyuncu oyunu kazanır!',
+      setupH: '🎴 Hazırlık',
+      setup1: '<strong>2–4 oyuncu</strong> birlikte oynayabilir',
+      setup2: 'Her oyuncuya <strong>4 kapalı kart</strong> dağıtılır',
+      setup3: 'Başlangıçta her oyuncu <strong>2 karta bakabilir</strong> ve yerlerini ve değerlerini aklında tutar (6 saniye!)',
+      setup4: 'Ezberledikten sonra kartlar tekrar <strong>kapanır</strong>',
+      flowH: '🔄 Bir hamle nasıl işler',
+      flowIntro: '<strong>Her hamle şunlardan oluşur:</strong>',
+      flow1: 'Çekme destesinden <strong>bir kart çek</strong>',
+      flow2: '<strong>Karar ver:</strong>',
+      flow2a: '👉 <strong>Kartlarından birini</strong> çektiğin kartla <strong>değiştir</strong> (eski kart ıskarta destesine gider)',
+      flow2b: '👉 <strong>Çektiğin kartı at &amp; yeteneğini kullan</strong>',
+      flow3: '<strong>Hamlen biter</strong> – sıra bir sonraki oyuncuya geçer',
+      endH: '⚡ Oyunu bitirmek',
+      endP: 'En iyi kartların sende olduğunu düşünüyorsan ya da riski göze almak istiyorsan, istediğin an <strong>„Oyunu bitir"</strong> diyebilirsin. Ardından her oyuncunun <strong>bir hamlesi daha</strong> olur, sonra tur biter.',
+      abH: '🎁 Özel kartlar – Yetenekler',
+      abIntro: 'Bazı kartların özel yetenekleri vardır:',
+      ab1: '<strong>Kendi kartına bak:</strong> kapalı kartlarından birine kısaca göz at',
+      ab2: '<strong>Rakibin kartına bak:</strong> başka bir oyuncunun kartına bak',
+      ab3: '<strong>Kartları takas et:</strong> herhangi iki kartı takas et (kendi kartın ya da başkasınınki)',
+      ab4: '<strong>Bak &amp; Takas et:</strong> iki karta bak ve sonra onları takas et',
+      tableH: '🎴 Tüm kartlar – Değerler & Yetenekler',
+      tableIntro: 'Oyundaki tüm kartların eksiksiz listesi:',
+      thCard: 'Kart', thValue: 'Değer', thAbility: 'Yetenek',
+      luckyCard: 'Şans kartı!',
+      bestCard: 'En iyisi!',
+      noneShort: 'Yok',
+      penaltyCard: 'Ceza kartı',
+      snapH: '⚡ Kap – Hızlı tepki ver!',
+      snapP: 'Atılan her karttan sonra kısa bir zaman penceresi açılır (destelerin üstündeki çubuk). Bu süre boyunca her oyuncu <strong>masadaki herhangi bir karta</strong> dokunabilir – kendi kartına ya da bir rakibinkine. Kart herkese açılır:',
+      snap1: '<strong>Aynı değer mi?</strong> Kart ıskarta destesine gider, pencere hemen kapanır ve sıra sana geçer – bir kart eksikle.',
+      snap2: 'Kart bir <strong>rakibe</strong> aitse, oluşan boşluğu kendi kartlarından biriyle doldurursun. Rakibin el büyüklüğü değişmez, sen bir kart kaybedersin.',
+      snap3: '<strong>Yanlış değer mi?</strong> Kart yerine geri döner, bir <strong>ceza kartı</strong> çekersin ve bu pencerede hakkın biter.',
+      snapNote: 'Herkesin pencere başına tam bir hakkı var – yani yalnızca kartı gerçekten hatırlıyorsan dokun.',
+      pointsH: '🎯 Kart değerleri & puanlar',
+      pointsP: 'Her kartın -1 ile 13 arasında bir değeri vardır. Ne kadar düşükse o kadar iyi. Tüm değerlerin toplamı güncel puanındır. Burada da düşük olan iyidir. Yani yüksek kartlardan kurtul ve oyunu ilk bitiren sen ol!',
+      warn: '<strong>⚠️ Dikkat!</strong> Ceza puanını <strong>yalnızca oyunu bitiren oyuncu</strong> alır – en az puana sahip değilse <strong>ya da</strong> o turda eli 7 puandan fazla ediyorsa 30 puan. Ceza hiçbir zaman 30 puanı aşmaz, diğer tüm oyuncular cezasız kalır.',
+    },
+
+    BGThemes: {
+      onyx: 'Oniks',
+      mitter: 'Gece yarısı',
+      nebel: 'Sis',
+      violett: 'Mor',
+      tiefsee: 'Derin deniz',
+      wein: 'Şarap',
+      reinweiss: 'Saf siyah',
+    },
+    CardBacks: {
+      classic: 'Oniks',
+      rauten: 'İndigo',
+      wellen: 'Giyoş',
+      karo: 'Yıldız alanı',
+    }
   }
 };
+
+// Verfügbare Sprachen. Eine neue Sprache braucht genau zwei Schritte: einen
+// Block in TRANSLATIONS und eine Zeile hier – Umschalter (updateLanguageUI),
+// Gültigkeitsprüfung (loadSettings) und der Vollständigkeitstest lesen daraus.
+const LANGUAGES = [
+  { id: 'de', flag: '🇩🇪', label: 'Deutsch' },
+  { id: 'en', flag: '🇬🇧', label: 'English' },
+  { id: 'tr', flag: '🇹🇷', label: 'Türkçe' },
+];
 
 // t('a.b', {n: 3}) – liefert den Text der aktuellen Sprache. Fehlt ein Schlüssel,
 // wird auf Deutsch zurückgefallen (statt den rohen Schlüssel zu zeigen), damit ein
@@ -2001,7 +2303,10 @@ const CARD_BACKS = [
 ];
 
 function loadSettings() {
-  currentLanguage = localStorage.getItem('karma_language') || 'de';
+  // Ein unbekannter gespeicherter Wert (alter Build, manuell gesetzt) würde in
+  // t() bei jedem Schlüssel auf Deutsch zurückfallen – lieber gleich auf Deutsch.
+  const storedLang = localStorage.getItem('karma_language');
+  currentLanguage = LANGUAGES.some(l => l.id === storedLang) ? storedLang : 'de';
   // Alte gespeicherte IDs (british, blue, …) sind nicht mehr vorhanden – auf Onyx zurückfallen.
   const validBg = new Set(['onyx','mitter','nebel','violett','tiefsee','wein','reinweiss']);
   const storedBg = localStorage.getItem('karma_bg');
@@ -2043,8 +2348,14 @@ function applyStaticI18n() {
 }
 
 function updateLanguageUI() {
-  document.getElementById('lang-de').classList.toggle('active', currentLanguage === 'de');
-  document.getElementById('lang-en').classList.toggle('active', currentLanguage === 'en');
+  const grid = document.getElementById('lang-grid');
+  if (grid) {
+    grid.innerHTML = LANGUAGES.map(l => `
+      <button class="swatch ${l.id === currentLanguage ? 'active' : ''}" id="lang-${l.id}" onclick="setLanguage('${l.id}')" style="flex:1">
+        <div style="font-size:24px;margin-bottom:4px">${l.flag}</div>
+        <div class="swatch-lbl">${l.label}</div>
+      </button>`).join('');
+  }
 
   applyStaticI18n();
   document.getElementById('lang-label').textContent = t('language');
