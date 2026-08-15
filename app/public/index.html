@@ -137,6 +137,21 @@ select option { background: #0b0d14; }
 #players-list { display: flex; flex-direction: column; gap: 8px; }
 .player-chip { display: flex; align-items: center; gap: 10px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 11px 14px; font-size: 14px; }
 .player-chip .crown { color: var(--brand-lift); }
+.player-chip .chip-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Bots: Auswahl in der Lobby und Kennzeichnung am Tisch. Ein Bot bleibt immer
+   als solcher erkennbar — am Tisch verhält er sich wie ein Mitspieler, und
+   niemand soll rätseln müssen, ob gegenüber ein Mensch sitzt. */
+.bot-row { display: flex; gap: 8px; align-items: center; }
+.bot-row select { flex: 1; min-width: 0; margin: 0; }
+.btn-slim { width: auto; flex: 0 0 auto; padding: 10px 14px; font-size: 12px; margin: 0; }
+.bot-tag { display: inline-flex; align-items: center; gap: 3px; font-size: 10px; letter-spacing: .1em; text-transform: uppercase; padding: 2px 6px; border-radius: 999px; border: 1px solid var(--line-2); color: var(--ink-3); white-space: nowrap; }
+.bot-tag.lvl-easy   { border-color: rgba(76,175,80,.5);  color: #8bd48f; }
+.bot-tag.lvl-medium { border-color: rgba(255,152,0,.5);  color: #ffc06b; }
+.bot-tag.lvl-hard   { border-color: rgba(244,67,54,.55); color: #ff9a90; }
+.bot-kick { background: transparent; border: 0; color: var(--ink-3); font-size: 16px; line-height: 1; cursor: pointer; padding: 2px 4px; width: auto; margin: 0; }
+.bot-kick:hover { color: #ff9a90; }
+.opp-name .bot-tag { font-size: 9px; padding: 1px 5px; margin-left: 5px; }
 
 /* ── GAME ── */
 #game { display: none; flex-direction: column; height: 100vh; overflow: hidden; }
@@ -155,6 +170,25 @@ select option { background: #0b0d14; }
 /* Opponents zone */
 #opponents { display: flex; justify-content: center; gap: 20px; padding: 10px 16px; flex-shrink: 0; flex-wrap: wrap; }
 .opponent-zone { display: flex; flex-direction: column; align-items: center; gap: 8px; position: relative; transition: transform .35s ease; }
+/* Profilbild: kleiner Kreis neben dem Namen. inline-flex + vertical-align, damit
+   es sich in bestehende Textzeilen (Gegnername, Lobby-Chip) einfügt, ohne dass
+   deren Ausrichtung angefasst werden muss. */
+.avatar { display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; overflow: hidden; flex: 0 0 auto; vertical-align: middle; background: #23232c; border: 1px solid rgba(255,255,255,.18); }
+.avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.av-initial { font-weight: 800; color: #fff; letter-spacing: 0; }
+.av-sm { width: 18px; height: 18px; font-size: 9px; }
+.av-md { width: 26px; height: 26px; font-size: 12px; }
+.av-lg { width: 44px; height: 44px; font-size: 19px; }
+
+/* Auswahlraster in den Einstellungen */
+.avatar-group-lbl { font-size: 10px; text-transform: uppercase; letter-spacing: .18em; color: var(--ink-3); margin: 10px 0 6px; }
+.avatar-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.avatar-pick { display: flex; flex-direction: column; align-items: center; gap: 4px; width: 60px; padding: 6px 2px; background: none; border: 1px solid transparent; border-radius: 10px; cursor: pointer; }
+.avatar-pick:hover { border-color: var(--line); }
+.avatar-pick.active { border-color: var(--brand-lift); background: rgba(255,255,255,.05); }
+.avatar-pick.active .avatar { border-color: var(--brand-lift); box-shadow: 0 0 0 2px var(--brand-lift); }
+.avatar-pick-lbl { font-size: 9px; color: var(--ink-2); text-align: center; line-height: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+
 .opp-name { font-size: 10px; font-weight: 400; color: var(--ink-2); text-align: center; text-transform: uppercase; letter-spacing: .2em; transition: color .35s ease; }
 .opp-name.active { color: var(--brand-lift); }
 .opp-hand { display: flex; gap: 4px; transition: transform .35s ease, box-shadow .35s ease; border-radius: 10px; }
@@ -411,7 +445,7 @@ body[data-cardback="karo"] .card-back::after { border-color: rgba(120,200,160,.2
 }
 .tbl-peek { animation: tblPeekGlow 1.2s ease-in-out infinite; outline: 2px solid var(--gold); outline-offset: -2px; border-radius: var(--radius); }
 .tbl-peek::after { content: '👁'; font-size: 26px; filter: drop-shadow(0 0 6px rgba(115,123,196,.85)); }
-.tbl-swap-sel { animation: tblSelPulse 1.4s ease-in-out infinite; outline: 2px dashed #9C27B0; outline-offset: -2px; border-radius: var(--radius); }
+.tbl-swap-sel { animation: tblSelPulse 1.4s ease-in-out infinite; outline: 2px dashed #9C27B0; outline-offset: -2px; border-radius: var(--radius); cursor: pointer; }
 .tbl-swap-sel::after { content: '1'; font-size: 16px; font-weight: 900; color: #CE93D8; text-shadow: 0 0 8px rgba(156,39,176,.9); }
 .tbl-swap-pair { animation: tblSelPulse 1s ease-in-out infinite; outline: 2px solid #9C27B0; outline-offset: -2px; border-radius: var(--radius); }
 .tbl-swap-pair::after { content: '↔'; font-size: 22px; font-weight: 900; color: #CE93D8; text-shadow: 0 0 8px rgba(156,39,176,.9); }
@@ -535,6 +569,28 @@ body[data-cardback="karo"] .card-back::after { border-color: rgba(120,200,160,.2
 .race-target.known { outline-color: rgba(240,171,252,.85); }
 .give-source { cursor: pointer; border-radius: var(--radius); outline: 2px solid rgba(206,147,216,.75); outline-offset: -2px; animation: tblSelPulse 1.3s ease-in-out infinite; }
 .give-source:hover { transform: translateY(-3px); transition: transform .12s ease; }
+
+/* Joker: die Karte dreht sich am Tisch um, statt in einem Fenster aufzugehen.
+   Nur ein halber Umschlag – die Vorderseite steht schon im DOM, die Drehung
+   muss also bei 90° starten, sonst sähe man sie kurz spiegelverkehrt. */
+@keyframes tblFlipIn {
+  0%   { transform: rotateY(90deg); }
+  100% { transform: rotateY(0deg); }
+}
+.tbl-flip { animation: tblFlipIn .34s ease-out; backface-visibility: hidden; }
+
+/* Anfassbare Tischkarten während der Tausch-Auswahl (Joker/Hund). Lila wie alles
+   andere zum Tausch, damit die Farbe die Fähigkeit trägt und nicht der Ort.
+   Die bereits gewählte Karte bekommt diese Klasse nicht: sie trägt den
+   Auswahlring .tbl-swap-sel, und der steht weiter oben im Stylesheet – bei
+   gleicher Spezifität würde die Ziel-Umrandung ihn sonst überschreiben.
+   Entfernt wird sie in applyAbilityHighlights(). */
+@keyframes abilityTargetPulse {
+  0%,100% { box-shadow: 0 0 0 1px rgba(156,39,176,.4); }
+  50%     { box-shadow: 0 0 12px 3px rgba(156,39,176,.45); }
+}
+.ability-target { cursor: pointer; border-radius: var(--radius); outline: 2px solid rgba(156,39,176,.55); outline-offset: -2px; animation: abilityTargetPulse 1.3s ease-in-out infinite; }
+.ability-target:hover { outline-color: #CE93D8; transform: translateY(-3px); transition: transform .12s ease; }
 
 /* Lücke im Gegner-Blatt, solange der Gewinner seine Ersatzkarte noch nicht abgegeben hat */
 .slot-empty { background: transparent !important; border: 2px dashed rgba(206,147,216,.7) !important; box-shadow: none !important; }
@@ -970,6 +1026,8 @@ body[data-cardback="karo"] .card-back::after { border-color: rgba(120,200,160,.2
   #opponents { gap: 8px; padding: 5px 8px 0; }
   .opponent-zone { gap: 3px; }
   .opp-name { font-size: 9px; letter-spacing: .12em; }
+  .av-sm { width: 15px; height: 15px; font-size: 8px; }
+  .av-md { width: 20px; height: 20px; font-size: 10px; }
   .opp-hand { gap: 3px; }
   #opponents[data-cols="2"] .opp-hand { display: grid; grid-template-columns: repeat(2, max-content); }
 
@@ -1101,6 +1159,22 @@ body[data-cardback="karo"] .card-back::after { border-color: rgba(120,200,160,.2
       <option value="best_of_5" data-i18n="bestOf5">Best of 5</option>
       <option value="best_of_10" data-i18n="bestOf10">Best of 10</option>
     </select>
+    <!-- Einzelspieler: die Gegner sitzen als Bots mit am Tisch. "Nur Menschen"
+         lässt die Plätze frei – dann ist es eine ganz normale Mehrspieler-Session,
+         die im Warteraum immer noch mit Bots aufgefüllt werden kann. -->
+    <div class="bot-row">
+      <select id="bot-count" onchange="renderBotSetup()">
+        <option value="0" data-i18n="botsNone">Nur Menschen</option>
+        <option value="1" data-i18n="bots1">1 Gegner (Bot)</option>
+        <option value="2" data-i18n="bots2">2 Gegner (Bots)</option>
+        <option value="3" data-i18n="bots3">3 Gegner (Bots)</option>
+      </select>
+      <select id="bot-level" class="hidden">
+        <option value="easy" data-i18n="botEasy">Leicht</option>
+        <option value="medium" selected data-i18n="botMedium">Mittel</option>
+        <option value="hard" data-i18n="botHard">Schwer</option>
+      </select>
+    </div>
     <button class="btn btn-gold" onclick="createSession()" data-i18n="createSession">Session erstellen</button>
     <div class="divider" data-i18n="orJoin">oder joinen</div>
     <input id="join-code" type="text" inputmode="numeric" pattern="[0-9]*" data-i18n-ph="joinCode" placeholder="Session-Code (z.B. 1234)" maxlength="4" autocomplete="off" style="letter-spacing:3px">
@@ -1116,6 +1190,17 @@ body[data-cardback="karo"] .card-back::after { border-color: rgba(120,200,160,.2
     <div style="font-size:12px;color:rgba(255,255,255,.4);text-align:center" data-i18n="showCode">Zeige diesen Code den anderen Spielern</div>
     <div style="font-size:13px;color:rgba(255,255,255,.6);margin-top:4px" data-i18n="playersInSession">Spieler in der Session:</div>
     <div id="players-list"></div>
+    <!-- Freie Plätze mit Bots auffüllen. Nur der Host sieht die Zeile, und nur
+         solange überhaupt ein Platz frei ist. -->
+    <div id="bot-fill" class="bot-row hidden">
+      <select id="bot-fill-level">
+        <option value="easy" data-i18n="botEasy">Leicht</option>
+        <option value="medium" selected data-i18n="botMedium">Mittel</option>
+        <option value="hard" data-i18n="botHard">Schwer</option>
+      </select>
+      <button class="btn btn-outline btn-slim" onclick="addBot(1)" data-i18n="addBot">+ Bot</button>
+      <button class="btn btn-outline btn-slim" onclick="addBot(3)" data-i18n="fillBots">Auffüllen</button>
+    </div>
     <button id="start-btn" class="btn btn-green hidden" onclick="startGame()" data-i18n="startGame">Spiel starten</button>
     <div id="waiting-msg" style="font-size:13px;color:rgba(255,255,255,.4);text-align:center" data-i18n="waitingForHost">Warte auf den Host…</div>
   </div>
@@ -1271,6 +1356,11 @@ body[data-cardback="karo"] .card-back::after { border-color: rgba(120,200,160,.2
       <div style="display:flex;gap:8px" id="lang-grid"></div>
     </div>
     <div class="set-group">
+      <h3 id="avatar-label">Profilbild</h3>
+      <!-- Baut renderAvatarGrid() aus AVATAR_CARD_NRS + AVATAR_LEGACY. -->
+      <div id="avatar-grid"></div>
+    </div>
+    <div class="set-group">
       <h3 id="bg-label">Hintergrund</h3>
       <div class="swatch-grid" id="bg-grid"></div>
     </div>
@@ -1292,8 +1382,6 @@ body[data-cardback="karo"] .card-back::after { border-color: rgba(120,200,160,.2
 let ws = null;
 let state = null;
 let myId = crypto.randomUUID();
-let abilitySelectionStep = null;
-let abilitySelection = [];
 
 // ── Swipe Handling ────────────────────────────────────────────────────────────
 let touchStartX = 0, touchStartY = 0, touchStartTime = 0;
@@ -1319,7 +1407,33 @@ function createSession() {
   const name = document.getElementById('player-name').value.trim();
   if (!name) { alert(t('alertName')); return; }
   const gameMode = document.getElementById('game-mode').value;
-  connect(() => send({ type: 'create', playerId: myId, playerName: name, gameMode }));
+  const bots = parseInt(document.getElementById('bot-count').value, 10) || 0;
+  const botLevel = document.getElementById('bot-level').value;
+  connect(() => send({ type: 'create', playerId: myId, playerName: name, gameMode,
+                       avatar: currentAvatar, bots, botLevel }));
+}
+
+// Die Stärke-Auswahl steht nur da, wenn auch Bots mitspielen sollen.
+function renderBotSetup() {
+  const count = parseInt(document.getElementById('bot-count').value, 10) || 0;
+  document.getElementById('bot-level').classList.toggle('hidden', count === 0);
+}
+
+// Freie Plätze auffüllen. Der Server setzt so viele Bots wie noch Platz ist –
+// "Auffüllen" schickt deshalb einfach die Höchstzahl.
+function addBot(count) {
+  send({ type: 'add_bot', level: document.getElementById('bot-fill-level').value, count });
+}
+
+function removeBot(botId) { send({ type: 'remove_bot', botId }); }
+
+function botLevelLabel(level) {
+  return t({ easy: 'botEasy', medium: 'botMedium', hard: 'botHard' }[level] || 'botMedium');
+}
+
+function botTagHtml(p) {
+  if (!p.isBot) return '';
+  return `<span class="bot-tag lvl-${esc(p.botLevel || 'medium')}">🤖 ${esc(botLevelLabel(p.botLevel))}</span>`;
 }
 
 function joinSession() {
@@ -1327,7 +1441,7 @@ function joinSession() {
   const code = document.getElementById('join-code').value.trim().toUpperCase();
   if (!name) { alert(t('alertName')); return; }
   if (!code) { alert(t('alertCode')); return; }
-  connect(() => send({ type: 'join', playerId: myId, playerName: name, sessionId: code }));
+  connect(() => send({ type: 'join', playerId: myId, playerName: name, sessionId: code, avatar: currentAvatar }));
 }
 
 function startGame() { send({ type: 'start' }); }
@@ -1347,6 +1461,10 @@ function handleMessage(msg) {
   // Kommt unmittelbar vor dem State mit den vertauschten Händen: markiert, welche
   // Karten fliegen sollen (bzw. dass bewusst nicht getauscht wurde).
   if (msg.type === 'swap_anim') { noteSwapAnim(msg); return; }
+  // Handtausch aus dem Nachziehstapel: sagt, welcher Slot getauscht hat und
+  // welche Karte er dafür abgegeben hat. Ohne diese Nachricht liefe der Zug bei
+  // allen anderen stumm ab – siehe start_keep_flight im Server.
+  if (msg.type === 'keep_anim') { noteKeepAnim(msg); return; }
   // Schnapp: die getippte Karte dreht sich für alle sichtbar um. Danach fliegt
   // sie entweder auf den Ablagestapel (Treffer) oder zurück in den Slot (Fehlgriff).
   if (msg.type === 'race_reveal') { noteRaceReveal(msg); return; }
@@ -1397,6 +1515,10 @@ const TRANSLATIONS = {
   de: {
     // ── Allgemein / Einstellungen ──
     language: 'Sprache',
+    avatar: 'Profilbild',
+    avatarNone: 'Ohne Bild',
+    avatarCards: 'Figuren aus den Karten',
+    avatarLegacy: 'Legacy-Figuren',
     background: 'Hintergrund',
     cardback: 'Kartenrücken',
     done: 'Fertig',
@@ -1426,6 +1548,16 @@ const TRANSLATIONS = {
     waitingForHost: 'Warte auf den Host…',
     waitingForPlayers: 'Warte auf weitere Spieler (min. 2)…',
     you: '(Du)',
+    botsNone: 'Nur Menschen',
+    bots1: '1 Gegner (Bot)',
+    bots2: '2 Gegner (Bots)',
+    bots3: '3 Gegner (Bots)',
+    botEasy: 'Leicht',
+    botMedium: 'Mittel',
+    botHard: 'Schwer',
+    addBot: '+ Bot',
+    fillBots: 'Auffüllen',
+    removeBot: 'Bot entfernen',
     alertName: 'Bitte Namen eingeben',
     alertCode: 'Bitte Session-Code eingeben',
     codeCopied: 'Session-Code kopiert! 📋',
@@ -1470,6 +1602,9 @@ const TRANSLATIONS = {
       see_others: 'Wähle eine Karte eines Mitspielers',
       swap: 'Wähle zwei Karten zum Tauschen',
       see_swap: 'Wähle zwei Karten',
+      tableDecide: 'Beide Karten liegen offen – tauschen? Noch',
+      tablePick1: '{ab}: Tippe die erste Karte am Tisch an',
+      tablePick2: '{ab}: Tippe die zweite Karte an – oder die erste nochmal, um sie abzuwählen',
       swapFlight: 'Achte darauf, wohin die Karten wandern…',
       giveOwn: 'Wähle eine deiner Karten, die du abgibst',
     },
@@ -1500,6 +1635,7 @@ const TRANSLATIONS = {
       revealOne: 'Du siehst sie <strong>6 Sekunden</strong> – danach wird sie wieder verdeckt:',
       hiddenAgain: 'Karte ist wieder verdeckt.',
       swapTitle: 'Zwei Karten tauschen',
+      undoBtn: 'Auswahl zurücknehmen',
       pick1: 'Wähle die erste Karte (eigene oder fremde).',
       pick2: 'Wähle die zweite Karte zum Tauschen.',
       seeSwapTitle: 'Zwei Karten ansehen & tauschen',
@@ -1597,6 +1733,8 @@ const TRANSLATIONS = {
     // ── Server-Meldungen im Ereignis-Log ──
     log: {
       joined: '{name} ist beigetreten!',
+      botJoined: '{name} (Bot) sitzt am Tisch.',
+      startPlayer: '{name} fängt an',
       disconnected: '{name} hat die Verbindung getrennt.',
       callEnd: '{name} beendet das Spiel!',
       draw: '{name} zieht eine Karte',
@@ -1686,6 +1824,10 @@ const TRANSLATIONS = {
   en: {
     // ── General / settings ──
     language: 'Language',
+    avatar: 'Profile picture',
+    avatarNone: 'No picture',
+    avatarCards: 'Figures from the cards',
+    avatarLegacy: 'Legacy figures',
     background: 'Background',
     cardback: 'Card Back',
     done: 'Done',
@@ -1715,6 +1857,16 @@ const TRANSLATIONS = {
     waitingForHost: 'Waiting for the host…',
     waitingForPlayers: 'Waiting for more players (min. 2)…',
     you: '(You)',
+    botsNone: 'Humans only',
+    bots1: '1 opponent (bot)',
+    bots2: '2 opponents (bots)',
+    bots3: '3 opponents (bots)',
+    botEasy: 'Easy',
+    botMedium: 'Medium',
+    botHard: 'Hard',
+    addBot: '+ Bot',
+    fillBots: 'Fill seats',
+    removeBot: 'Remove bot',
     alertName: 'Please enter a name',
     alertCode: 'Please enter a session code',
     codeCopied: 'Session code copied! 📋',
@@ -1759,6 +1911,9 @@ const TRANSLATIONS = {
       see_others: "Pick a card from another player",
       swap: 'Pick two cards to swap',
       see_swap: 'Pick two cards',
+      tableDecide: 'Both cards are face up – swap them? Time left',
+      tablePick1: '{ab}: tap the first card on the table',
+      tablePick2: '{ab}: tap the second card – or the first one again to deselect it',
       swapFlight: 'Watch where the cards go…',
       giveOwn: 'Pick one of your cards to hand over',
     },
@@ -1789,6 +1944,7 @@ const TRANSLATIONS = {
       revealOne: 'You can see it for <strong>6 seconds</strong> – then it is turned face down again:',
       hiddenAgain: 'The card is face down again.',
       swapTitle: 'Swap two cards',
+      undoBtn: 'Undo selection',
       pick1: "Pick the first card (yours or another player's).",
       pick2: 'Pick the second card to swap.',
       seeSwapTitle: 'Look at two cards & swap',
@@ -1882,6 +2038,8 @@ const TRANSLATIONS = {
     // ── Server messages in the event log ──
     log: {
       joined: '{name} joined!',
+      botJoined: '{name} (bot) takes a seat.',
+      startPlayer: '{name} goes first',
       disconnected: '{name} disconnected.',
       callEnd: '{name} ends the game!',
       draw: '{name} draws a card',
@@ -1971,6 +2129,10 @@ const TRANSLATIONS = {
   tr: {
     // ── Genel / ayarlar ──
     language: 'Dil',
+    avatar: 'Profil resmi',
+    avatarNone: 'Resim yok',
+    avatarCards: 'Kartlardaki figürler',
+    avatarLegacy: 'Eski figürler',
     background: 'Arka plan',
     cardback: 'Kart arkası',
     done: 'Tamam',
@@ -2002,6 +2164,16 @@ const TRANSLATIONS = {
     waitingForHost: 'Kurucu bekleniyor…',
     waitingForPlayers: 'Daha fazla oyuncu bekleniyor (en az 2)…',
     you: '(Sen)',
+    botsNone: 'Sadece insanlar',
+    bots1: '1 rakip (bot)',
+    bots2: '2 rakip (bot)',
+    bots3: '3 rakip (bot)',
+    botEasy: 'Kolay',
+    botMedium: 'Orta',
+    botHard: 'Zor',
+    addBot: '+ Bot',
+    fillBots: 'Yerleri doldur',
+    removeBot: 'Botu kaldır',
     alertName: 'Lütfen bir ad gir',
     alertCode: 'Lütfen oturum kodunu gir',
     codeCopied: 'Oturum kodu kopyalandı! 📋',
@@ -2046,6 +2218,9 @@ const TRANSLATIONS = {
       see_others: 'Başka bir oyuncunun kartını seç',
       swap: 'Takas için iki kart seç',
       see_swap: 'İki kart seç',
+      tableDecide: 'İki kart da açık – takas edilsin mi? Kalan süre',
+      tablePick1: '{ab}: masadaki ilk karta dokun',
+      tablePick2: '{ab}: ikinci karta dokun – ya da seçimi geri almak için ilkine tekrar dokun',
       swapFlight: 'Kartların nereye gittiğine dikkat et…',
       giveOwn: 'Vereceğin kartı seç',
     },
@@ -2076,6 +2251,7 @@ const TRANSLATIONS = {
       revealOne: 'Kartı <strong>6 saniye</strong> göreceksin – sonra tekrar kapanacak:',
       hiddenAgain: 'Kart tekrar kapandı.',
       swapTitle: 'İki kartı takas et',
+      undoBtn: 'Seçimi geri al',
       pick1: 'İlk kartı seç (kendi kartın ya da başkasınınki).',
       pick2: 'Takas için ikinci kartı seç.',
       seeSwapTitle: 'İki karta bak & takas et',
@@ -2173,6 +2349,8 @@ const TRANSLATIONS = {
     // ── Sunucu mesajları (olay geçmişi) ──
     log: {
       joined: '{name} katıldı!',
+      botJoined: '{name} (bot) masaya oturdu.',
+      startPlayer: '{name} başlıyor',
       disconnected: '{name} bağlantıyı kesti.',
       callEnd: '{name} oyunu bitiriyor!',
       draw: '{name} bir kart çekiyor',
@@ -2335,6 +2513,101 @@ const CARD_BACKS = [
     ring: 'rgba(120,200,160,.25)' },
 ];
 
+/* ── Profilbilder ─────────────────────────────────────────────────────────────
+   Kleine runde Bilder neben dem Namen – am Tisch sieht man damit auf einen Blick,
+   wer wo sitzt, statt drei kurze Namen in Versalien unterscheiden zu müssen.
+
+   Zur Wahl stehen alle Figuren der aktuellen Karten plus die Legacy-Figuren, also
+   die Motive, die früher auf den Karten standen (siehe Karten-Update in der
+   Historie). Die Dateien liegen als quadratische 160px-WebP in Bilder/avatare/:
+   der Kartenausschnitt ist ein breiter, flacher Streifen und taugt im Kreis nicht,
+   deshalb ein eigener, ums Gesicht zentrierter Schnitt.
+
+   Wie die Sprüche werden Figurennamen NICHT übersetzt – sie gehören der Figur.
+   Die Kartenfiguren holen ihren Namen trotzdem aus cardName.<nr>, damit Hund/Katze
+   in der Sprache des Spielers stehen; die Legacy-Namen sind reine Eigennamen und
+   stehen deshalb direkt hier statt in TRANSLATIONS. */
+const AVATAR_CARD_NRS = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15];
+const AVATAR_LEGACY = [
+  { id: 'legacy-olli',     label: 'Olli' },
+  { id: 'legacy-tupac',    label: 'Tupac' },
+  { id: 'legacy-arnold',   label: 'Arnold' },
+  { id: 'legacy-cartman',  label: 'Cartman' },
+  { id: 'legacy-zidane',   label: 'Zidane' },
+  { id: 'legacy-brucelee', label: 'Bruce Lee' },
+  { id: 'legacy-hawktuah', label: 'Hawk Tuah' },
+  { id: 'legacy-snowden',  label: 'Snowden' },
+  { id: 'legacy-trump',    label: 'Trump' },
+  { id: 'legacy-hankey',   label: 'Mr Hankey' },
+];
+
+let currentAvatar = null;   // gewählte Figur-ID oder null (= Initial)
+
+function avatarUrl(id) { return `/images/avatare/${id}.webp`; }
+
+function avatarLabel(id) {
+  if (id.startsWith('card-')) return t('cardName.' + id.slice(5));
+  const f = AVATAR_LEGACY.find(a => a.id === id);
+  return f ? f.label : id;
+}
+
+// Der Server reicht die ID nur durch und prüft sie nicht (sonst müsste der
+// Katalog in drei Dateien gepflegt werden). Geprüft wird hier, beim Anzeigen:
+// eine unbekannte ID fällt auf den Namens-Initial zurück statt auf ein kaputtes
+// Bild.
+function avatarKnown(id) {
+  return !!id && (AVATAR_CARD_NRS.some(n => 'card-' + n === id) || AVATAR_LEGACY.some(a => a.id === id));
+}
+
+// Ersatzfarbe für Spieler ohne Bild: aus dem Namen abgeleitet, damit derselbe
+// Spieler immer denselben Farbpunkt hat – ein zufälliger würde bei jedem
+// Neuaufbau des Tisches wechseln.
+function avatarTint(name) {
+  let h = 0;
+  for (const ch of String(name || '')) h = (h * 31 + ch.codePointAt(0)) % 360;
+  return `hsl(${h} 45% 38%)`;
+}
+
+function avatarHtml(p, size) {
+  const cls = `avatar av-${size}`;
+  if (avatarKnown(p.avatar)) {
+    return `<span class="${cls}"><img src="${avatarUrl(p.avatar)}" alt="" loading="lazy"></span>`;
+  }
+  const initial = (String(p.name || '?').trim()[0] || '?').toUpperCase();
+  return `<span class="${cls} av-initial" style="background:${avatarTint(p.name)}">${esc(initial)}</span>`;
+}
+
+function setAvatar(id) {
+  currentAvatar = id || null;
+  if (currentAvatar) localStorage.setItem('karma_avatar', currentAvatar);
+  else localStorage.removeItem('karma_avatar');
+  renderSettings();
+  // Mitten im Spiel wechseln ist erlaubt – das Bild ist reine Anzeige. Vor dem
+  // Beitreten gibt es noch keine Verbindung, dann reist die Wahl bei create/join mit.
+  send({ type: 'set_avatar', avatar: currentAvatar });
+  if (state && state.phase && state.phase !== 'lobby') render();
+  else if (state) renderLobby();
+}
+
+function renderAvatarGrid() {
+  const grid = document.getElementById('avatar-grid');
+  if (!grid) return;
+  const cell = (id, label) => `
+    <button class="avatar-pick ${id === currentAvatar ? 'active' : ''}" title="${esc(label)}"
+            onclick="setAvatar(${id === null ? 'null' : `'${id}'`})">
+      ${id === null
+        ? `<span class="avatar av-lg av-initial">?</span>`
+        : `<span class="avatar av-lg"><img src="${avatarUrl(id)}" alt="" loading="lazy"></span>`}
+      <span class="avatar-pick-lbl">${esc(label)}</span>
+    </button>`;
+  grid.innerHTML =
+    `<div class="avatar-group-lbl">${t('avatarCards')}</div>
+     <div class="avatar-row">${cell(null, t('avatarNone'))}
+       ${AVATAR_CARD_NRS.map(n => cell('card-' + n, t('cardName.' + n))).join('')}</div>
+     <div class="avatar-group-lbl">${t('avatarLegacy')}</div>
+     <div class="avatar-row">${AVATAR_LEGACY.map(a => cell(a.id, a.label)).join('')}</div>`;
+}
+
 function loadSettings() {
   // Ein unbekannter gespeicherter Wert (alter Build, manuell gesetzt) würde in
   // t() bei jedem Schlüssel auf Deutsch zurückfallen – lieber gleich auf Deutsch.
@@ -2347,6 +2620,10 @@ function loadSettings() {
   const back = localStorage.getItem('karma_cardback') || 'classic';
   document.body.dataset.bg = bg;
   document.body.dataset.cardback = back;
+  // Gleiche Vorsicht wie bei der Sprache: eine ID aus einem älteren Build wäre
+  // sonst dauerhaft gesetzt, ohne dass je ein Bild erscheint.
+  const storedAvatar = localStorage.getItem('karma_avatar');
+  currentAvatar = avatarKnown(storedAvatar) ? storedAvatar : null;
   updateLanguageUI();
 }
 
@@ -2392,6 +2669,7 @@ function updateLanguageUI() {
 
   applyStaticI18n();
   document.getElementById('lang-label').textContent = t('language');
+  document.getElementById('avatar-label').textContent = t('avatar');
   document.getElementById('bg-label').textContent = t('background');
   document.getElementById('cardback-label').textContent = t('cardback');
   const settingsDoneBtn = document.getElementById('settings-done-btn');
@@ -2411,6 +2689,7 @@ function setCardBack(id) {
 }
 
 function renderSettings() {
+  renderAvatarGrid();
   const curBg = document.body.dataset.bg, curBack = document.body.dataset.cardback;
   document.getElementById('bg-grid').innerHTML = BG_THEMES.map(theme => `
     <button class="swatch ${theme.id === curBg ? 'active' : ''}" onclick="setBg('${theme.id}')">
@@ -2586,13 +2865,21 @@ function renderLobby() {
   for (const p of state.players) {
     const chip = document.createElement('div');
     chip.className = 'player-chip';
+    const label = p.id === state.myId
+      ? '<strong>' + esc(p.name) + ' ' + t('you') + '</strong>'
+      : esc(p.name);
     chip.innerHTML = `<span class="dot ${p.connected ? 'online' : 'offline'}"></span>
-      ${p.id === state.myId ? '<strong>' + esc(p.name) + ' ' + t('you') + '</strong>' : esc(p.name)}
-      ${state.isHost && p.id === state.myId ? '<span class="crown">👑</span>' : ''}`;
+      ${avatarHtml(p, 'md')}
+      <span class="chip-name">${label}</span>
+      ${botTagHtml(p)}
+      ${state.isHost && p.id === state.myId ? '<span class="crown">👑</span>' : ''}
+      ${state.isHost && p.isBot ? `<button class="bot-kick" title="${esc(t('removeBot'))}" onclick="removeBot('${esc(p.id)}')">✕</button>` : ''}`;
     list.appendChild(chip);
   }
   const startBtn = document.getElementById('start-btn');
   const waitMsg = document.getElementById('waiting-msg');
+  // Bots füllen nur freie Plätze – ist der Tisch voll, verschwindet die Zeile.
+  document.getElementById('bot-fill').classList.toggle('hidden', !state.isHost || state.players.length >= 4);
   if (state.isHost) {
     startBtn.classList.toggle('hidden', state.players.length < 2);
     waitMsg.classList.toggle('hidden', state.players.length >= 2);
@@ -2803,7 +3090,9 @@ function renderOpponents() {
     nameEl.className = 'opp-name' + (isActive ? ' active' : '');
     const thinking = state.drawnBy === p.id
       ? `<span class="opp-thinking">· ${t('thinking')}<i></i><i></i><i></i></span>` : '';
-    nameEl.innerHTML = `${isActive ? '▶ ' : ''}${esc(p.name)}${!p.connected ? ' ' + t('away') : ''}${thinking}`;
+    // Der Bot-Anhänger bleibt auch am Tisch stehen: wer gegenüber sitzt und wie
+    // stark er ist, soll man während der Partie nachsehen können.
+    nameEl.innerHTML = `${isActive ? '▶ ' : ''}${avatarHtml(p, 'sm')} ${esc(p.name)}${botTagHtml(p)}${!p.connected && !p.isBot ? ' ' + t('away') : ''}${thinking}`;
     const hand = document.createElement('div');
     hand.className = 'opp-hand';
     for (let i = 0; i < p.hand.length; i++) {
@@ -2816,17 +3105,27 @@ function renderOpponents() {
       if (c && c.uid) cardEl.dataset.uid = c.uid;
       cardEl.dataset.pid = p.id;
       cardEl.dataset.index = i;
+      const rev = c && abilityRevealAt(p.id, i);
       if (!c) {
         // Lücke aus einem Schnapp-Treffer – wird gleich vom Gewinner aufgefüllt.
         cardEl.classList.add('slot-empty');
+      } else if (rev) {
+        // Joker: die Karte dreht sich am Tisch um, statt in einem Fenster zu landen.
+        cardEl.innerHTML = buildCardInner(rev, m.oppW, m.oppH);
+        cardEl.classList.add('tbl-flip');
       } else if (!c.hidden) {
         cardEl.innerHTML = buildCardInner(c, m.oppW, m.oppH);
       } else {
         cardEl.innerHTML = '<div class="card-back"></div>';
       }
-      // Schnapp-Fenster: auch fremde Karten sind Ziel. Wer die Karte schon kennt,
-      // bekommt einen anderen Rahmen – muss also nicht raten.
-      if (c && canRace()) {
+      // Tausch-Auswahl (Joker/Hund) und Schnapp-Fenster sind verschiedene Phasen,
+      // können sich also nie überlagern.
+      if (c && canPickForAbility()) {
+        cardEl.classList.add('ability-target');
+        cardEl.onclick = () => abilitySelectCard(p.id, i);
+      } else if (c && canRace()) {
+        // Schnapp-Fenster: auch fremde Karten sind Ziel. Wer die Karte schon kennt,
+        // bekommt einen anderen Rahmen – muss also nicht raten.
         cardEl.classList.add('race-target');
         if (c.knownByViewer) cardEl.classList.add('known');
         cardEl.onclick = () => sendRace(p.id, i);
@@ -2974,7 +3273,7 @@ function discardDrawn() {
 function renderMyZone() {
   const me = state.players.find(p => p.isMe);
   if (!me) return;
-  document.getElementById('my-name').textContent = me.name;
+  document.getElementById('my-name').innerHTML = `${avatarHtml(me, 'md')} ${esc(me.name)}`;
   const isMyTurn = state.currentPlayerId === state.myId;
   const myTurnGlow = isMyTurn && ['playing', 'ability', 'swap_flight'].includes(state.phase);
   document.getElementById('turn-badge').classList.toggle('hidden', !isMyTurn || state.phase === 'racing' || state.phase === 'race_give');
@@ -2992,13 +3291,18 @@ function renderMyZone() {
     card.dataset.index = i;
     card.dataset.pid = me.id;
     if (c && c.uid) card.dataset.uid = c.uid;
+    const rev = c && abilityRevealAt(me.id, i);
     if (!c) {
       card.classList.add('slot-empty');
+    } else if (rev) {
+      card.innerHTML = buildCardInner(rev, m.myW, m.myH);
+      card.classList.add('tbl-flip');
     } else if (!c.hidden) {
       card.innerHTML = buildCardInner(c, m.myW, m.myH);
     } else {
       card.innerHTML = '<div class="card-back"></div>';
     }
+    if (c && canPickForAbility()) card.classList.add('ability-target');
     if (c && canRace()) card.classList.add('race-target');
     if (c && canGive()) card.classList.add('give-source');
     card.onclick = () => handleMyCardClick(i, c);
@@ -3011,6 +3315,22 @@ function renderMyZone() {
 function renderActionBar(isMyTurn, me) {
   const bar = document.getElementById('action-bar');
   bar.innerHTML = '';
+
+  // Joker/Hund am Tisch: die Knöpfe der Fähigkeit sitzen hier, weil es kein
+  // Fenster mehr gibt, das sie tragen könnte.
+  if (canPickForAbility()) {
+    // Der zweite Klick auf die gewählte Karte nimmt sie ebenfalls zurück, aber
+    // diese Geste muss man erst finden – der Knopf ist der sichtbare Ausweg.
+    if ((state.abilityState.selectedCards || []).length) {
+      addBtn(bar, t('ab.undoBtn'), '#64748b', abilityUndo);
+    }
+    return;
+  }
+  if (isDecidingSwap()) {
+    addBtn(bar, t('ab.swapBtn'), '#9C27B0', () => _sendAbility({ type: 'ability', doSwap: true }));
+    addBtn(bar, t('ab.noSwapBtn'), '#64748b', () => _sendAbility({ type: 'ability', doSwap: false }));
+    return;
+  }
 
   if (!isMyTurn || state.phase === 'racing' || state.phase === 'race_give' || state.phase === 'ability' || state.phase === 'swap_flight') return;
 
@@ -3034,6 +3354,8 @@ function addBtn(container, label, color, fn) {
 }
 
 function handleMyCardClick(idx, card) {
+  // Joker/Hund: die eigenen Karten sind ganz normale Auswahlziele.
+  if (canPickForAbility()) { abilitySelectCard(state.myId, idx); return; }
   const isMyTurn = state.currentPlayerId === state.myId;
   if (state.phase === 'playing' && state.drawnCard && isMyTurn) {
     send({ type: 'keep', handIndex: idx });
@@ -3052,7 +3374,7 @@ function handleMyCardClick(idx, card) {
 function renderInstruction() {
   const el = document.getElementById('instruct');
   const isMyTurn = state.currentPlayerId === state.myId;
-  let txt = '';
+  let txt = '', html = '';
   if (state.phase === 'playing') {
     if (isMyTurn) {
       txt = t(state.drawnCard ? 'inst.chooseSwapOrDiscard' : 'inst.drawOrEnd');
@@ -3062,7 +3384,19 @@ function renderInstruction() {
     }
   } else if (state.phase === 'ability') {
     const as = state.abilityState;
-    if (as?.activatedBy === state.myId) {
+    if (canPickForAbility()) {
+      // Die Auswahl läuft am Tisch, es gibt kein Fenster mehr, das den Auftrag
+      // erklärt – diese Zeile ist die ganze Anleitung. Sie nennt die Fähigkeit
+      // (die Karte liegt schon auf der Ablage) und was der nächste Klick tut.
+      txt = t(as.step === 'select1' ? 'inst.tablePick1' : 'inst.tablePick2',
+              { ab: getAbilityName(as.type) });
+    } else if (isDecidingSwap()) {
+      // Beide Karten liegen jetzt offen am Tisch – die Zeile sagt nur noch, dass
+      // die Uhr läuft. Die Sekunden füllt tickReveal() über .reveal-secs nach,
+      // dieselbe Klasse wie im Fähigkeitsfenster.
+      txt = t('inst.tableDecide');
+      html = `${esc(txt)} <strong class="reveal-secs">${Math.ceil(state.revealTotalSeconds || 6)}</strong>s`;
+    } else if (as?.activatedBy === state.myId) {
       const key = 'inst.' + as.type;
       txt = t(key) === key ? '' : t(key);
     }
@@ -3074,8 +3408,8 @@ function renderInstruction() {
   } else if (state.phase === 'race_give') {
     txt = state.raceGive?.racerId === state.myId ? t('inst.giveOwn') : '';
   }
-  el.textContent = txt;
-  el.classList.toggle('hidden', !txt);
+  if (html) el.innerHTML = html; else el.textContent = txt;
+  el.classList.toggle('hidden', !txt && !html);
 }
 
 function renderEndBanner() {
@@ -3260,6 +3594,8 @@ let pendingSwapAnim = null;        // vom Server angekündigter Tausch
 let pendingSwapAnimTimer = null;
 let pendingRaceReveal = null;      // vom Server angekündigter Schnapp-Versuch
 let pendingRaceRevealTimer = null;
+let pendingKeepAnim = null;        // angekündigter Handtausch aus dem Stapel
+let pendingKeepAnimTimer = null;
 
 function noteSwapAnim(msg) {
   pendingSwapAnim = msg;
@@ -3273,6 +3609,12 @@ function noteRaceReveal(msg) {
   pendingRaceReveal = msg;
   clearTimeout(pendingRaceRevealTimer);
   pendingRaceRevealTimer = setTimeout(() => { pendingRaceReveal = null; }, 3000);
+}
+
+function noteKeepAnim(msg) {
+  pendingKeepAnim = msg;
+  clearTimeout(pendingKeepAnimTimer);
+  pendingKeepAnimTimer = setTimeout(() => { pendingKeepAnim = null; }, 2500);
 }
 
 function noteRaceGiveAnim(msg) {
@@ -3320,6 +3662,12 @@ function runTableFlip(before) {
   if (anim) { pendingSwapAnim = null; clearTimeout(pendingSwapAnimTimer); }
   const race = pendingRaceReveal;
   if (race) { pendingRaceReveal = null; clearTimeout(pendingRaceRevealTimer); }
+  const keep = pendingKeepAnim;
+  if (keep) { pendingKeepAnim = null; clearTimeout(pendingKeepAnimTimer); }
+  // Muss vor dem FLIP unten laufen: animateKeep braucht die noch liegende
+  // gezogene Karte (#draw-hold) als Startpunkt, und syncDrawHold räumt sie
+  // gleich nach runTableFlip weg.
+  if (keep) animateKeep(keep);
   if (anim && anim.mode === 'stay') { animateStay(anim.cards); return; }
   if (!before || !before.size) {
     if (race) animateRaceReveal(race, null);
@@ -3523,9 +3871,24 @@ function animatePenalty(penalty) {
   });
 }
 
+// Dauer eines Kartenflugs. SWAP_FLIGHT_MS gilt für alles, was als Tausch gelesen
+// werden soll (Fähigkeitstausch, Handtausch aus dem Nachziehstapel, Wiederholung
+// aus dem Log) – bewusst gemächlich, der Vorgang ist die Information. Er muss ins
+// Server-Fenster passen: FLIGHT_SECONDS bzw. KEEP_FLIGHT_SECONDS, beide größer.
+// SHIFT_FLIGHT_MS ist nur das Nachrücken von Karten im Layout, kein Ereignis.
+const SWAP_FLIGHT_MS = 1170;
+const SHIFT_FLIGHT_MS = 380;
+
+function finiteScale(v) { return Number.isFinite(v) && v > 0 ? v : 1; }
+
 // Die Karte startet optisch an ihrer alten Stelle und bewegt sich von dort auf
 // die neue – über einen Bogen, damit zwei tauschende Karten sich nicht decken.
 function flyCard(el, dx, dy, sx, sy, isSwap) {
+  // Ein Slot kann im Moment der Messung 0 breit sein (Reihe gerade neu gebaut,
+  // 2×2-Raster im Umbruch). Das ergibt scale(Infinity) – und ein einziger
+  // ungültiger Wert lässt den Browser das GANZE Keyframe verwerfen: die Karte
+  // springt dann ohne Flug an ihren Platz.
+  sx = finiteScale(sx); sy = finiteScale(sy);
   const len = Math.hypot(dx, dy) || 1;
   const bow = isSwap ? Math.min(90, len * 0.3) : 0;
   const px = (-dy / len) * bow, py = (dx / len) * bow;
@@ -3536,7 +3899,7 @@ function flyCard(el, dx, dy, sx, sy, isSwap) {
   el.style.transformOrigin = 'top left';
   el.classList.add(isSwap ? 'card-flying' : 'card-shifting');
 
-  const dur = reducedMotion() ? 1 : (isSwap ? 900 : 380);
+  const dur = reducedMotion() ? 1 : (isSwap ? SWAP_FLIGHT_MS : SHIFT_FLIGHT_MS);
   const anim = el.animate([
     { transform: `translate(${dx}px, ${dy}px) scale(${sx}, ${sy}) rotate(0deg)`, offset: 0 },
     { transform: `translate(${dx / 2 + px}px, ${dy / 2 + py}px) scale(${midX}, ${midY}) rotate(${tilt}deg)`, offset: .5 },
@@ -3565,6 +3928,36 @@ function spawnSlotGhost(rect) {
   g.style.height = rect.height + 'px';
   document.body.appendChild(g);
   setTimeout(() => g.remove(), 1000);
+}
+
+// Handtausch aus dem Nachziehstapel, für ALLE Spieler sichtbar.
+//
+// Zwei Bewegungen gleichzeitig, weil es ein Vorgang ist: die abgelegte Karte
+// fliegt aufgedeckt vom Slot auf den Ablagestapel (sie ist ab jetzt öffentlich
+// und damit das nächste Schnapp-Ziel), die gezogene Karte fliegt von dort, wo
+// sie sichtbar lag, verdeckt in den frei gewordenen Slot.
+//
+// Läuft direkt nach dem Neuaufbau: der Slot enthält bereits die neue Karte, ihr
+// Element wird per Inverse-FLIP von der Startposition eingeflogen. Die alte
+// Karte ist nicht mehr im DOM und reist deshalb als Klon (replayFlight).
+function animateKeep(msg) {
+  const slotEl = tableCardEl(msg.playerId, msg.cardIndex);
+  const slot = slotEl ? slotEl.getBoundingClientRect() : null;
+  if (!slot || !slot.width) return;
+
+  const discardEl = document.getElementById('discard-pile');
+  if (discardEl) {
+    replayFlight(slot, discardEl.getBoundingClientRect(), msg.card);
+    setTimeout(() => pulseEl(discardEl, 'card-landed'), SWAP_FLIGHT_MS);
+  }
+
+  // Startpunkt der neuen Karte: die liegende gezogene Karte. Beim Ziehenden
+  // selbst hat die Entscheidungsansicht sie ersetzt – dann tut es der Stapel.
+  const from = rectOf('draw-hold') || rectOf('deck-pile');
+  if (!from || !from.width || reducedMotion()) return;
+  spawnSlotGhost(from);
+  flyCard(slotEl, from.left - slot.left, from.top - slot.top,
+          from.width / slot.width, from.height / slot.height, true);
 }
 
 // Hund (12) ohne Tausch: nichts bewegt sich, also muss das Nicht-Ereignis
@@ -3744,6 +4137,10 @@ function applyAbilityHighlights() {
   for (const s of sel) {
     const el = tableCardEl(s.playerId, s.cardIndex);
     if (!el) continue;
+    // Gewählt schlägt wählbar: der Auswahlring steht im Stylesheet vor der
+    // Ziel-Umrandung und würde sonst von ihr überdeckt. Anklickbar bleibt die
+    // Karte trotzdem – der Klick nimmt die Auswahl zurück.
+    el.classList.remove('ability-target');
     if (as.type === 'see_own' || as.type === 'see_others') el.classList.add('tbl-peek');
     else if (as.type === 'see_swap' && as.step === 'decide_swap') el.classList.add('tbl-peek');
     else el.classList.add(sel.length === 2 ? 'tbl-swap-pair' : 'tbl-swap-sel');
@@ -3764,6 +4161,12 @@ function renderAbilityModal() {
   // Beobachter bekommen kein Vollbild-Modal mehr – sie verfolgen die Fähigkeit
   // direkt am Tisch (Laufband, markierte Slots, Flugbahn beim Tausch).
   if (!isActivator) {
+    overlay.classList.add('hidden');
+    return;
+  }
+  // Auch der Auslöser bekommt für Joker und Hund kein Fenster mehr – Auswahl,
+  // Aufdecken und Tauschfrage laufen am Tisch (siehe abilityRunsOnTable).
+  if (abilityRunsOnTable()) {
     overlay.classList.add('hidden');
     return;
   }
@@ -3814,45 +4217,10 @@ function renderAbilityModal() {
     }
   }
 
-  if (as.type === 'swap') {
-    title.textContent = t('ab.swapTitle');
-    if (as.step === 'select1') {
-      desc.textContent = t('ab.pick1');
-      body.innerHTML = buildAllCardsForAbility(as.selectedCards || []);
-    } else if (as.step === 'select2') {
-      desc.textContent = t('ab.pick2');
-      body.innerHTML = buildAllCardsForAbility(as.selectedCards || []);
-    }
-  }
-
-  if (as.type === 'see_swap') {
-    title.textContent = t('ab.seeSwapTitle');
-    if (as.step === 'select1') {
-      desc.textContent = t('ab.pickFirst');
-      body.innerHTML = buildAllCardsForAbility(as.selectedCards || []);
-    } else if (as.step === 'select2') {
-      desc.textContent = t('ab.pickSecond');
-      body.innerHTML = buildAllCardsForAbility(as.selectedCards || []);
-    } else if (as.step === 'decide_swap') {
-      if (as.revealedCards) {
-        desc.innerHTML = t('ab.revealBoth');
-        body.innerHTML = revealTimerHtml() + `<div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin:12px 0">` +
-          as.revealedCards.map(r => {
-            const p = state.players.find(x => x.id === r.playerId);
-            return `<div style="text-align:center"><div style="font-size:11px;color:rgba(255,255,255,.5);margin-bottom:4px">${esc(p?.name||'?')} #${r.cardIndex+1}</div><div class="card" style="width:${ash.w}px;height:${ash.h}px">${buildCardInner(r.card, ash.w, ash.h)}</div></div>`;
-          }).join('') + '</div>';
-      } else {
-        desc.textContent = t('ab.memorySwap');
-        body.innerHTML = `<div style="display:flex;gap:16px;justify-content:center;margin:12px 0">` +
-          (as.selectedCards || []).map(sc => {
-            const p = state.players.find(x => x.id === sc.playerId);
-            return `<div style="text-align:center"><div style="font-size:11px;color:rgba(255,255,255,.5);margin-bottom:4px">${esc(p?.name||'?')} #${sc.cardIndex+1}</div><div class="card" style="width:${ash.w}px;height:${ash.h}px"><div class="card-back"></div></div></div>`;
-          }).join('') + '</div>';
-      }
-      addBtn(actions, t('ab.swapBtn'), '#9C27B0', () => _sendAbility({ type: 'ability', doSwap: true }));
-      addBtn(actions, t('ab.noSwapBtn'), '#64748b', () => _sendAbility({ type: 'ability', doSwap: false }));
-    }
-  }
+  // swap (Joker) und see_swap (Hund) tauchen hier nicht mehr auf: sie laufen
+  // vollständig am Tisch ab und sind oben über abilityRunsOnTable() schon
+  // abgefangen. Ihre Texte (ab.pick1/pickFirst/revealBoth/swapBtn/…) leben
+  // weiter – die Tischansicht benutzt dieselben Schlüssel.
   tickReveal();
 }
 
@@ -3892,23 +4260,6 @@ function buildOpponentsForAbility() {
   return html;
 }
 
-function buildAllCardsForAbility(selected) {
-  const aps = abilityPickSize();
-  let html = '<div style="display:flex;flex-direction:column;gap:12px;margin:12px 0">';
-  for (const p of state.players) {
-    html += `<div><div style="font-size:12px;color:rgba(255,255,255,.5);margin-bottom:4px">${esc(p.name)}${p.isMe ? ' ' + t('you') : ''}</div><div style="display:flex;gap:6px;flex-wrap:wrap">`;
-    for (let i = 0; i < p.hand.length; i++) {
-      const c = p.hand[i];
-      const sel = selected.some(s => s.playerId === p.id && s.cardIndex === i);
-      const fn = `abilitySelectCard('${p.id}',${i})`;
-      html += `<div class="card ${sel?'selected':''}" style="width:${aps.w}px;height:${aps.h}px" onclick="${fn}">${c && !c.hidden ? buildCardInner(c,aps.w,aps.h) : '<div class="card-back"></div>'}</div>`;
-    }
-    html += '</div></div>';
-  }
-  html += '</div>';
-  return html;
-}
-
 // Verhindert, dass ein zweiter Klick auf eine Karte losgeht, bevor der Server
 // den Reveal-Zustand zurückspiegelt. Ohne diese Sperre landete der zweite Klick
 // beim alten Server-Code im "Fertig"-Zweig und beendete die Fähigkeit sofort.
@@ -3920,6 +4271,40 @@ function _sendAbility(msg) {
   // Freigabe kommt aus dem nächsten State-Update (siehe handleMessage). Als
   // Sicherheitsnetz nach 800 ms lösen wir automatisch, falls kein State kommt.
   setTimeout(() => { abilityPendingSend = false; }, 800);
+}
+
+// Joker (11) und Hund (12) laufen vollständig am Tisch ab – Auswählen UND
+// Aufdecken. Das Fähigkeitsfenster zeigte die Hände in einer eigenen
+// Reihenfolge; wer dort auf "Platz 2" tippte, traf am Tisch etwas anderes, und
+// nach dem Aufdecken verdeckte es genau den Tisch, über den man entscheiden
+// sollte. Am Tisch stimmt die Reihenfolge per Definition.
+// Das Fenster bleibt den Guck-Karten (see_own/see_others) vorbehalten.
+function abilityRunsOnTable() {
+  const as = state.abilityState;
+  return state.phase === 'ability' && !!as && as.activatedBy === state.myId
+    && (as.type === 'swap' || as.type === 'see_swap');
+}
+
+function canPickForAbility() {
+  const as = state.abilityState;
+  return abilityRunsOnTable() && (as.step === 'select1' || as.step === 'select2');
+}
+
+// Die beiden Karten liegen offen (nur für den Auslöser) und die Tauschfrage steht an.
+function isDecidingSwap() {
+  const as = state.abilityState;
+  return abilityRunsOnTable() && as.step === 'decide_swap';
+}
+
+// Vorderseite, die für diesen Slot ausnahmsweise sichtbar ist. `revealedCards`
+// schickt der Server AUSSCHLIESSLICH an den Spieler, der die Fähigkeit ausgelöst
+// hat, und nur solange sein Reveal-Fenster läuft (siehe send_state) – die
+// anderen bekommen das Feld gar nicht erst und sehen weiter die Rückseite.
+function abilityRevealAt(playerId, cardIndex) {
+  const rc = state.abilityState && state.abilityState.revealedCards;
+  if (!rc) return null;
+  const hit = rc.find(r => r.playerId === playerId && r.cardIndex === cardIndex);
+  return hit ? hit.card : null;
 }
 
 function abilitySelectCard(playerId, cardIndex) {
@@ -3939,16 +4324,21 @@ function abilitySelectCard(playerId, cardIndex) {
     return;
   }
   if (as.type === 'swap' || as.type === 'see_swap') {
+    // Nochmal auf eine bereits gewählte Karte tippen = Auswahl aufheben. Das ist
+    // die Geste, die man ohne Erklärung probiert; vorher passierte dabei nichts
+    // und man saß in einem Fehlklick fest, weil der Tausch sofort ausgeführt
+    // wurde, sobald man irgendeine zweite Karte traf.
+    const already = (as.selectedCards || []).some(s => s.playerId === playerId && s.cardIndex === cardIndex);
+    if (already) { _sendAbility({ type: 'ability', undo: true }); return; }
     if (as.step === 'select1') {
       _sendAbility({ type: 'ability', card1: { playerId, cardIndex } });
     } else if (as.step === 'select2') {
-      const c1 = as.selectedCards?.[0];
-      if (c1 && !(c1.playerId === playerId && c1.cardIndex === cardIndex)) {
-        _sendAbility({ type: 'ability', card2: { playerId, cardIndex } });
-      }
+      _sendAbility({ type: 'ability', card2: { playerId, cardIndex } });
     }
   }
 }
+
+function abilityUndo() { _sendAbility({ type: 'ability', undo: true }); }
 
 function abilitySelectOther(playerId, cardIndex) { abilitySelectCard(playerId, cardIndex); }
 
@@ -4568,7 +4958,7 @@ function replayFlight(from, to, card) {
   document.body.appendChild(clone);
 
   const dx = to.left - from.left, dy = to.top - from.top;
-  const sx = to.width / from.width, sy = to.height / from.height;
+  const sx = finiteScale(to.width / from.width), sy = finiteScale(to.height / from.height);
   const len = Math.hypot(dx, dy) || 1;
   const bow = Math.min(90, len * 0.28);
   const px = (-dy / len) * bow, py = (dx / len) * bow;
@@ -4577,8 +4967,8 @@ function replayFlight(from, to, card) {
     { transform: 'translate(0,0) scale(1,1) rotate(0deg)', opacity: .2, offset: 0 },
     { transform: `translate(${dx/2 + px}px, ${dy/2 + py}px) scale(${(sx+1)/2}, ${(sy+1)/2}) rotate(6deg)`, opacity: .95, offset: .5 },
     { transform: `translate(${dx}px, ${dy}px) scale(${sx}, ${sy}) rotate(0deg)`, opacity: .2, offset: 1 },
-  ], { duration: 900, easing: 'cubic-bezier(.34,.02,.24,1)' });
-  onAnimEnd(a, 900, () => clone.remove());
+  ], { duration: SWAP_FLIGHT_MS, easing: 'cubic-bezier(.34,.02,.24,1)' });
+  onAnimEnd(a, SWAP_FLIGHT_MS, () => clone.remove());
 }
 
 // ── Swipe ─────────────────────────────────────────────────────────────────────

@@ -41,8 +41,14 @@ PUBLIC_DIR = Path(__file__).parent / 'app' / 'public'
 REVEAL_SECONDS = 6
 # Flugfenster: so lange sehen alle Spieler die Karten von Slot zu Slot fliegen,
 # bevor die zeitkritische Schnapp-Phase startet. Muss zur Client-Animation passen
-# (card-flying: 900ms + Nachglühen).
-FLIGHT_SECONDS = 1.4
+# (SWAP_FLIGHT_MS: 1170ms + Nachglühen).
+FLIGHT_SECONDS = 1.8
+# Dasselbe Fenster für den Handtausch aus dem Nachziehstapel (handle_keep). Der
+# Vorgang passiert jede Runde und besteht nur aus zwei gleichzeitigen Flügen –
+# er braucht kein Aufdecken und darf deshalb kürzer sein als der Fähigkeitstausch.
+# Ohne dieses Fenster liefe die Animation gegen den Schnapp-Timer: die Karte, auf
+# die geschnappt werden soll, wäre noch unterwegs, während die Uhr schon läuft.
+KEEP_FLIGHT_SECONDS = 1.5
 # Schnapp-Fenster. Gilt für die Zeitleiste am Tisch (#race-bar im Client) –
 # gezielt länger als die alten 3 s des Vollbild-Overlays, weil jetzt kleine
 # Tischkarten getroffen werden müssen statt großer Overlay-Karten.
@@ -88,7 +94,7 @@ def gen_session_id():
     free = [f'{n:04d}' for n in range(10000) if f'{n:04d}' not in sessions]
     return random.choice(free) if free else None
 
-def new_session(host_id, host_name, host_ws, game_mode):
+def new_session(host_id, host_name, host_ws, game_mode, host_avatar=None):
     sid = gen_session_id()
     if sid is None:
         return None
@@ -105,6 +111,9 @@ def new_session(host_id, host_name, host_ws, game_mode):
         race_deadline=0.0, race_missed=set(),
         race_give=None, race_give_task=None,
         end_called_by=None, final_round_left=0,
+        # Züge seit Rundenbeginn. Nur die Bots lesen das: eine Runde, in der
+        # niemand "beenden" ruft, läuft sonst ewig (siehe _bot_should_call_end).
+        round_turns=0,
         round_number=1, match_scores={}, round_scores={},
         score_breakdown={},
         # Ein Eintrag je beendeter Runde. Der Endstand baut daraus die Tabelle
@@ -114,22 +123,38 @@ def new_session(host_id, host_name, host_ws, game_mode):
         round_history=[],
         reveal_all=False, ability_reveal_task=None,
         swap_flight=None, swap_flight_task=None,
+        # Treiber-Task der KI-Gegner. Höchstens einer je Session (siehe bot_kick).
+        bot_task=None,
     )
     sessions[sid] = s
-    _add_player(s, host_id, host_name, host_ws)
+    _add_player(s, host_id, host_name, host_ws, host_avatar)
     return s
 
-def _add_player(s, pid, name, ws):
+# Profilbild: die ID einer Figur aus dem Client-Katalog (AVATARS), z. B.
+# 'card-11' oder 'legacy-trump'. Der Server prüft sie NICHT gegen eine Liste –
+# er reicht sie nur durch, und der Client bildet unbekannte IDs auf den
+# Namens-Initial ab. Sonst müsste der Katalog in drei Dateien gepflegt werden.
+# Länge ist begrenzt, damit niemand über das Feld beliebig viel State ablegt.
+AVATAR_MAX_LEN = 40
+
+def _clean_avatar(v):
+    return v[:AVATAR_MAX_LEN] if isinstance(v, str) and v else None
+
+def _add_player(s, pid, name, ws, avatar=None, bot_level=None):
     # known_cards: uid → {value,nr,name,ability,quote,image,color}. Persistent per-player
     # knowledge of specific card identities (by uid). Populated when the player observes
     # a card (initial peek, see_own, see_others, see_swap, own drawn card kept). Cleared
     # for a uid when the card enters the discard pile (a re-shuffled draw is a fresh unknown).
     # Since uid is stable across slot swaps, knowledge naturally follows the card as it moves.
+    # Ein Bot ist derselbe Eintrag ohne WebSocket (ws=None) – siehe Bot-Abschnitt.
     s['players'].append(dict(
         id=pid, name=name, ws=ws, hand=[], connected=True,
+        avatar=_clean_avatar(avatar),
         revealed={}, reveal_until=0.0, reveal_task=None,
         peek_selection=[], peek_revealing=False, peek_done=False,
         known_cards={},
+        is_bot=bool(bot_level), bot_level=bot_level,
+        race_at=0.0, race_done=True, ability_plan=None,
     ))
     s['match_scores'][pid] = 0
     s['round_scores'][pid] = 0
@@ -224,11 +249,36 @@ async def start_swap_flight(s, cards, mode):
     # animiert damit die Positionsänderung, die im folgenden State steckt.
     await broadcast(s, dict(type='swap_anim', cards=cards, mode=mode))
     await send_state(s)
-    s['swap_flight_task'] = asyncio.ensure_future(_end_swap_flight(s))
+    s['swap_flight_task'] = asyncio.ensure_future(_end_swap_flight(s, FLIGHT_SECONDS))
 
-async def _end_swap_flight(s):
+async def start_keep_flight(s, pid, hand_index, replaced):
+    """Fenster für den Handtausch aus dem Nachziehstapel.
+
+    Am echten Tisch sieht jeder, wie eine Karte in die Hand wandert und eine
+    andere in die Ablage geht. Im Client war davon nichts zu sehen: die ersetzte
+    Karte verschwindet vom Tisch und die neue trägt eine frische uid – die
+    FLIP-Animation (runTableFlip) findet also weder Vorher- noch Nachher-Position
+    und der Zug lief bei den Mitspielern komplett stumm ab.
+
+    Wie beim Fähigkeitstausch kommt deshalb erst das Ereignis, dann der Zustand:
+    `keep_anim` sagt, welcher Slot betroffen ist und welche Karte er abgegeben
+    hat (die ist ab jetzt öffentlich, sie liegt oben auf der Ablage)."""
+    _cancel_swap_flight(s)
+    p = next((x for x in s['players'] if x['id'] == pid), None)
+    new_card = p['hand'][hand_index] if p and 0 <= hand_index < len(p['hand']) else None
+    s['phase'] = 'swap_flight'
+    s['swap_flight'] = dict(cards=[], mode='keep')
+    await broadcast(s, dict(
+        type='keep_anim', playerId=pid, cardIndex=hand_index,
+        uid=new_card['uid'] if new_card else None,
+        card=card_view(replaced, False),
+    ))
+    await send_state(s)
+    s['swap_flight_task'] = asyncio.ensure_future(_end_swap_flight(s, KEEP_FLIGHT_SECONDS))
+
+async def _end_swap_flight(s, secs):
     try:
-        await asyncio.sleep(FLIGHT_SECONDS)
+        await asyncio.sleep(secs)
     except asyncio.CancelledError:
         return
     s['swap_flight_task'] = None
@@ -237,6 +287,9 @@ async def _end_swap_flight(s):
         await start_racing(s)
 
 async def send(ws, msg):
+    # Bots haben keine Verbindung – ihr "Client" ist der Treiber weiter unten.
+    if ws is None:
+        return
     try:
         if hasattr(ws, 'send_json'):
             await ws.send_json(msg)
@@ -293,6 +346,11 @@ def _find_card_slot(s, uid):
 async def send_state(s):
     now = _now()
     for viewer in s['players']:
+        # Ein Bot baut sich nie eine Sicht – er liest den Zustand direkt aus s.
+        # Ihm eine zu bauen wäre nicht nur Arbeit umsonst, sondern auch die
+        # Stelle, an der aus Versehen Hellsicht entstehen könnte.
+        if viewer['ws'] is None:
+            continue
         vi = s['players'].index(viewer)
         players_view = []
         for p in s['players']:
@@ -309,6 +367,8 @@ async def send_state(s):
                 hand_view.append(view)
             players_view.append(dict(
                 id=p['id'], name=p['name'], connected=p['connected'],
+                avatar=p.get('avatar'),
+                isBot=bool(p.get('is_bot')), botLevel=p.get('bot_level'),
                 peekDone=p['peek_done'], isMe=(p['id'] == viewer['id']),
                 hand=hand_view,
             ))
@@ -382,6 +442,11 @@ async def send_state(s):
             peekRevealing=viewer['peek_revealing'],
         ))
 
+    # Jeder Zustandswechsel ist der Anstoß für die Bots. Der Treiber selbst ruft
+    # send_state auf – der Wächter in bot_kick sorgt dafür, dass daraus keine
+    # zweite Schleife wird.
+    bot_kick(s)
+
 def refill_deck(s):
     if s['deck'] or len(s['discard_pile']) <= 1:
         return
@@ -394,11 +459,13 @@ async def start_game(s):
     s['deck'] = make_deck()
     s['discard_pile'] = [s['deck'].pop()]
     s['phase'] = 'peek'
+    # Der Startspieler wird jede Runde neu ausgelost - der Host hat kein Vorrecht.
     s['current_player_index'] = random.randrange(len(s['players']))
     s['drawn_card'] = None
     s['ability_state'] = None
     s['end_called_by'] = None
     s['final_round_left'] = 0
+    s['round_turns'] = 0
     s['reveal_all'] = False
     s['round_scores'] = {}
     _clear_race(s)
@@ -412,8 +479,16 @@ async def start_game(s):
         p['peek_revealing'] = False
         p['peek_done'] = False
         p['known_cards'] = {}
+        p['race_done'] = True
+        p['ability_plan'] = None
         s['round_scores'][p['id']] = 0
     await send_state(s)
+    # Das Los bleibt sonst unsichtbar: die Runde beginnt mit der Peek-Phase, und
+    # wer dran ist, sieht man erst danach. Ohne diese Zeile wirkt es, als finge
+    # immer der Host an.
+    await broadcast(s, dict(type='toast', key='log.startPlayer',
+                            params={'name': s['players'][s['current_player_index']]['name']},
+                            color='#737bc4'))
 
 def _finish_peek(s, p):
     p['peek_revealing'] = False
@@ -507,7 +582,7 @@ async def handle_keep(s, pid, hand_index):
                             params={'name': cp['name'], 'index': hand_index + 1}, color='#a78bfa',
                             anim={'kind': 'keep', 'playerId': cp['id'], 'cardIndex': hand_index,
                                   'card': card_view(replaced, False)}))
-    await start_racing(s)
+    await start_keep_flight(s, cp['id'], hand_index, replaced)
 
 async def handle_discard_drawn(s, pid):
     if s['phase'] != 'playing' or not s['drawn_card']:
@@ -584,6 +659,7 @@ async def start_racing(s):
     s['race_missed'] = set()
     _cancel_race_give(s)
     s['race_deadline'] = _now() + RACE_SECONDS
+    _bot_plan_race(s)
     if s['racing_task']:
         s['racing_task'].cancel()
     s['racing_task'] = asyncio.ensure_future(_racing_timer(s))
@@ -644,6 +720,9 @@ async def handle_race(s, pid, target_pid, card_index):
             p['hand'].append(s['deck'].pop())
             penalty_index = len(p['hand']) - 1
         reveal['penalty'] = {'playerId': pid, 'cardIndex': penalty_index}
+        # Der Fehlgriff dreht die Karte für ALLE sichtbar um und legt sie zurück.
+        # Genau diese öffentliche Information darf sich der schwere Bot merken.
+        _bot_note_race_reveal(s, card)
         await broadcast(s, reveal)
         await broadcast(s, dict(
             type='toast',
@@ -813,6 +892,17 @@ async def handle_ability(s, pid, data):
         if not ref:
             return None
         return {'player_id': ref.get('playerId', ref.get('player_id')), 'card_index': ref.get('cardIndex', ref.get('card_index', -1))}
+
+    # Auswahl zurücknehmen (Joker/Hund). Bewusst nur während der Auswahl selbst:
+    # ab 'decide_swap' hat der Spieler die beiden Karten bereits gesehen, ein
+    # "zurück" wäre dort ein zweiter Gratis-Blick auf ein neues Kartenpaar.
+    # Zurückgesetzt wird immer auf select1 – bei zwei Klicks nacheinander ist die
+    # erste Wahl fast immer die, die man revidieren will.
+    if bool(data.get('undo')) and t in ('swap', 'see_swap') and a['step'] in ('select1', 'select2'):
+        a['selected_cards'] = []
+        a['step'] = 'select1'
+        await send_state(s)
+        return
 
     if t == 'see_own':
         if a['waiting_for_selection']:
@@ -984,6 +1074,7 @@ def _do_swap(s, c1, c2):
 
 async def advance_turn(s, count_final=True):
     n = len(s['players'])
+    s['round_turns'] += 1
     s['current_player_index'] = (s['current_player_index'] + 1) % n
     if s['end_called_by'] and count_final:
         s['final_round_left'] -= 1
@@ -1071,6 +1162,589 @@ async def start_next_round(s):
     s['round_number'] += 1
     await start_game(s)
 
+async def start_new_match(s):
+    """'Neues Spiel' im Endstand - eine komplett neue Partie am selben Tisch.
+
+    start_next_round() kann das nicht leisten: dort ist round_number bereits
+    == total_rounds, der Aufruf fiele sofort wieder in den 'done'-Zweig und der
+    Knopf tat schlicht gar nichts. Punktestand und Rundentabelle muessen dabei
+    zurueck auf null, sonst zaehlt die neue Partie die alte weiter und die
+    Tabelle im Endstand waechst ueber zwei Matches hinweg."""
+    s['round_number'] = 1
+    s['round_history'] = []
+    s['score_breakdown'] = {}
+    s['match_scores'] = {p['id']: 0 for p in s['players']}
+    await start_game(s)
+
+# ── Bots (KI-Gegner) ──────────────────────────────────────────────────────────
+# Ein Bot ist ein ganz normaler Eintrag in s['players'] – nur ohne WebSocket
+# (ws=None) und mit is_bot/bot_level. Er spielt AUSSCHLIESSLICH über dieselben
+# handle_*-Funktionen wie ein Mensch. Dadurch gelten für ihn automatisch dieselben
+# Regeln, dieselben Phasenprüfungen und dieselbe Wissensbuchführung (known_cards),
+# und eine spätere Regeländerung kann nicht versehentlich nur eine der beiden
+# Seiten treffen. Der Bot "schummelt" also nicht einmal versehentlich über einen
+# eigenen Codepfad – er hat gar keinen.
+#
+# ⚠ KEINE HELLSICHT. Der einzige Zugang eines Bots zu einem Kartenwert ist
+# bot_value(); die Funktion liest ausschliesslich aus known_cards, also aus dem,
+# was der Bot wirklich gesehen hat (Peek zu Rundenbeginn, eigene Fähigkeiten,
+# selbst behaltene Ziehkarten). Im Bot-Code darf card['value'] NIRGENDS direkt
+# gelesen werden. Zwei Ausnahmen, die auch ein Mensch offen vor sich hat: die
+# selbst gezogene Karte (s['drawn_card'] gehört dem Spieler am Zug) und die
+# oberste Karte des Ablagestapels.
+#
+# Einzige Erweiterung nach oben: der SCHWERE Bot merkt sich zusätzlich Karten,
+# die ein Fehlgriff beim Schnappen für alle sichtbar umgedreht und zurückgelegt
+# hat (_bot_note_race_reveal). Das ist öffentliche Information – jeder am Tisch
+# sieht sie –, nur merkt sie sich nicht jeder. Treffer gehören ausdrücklich nicht
+# dazu: die Karte wandert in die Ablage, und _forget_uid löscht das Wissen ohnehin.
+
+BOT_LEVELS = ('easy', 'medium', 'hard')
+
+# Namen und Gesichter der Bots kommen aus dem Legacy-Avatar-Katalog des Clients
+# (Bilder/avatare/legacy-*.webp) – am Tisch sitzt damit eine erkennbare Figur
+# statt "Bot 2". Die IDs müssen zu AVATAR_LEGACY in index.html passen; eine
+# unbekannte ID fällt dort auf den Namens-Initial zurück, mehr passiert nicht.
+BOT_PERSONAS = [
+    ('Olli', 'legacy-olli'),
+    ('Arnold', 'legacy-arnold'),
+    ('Cartman', 'legacy-cartman'),
+    ('Zidane', 'legacy-zidane'),
+    ('Tupac', 'legacy-tupac'),
+    ('Snowden', 'legacy-snowden'),
+    ('Bruce Lee', 'legacy-brucelee'),
+    ('Trump', 'legacy-trump'),
+]
+
+# Erwartungswert einer unbekannten Karte: 337 Punkte auf 52 Karten im Deck.
+# Damit rechnet der Bot Slots hoch, die er nie gesehen hat – genau wie ein Mensch,
+# der weiss, was im Deck steckt, aber nicht, was vor ihm liegt.
+UNKNOWN_EV = 6.5
+
+# Was eine Fähigkeitskarte wert ist, wenn man sie ABLEGT statt sie auf die Hand
+# zu nehmen – gerechnet in Punkten und direkt gegen den Gewinn des Handtauschs
+# gestellt. Der leichte Bot ignoriert das (ability_worth=0) und wirft deshalb
+# regelmässig einen guten Joker weg.
+ABILITY_WORTH = {'none': 0.0, 'see_own': 2.0, 'see_others': 1.5, 'swap': 3.0, 'see_swap': 3.5}
+
+# Die drei Stärken. Alles, was einen Bot besser oder schlechter macht, steht hier
+# als Zahl – die Entscheidungsfunktionen selbst sind für alle Stärken dieselben.
+#
+# Am deutlichsten trennen die Stärken beim SCHNAPPEN, weil man das als Mensch
+# unmittelbar merkt: wie schnell reagiert wird, wie oft danebengegriffen wird und
+# ob überhaupt auf gegnerische Karten geschnappt wird.
+#   race_delay        Reaktionszeit in Sekunden, ab Öffnen des Fensters. Muss
+#                     unter RACE_SECONDS (5.0) bleiben, sonst kommt der Bot nie
+#                     zum Zug.
+#   race_accuracy     Trefferquote der eigenen Schnapp-Versuche. Der Rest geht
+#                     bewusst daneben und kostet den Bot eine Strafkarte.
+#   race_others       Schnappt auch auf Karten der Gegner (und schiebt dann eine
+#                     eigene in die Lücke), nicht nur auf die eigenen.
+#
+#   think             Denkpause vor einem normalen Zug (Sekunden, von/bis).
+#   blind_risk        Abschlag, wenn ein unbekannter Slot getauscht werden soll –
+#                     der Bot weiss ja nicht, ob er gerade etwas Gutes wegwirft.
+#   ability_worth     Faktor auf ABILITY_WORTH.
+#   keep_margin       Wie viel Gewinn ein Handtausch mindestens bringen muss.
+#   mistake           Wahrscheinlichkeit für einen schlicht falschen Zug.
+#   end_*             Wann "Spiel beenden" gerufen wird.
+#   patience          Ab wie vielen Zügen ein Vorsprung als Grund reicht, auch
+#                     ohne perfekte Hand (Geduldsventil, s. _bot_should_call_end).
+#   remembers_race    Merkt sich Karten aus Fehlgriffen beim Schnappen.
+BOT_PROFILES = {
+    'easy': dict(
+        race_delay=4.0, race_accuracy=0.50, race_others=False,
+        think=(1.2, 2.2),
+        blind_risk=0.0, ability_worth=0.0, keep_margin=0.0,
+        mistake=0.35,
+        end_max_unknown=2, end_max_total=16.0, end_chance=0.2, patience=26,
+        remembers_race=False,
+    ),
+    'medium': dict(
+        race_delay=3.0, race_accuracy=0.65, race_others=True,
+        think=(0.9, 1.6),
+        blind_risk=0.8, ability_worth=1.0, keep_margin=0.5,
+        mistake=0.12,
+        end_max_unknown=2, end_max_total=8.0, end_chance=0.6, patience=22,
+        remembers_race=False,
+    ),
+    'hard': dict(
+        race_delay=2.5, race_accuracy=0.90, race_others=True,
+        think=(0.6, 1.1),
+        blind_risk=1.2, ability_worth=1.0, keep_margin=0.3,
+        mistake=0.0,
+        end_max_unknown=1, end_max_total=7.0, end_chance=0.95, patience=18,
+        remembers_race=True,
+    ),
+}
+
+def _prof(bot):
+    return BOT_PROFILES.get(bot.get('bot_level'), BOT_PROFILES['medium'])
+
+def bot_value(bot, card):
+    """Der EINZIGE Weg, wie ein Bot an den Wert einer liegenden Karte kommt.
+
+    Liefert None, solange der Bot die Karte nie gesehen hat. Alle Entscheidungen
+    unten gehen durch diese Funktion – deshalb ist "der Bot kennt nur, was er
+    gesehen hat" hier an genau einer Stelle durchgesetzt und nicht über ein
+    Dutzend Heuristiken verteilt."""
+    if not card:
+        return None
+    known = bot.get('known_cards', {}).get(card.get('uid'))
+    return known['value'] if known else None
+
+def _bot_note_race_reveal(s, card):
+    """Fehlgriff beim Schnappen: die Karte lag offen auf dem Tisch und ging zurück.
+
+    Nur der schwere Bot merkt sie sich. Leicht und mittel vergessen sie sofort
+    wieder – auch dann, wenn sie den Fehlgriff selbst produziert haben."""
+    for p in s['players']:
+        if p.get('is_bot') and _prof(p)['remembers_race']:
+            _note_seen(p, card)
+
+def _bot_plan_race(s):
+    """Reaktionszeiten für das gerade geöffnete Schnapp-Fenster auslosen.
+
+    Jeder Bot bekommt EINEN Zeitpunkt und damit einen Versuch. Was er dann tippt,
+    entscheidet er erst in diesem Moment – bis dahin kann ein Fehlgriff eines
+    anderen ihm noch eine Karte verraten haben (nur schwer, siehe oben)."""
+    now = _now()
+    for p in s['players']:
+        if p.get('is_bot'):
+            p['race_at'] = now + _prof(p)['race_delay']
+            p['race_done'] = False
+
+def _bot_slots(bot, p):
+    """[(index, wert-oder-None)] über die belegten Slots einer Hand."""
+    return [(i, bot_value(bot, c)) for i, c in enumerate(p['hand']) if c]
+
+def _bot_estimate(bot, p):
+    """Geschätzte Punktzahl einer Hand aus Sicht dieses Bots."""
+    return sum(UNKNOWN_EV if v is None else v for _, v in _bot_slots(bot, p))
+
+def _bot_opponents(s, bot):
+    return [p for p in s['players'] if p['id'] != bot['id']]
+
+async def _bot_pause(bot, factor=1.0):
+    """Denkpause. Immer als Vielfaches der Profil-Spanne, nie als feste Sekunde –
+    sonst würde ein starker Bot an manchen Stellen doch wieder so lange grübeln
+    wie ein schwacher."""
+    a, b = _prof(bot)['think']
+    await asyncio.sleep(random.uniform(a, b) * factor)
+
+# ── Peek-Phase ────────────────────────────────────────────────────────────────
+async def _bot_peek(s, bot):
+    """Zwei der eigenen Karten ansehen.
+
+    Welche, ist reine Willkür – zu diesem Zeitpunkt hat niemand Information, auch
+    der schwere Bot nicht. Der Bot geht am Reveal-Timer vorbei (er muss sich
+    nichts "einprägen", _note_seen genügt), sonst würde jede Runde 6 Sekunden
+    warten, bevor der Mensch loslegen darf."""
+    picks = random.sample(range(len(bot['hand'])), min(2, len(bot['hand'])))
+    for i in picks:
+        _note_seen(bot, bot['hand'][i])
+    bot['peek_done'] = True
+    _check_all_peeked(s)
+    await send_state(s)
+
+# ── Zug: ziehen, behalten oder ablegen ────────────────────────────────────────
+def _bot_keep_index(s, bot):
+    """Slot für die gezogene Karte, oder None fürs Ablegen.
+
+    Die gezogene Karte liegt dem Bot offen vor (wie jedem Spieler am Zug), ihr
+    Wert darf also direkt gelesen werden. Alles auf der Hand geht durch
+    bot_value() und ist ohne Peek schlicht unbekannt."""
+    card = s['drawn_card']
+    prof = _prof(bot)
+    if not card:
+        return None
+    v = card['value']
+
+    best_i, best_gain = None, 0.0
+    for i, c in enumerate(bot['hand']):
+        if not c:
+            continue
+        kv = bot_value(bot, c)
+        # Unbekannte Slots werden mit dem Erwartungswert gerechnet und um den
+        # Blind-Abschlag gedrückt: eine ungesehene Karte wegzuwerfen ist eine
+        # Wette, und je stärker der Bot, desto vorsichtiger wettet er.
+        gain = (UNKNOWN_EV if kv is None else kv) - v
+        if kv is None:
+            gain -= prof['blind_risk']
+        if gain > best_gain:
+            best_i, best_gain = i, gain
+
+    # Ablegen ist nicht "nichts tun": eine Fähigkeitskarte löst beim Ablegen ihre
+    # Fähigkeit aus. Der Handtausch muss also mehr bringen als die Fähigkeit wert
+    # ist – für den leichten Bot ist sie nichts wert, er wirft sie achtlos weg.
+    worth = prof['ability_worth'] * ABILITY_WORTH.get(card['ability'], 0.0)
+    if best_i is not None and best_gain >= worth + prof['keep_margin']:
+        return best_i
+    return None
+
+def _bot_should_call_end(s, bot):
+    """„Spiel beenden" rufen? Normalerweise nur mit einer vorzeigbaren Hand.
+
+    Die Strafe von 30 Punkten trifft den Rufer, wenn er nicht die niedrigste Hand
+    hat ODER über 7 Punkten liegt – daher die Schwellen. Weil unbekannte Karten
+    mit 6,5 gerechnet werden, kann kein Bot gleich in den ersten Zügen rufen: mit
+    zwei ungesehenen Slots liegt die Schätzung immer über jeder Schwelle.
+
+    Dazu kommt ein Geduldsventil. Eine Hand mit fünf Karten kommt nie unter
+    7 Punkte – ohne das Ventil würde eine Runde, in der kein Mensch mitspielt
+    oder kein Mensch ruft, schlicht nie enden. Ab prof['patience'] Zügen genügt
+    deshalb ein klarer Vorsprung, und noch später ruft der Bot notfalls auch mit
+    einer mittelmässigen Hand."""
+    if s['end_called_by'] or s['drawn_card']:
+        return False
+    prof = _prof(bot)
+    slots = _bot_slots(bot, bot)
+    if not slots:
+        return True     # leere Hand = null Punkte, darauf muss man nicht warten
+    unknown = sum(1 for _, v in slots if v is None)
+    est = sum(UNKNOWN_EV if v is None else v for _, v in slots)
+    # Liegt der Bot nach seinem eigenen Kenntnisstand vorn? Unbekannte Karten
+    # zählen bei allen mit 6,5 – wer weniger Karten hält, steht damit besser da.
+    ahead = all(_bot_estimate(bot, opp) > est + 1.0 for opp in _bot_opponents(s, bot))
+
+    if unknown <= prof['end_max_unknown'] and est <= prof['end_max_total']:
+        # Der schwere Bot ruft auch dann nur, wenn er wirklich vorne liegt.
+        if not prof['remembers_race'] or ahead:
+            return random.random() < prof['end_chance']
+
+    turns = s.get('round_turns', 0)
+    if turns >= prof['patience'] and ahead:
+        return random.random() < 0.35
+    if turns >= prof['patience'] * 2:
+        return random.random() < 0.25
+    return False
+
+async def _bot_turn_step(s, bot):
+    if not s['drawn_card']:
+        if _bot_should_call_end(s, bot):
+            await _bot_pause(bot)
+            await handle_call_end(s, bot['id'])
+            return True
+        await _bot_pause(bot)
+        await handle_draw(s, bot['id'])
+        # Nachziehstapel leer und nichts zum Mischen: kein Zug möglich. Ohne
+        # diesen Ausstieg würde der Treiber endlos gegen dieselbe Wand laufen.
+        return bool(s['drawn_card'])
+
+    await _bot_pause(bot)
+    idx = _bot_keep_index(s, bot)
+    if random.random() < _prof(bot)['mistake']:
+        # Der leichte Bot vergreift sich: entweder er legt eine gute Karte weg
+        # oder er tauscht eine gute Karte gegen eine schlechte.
+        filled = [i for i, c in enumerate(bot['hand']) if c]
+        idx = random.choice(filled) if (idx is None and filled) else None
+    if idx is None:
+        await handle_discard_drawn(s, bot['id'])
+    else:
+        await handle_keep(s, bot['id'], idx)
+    return True
+
+# ── Fähigkeiten ───────────────────────────────────────────────────────────────
+def _bot_unknown_slots(bot, p):
+    return [i for i, v in _bot_slots(bot, p) if v is None]
+
+def _bot_pick_own_target(bot):
+    """Eigener Slot, den anzusehen sich lohnt: einer, den der Bot nicht kennt."""
+    unknown = _bot_unknown_slots(bot, bot)
+    if unknown:
+        return random.choice(unknown)
+    filled = [i for i, _ in _bot_slots(bot, bot)]
+    return random.choice(filled) if filled else None
+
+def _bot_pick_other_target(s, bot):
+    """(Gegner-Id, Slot) – bevorzugt bei dem Gegner, über den er am wenigsten weiss."""
+    cands = []
+    for opp in _bot_opponents(s, bot):
+        unknown = _bot_unknown_slots(bot, opp)
+        for i in unknown:
+            cands.append((opp['id'], i, 0))
+        if not unknown:
+            for i, _ in _bot_slots(bot, opp):
+                cands.append((opp['id'], i, 1))
+    if not cands:
+        return None
+    best = min(c[2] for c in cands)
+    pid, idx, _ = random.choice([c for c in cands if c[2] == best])
+    return pid, idx
+
+def _bot_swap_plan(s, bot):
+    """Zwei Slots für Joker (blind) und Hund (nach dem Ansehen).
+
+    Immer eine eigene Karte gegen eine gegnerische: die eigene ist die
+    schlechteste bekannte (sonst eine beliebige), das Ziel eine bekannt bessere –
+    und wenn der Bot nichts über den Gegner weiss, eine ungesehene als Wette.
+    Der leichte Bot würfelt beides aus."""
+    mine = _bot_slots(bot, bot)
+    theirs = [(opp['id'], i, v) for opp in _bot_opponents(s, bot) for i, v in _bot_slots(bot, opp)]
+    if not mine or not theirs:
+        return None
+    if random.random() < _prof(bot)['mistake']:
+        mi = random.choice(mine)[0]
+        tp, ti, _ = random.choice(theirs)
+        return {'player_id': bot['id'], 'card_index': mi}, {'player_id': tp, 'card_index': ti}
+
+    known_mine = [(i, v) for i, v in mine if v is not None]
+    if known_mine:
+        mi, mv = max(known_mine, key=lambda x: x[1])
+    else:
+        mi, mv = random.choice(mine)[0], None
+
+    better = [x for x in theirs if x[2] is not None and (mv is None or x[2] < mv)]
+    if better:
+        tp, ti, _ = min(better, key=lambda x: x[2])
+    else:
+        unknown = [x for x in theirs if x[2] is None]
+        tp, ti, _ = random.choice(unknown or theirs)
+    return {'player_id': bot['id'], 'card_index': mi}, {'player_id': tp, 'card_index': ti}
+
+def _as_ref(ref):
+    return {'playerId': ref['player_id'], 'cardIndex': ref['card_index']}
+
+async def _bot_ability_step(s, bot, a):
+    kind = a['type']
+
+    if kind in ('see_own', 'see_others'):
+        if a['waiting_for_selection']:
+            await _bot_pause(bot)
+            if kind == 'see_own':
+                idx = _bot_pick_own_target(bot)
+                if idx is None:
+                    await handle_ability(s, bot['id'], {'done': True})
+                else:
+                    await handle_ability(s, bot['id'], {'cardIndex': idx})
+            else:
+                pick = _bot_pick_other_target(s, bot)
+                if not pick:
+                    await handle_ability(s, bot['id'], {'done': True})
+                else:
+                    await handle_ability(s, bot['id'], {'targetPlayerId': pick[0], 'cardIndex': pick[1]})
+        else:
+            # Der Bot muss sich nichts einprägen – _note_seen ist schon passiert.
+            # Er wartet die 6 Sekunden Reveal also nicht ab.
+            await _bot_pause(bot, 0.6)
+            await handle_ability(s, bot['id'], {'done': True})
+        return True
+
+    if kind in ('swap', 'see_swap'):
+        if a['step'] == 'select1':
+            plan = _bot_swap_plan(s, bot)
+            if not plan:
+                return False
+            bot['ability_plan'] = plan
+            await _bot_pause(bot)
+            await handle_ability(s, bot['id'], {'card1': _as_ref(plan[0])})
+            return True
+        if a['step'] == 'select2':
+            plan = bot.get('ability_plan') or _bot_swap_plan(s, bot)
+            if not plan:
+                return False
+            await _bot_pause(bot, 0.5)
+            await handle_ability(s, bot['id'], {'card2': _as_ref(plan[1])})
+            return True
+        if a['step'] == 'decide_swap':
+            # Hund: beide Karten sind jetzt gesehen und stehen in known_cards –
+            # der Bot rechnet also mit echtem Wissen, nicht mit Hellsicht.
+            def seen_value(ref):
+                owner = next((x for x in s['players'] if x['id'] == ref['player_id']), None)
+                idx = ref['card_index']
+                card = owner['hand'][idx] if owner and 0 <= idx < len(owner['hand']) else None
+                return bot_value(bot, card)
+
+            c1, c2 = a['selected_cards']
+            v1, v2 = seen_value(c1), seen_value(c2)
+            # c1 ist nach _bot_swap_plan immer die eigene Karte: getauscht wird,
+            # wenn der Bot dabei die teurere der beiden loswird.
+            do_swap = (v1 is not None and v2 is not None and v1 > v2)
+            if random.random() < _prof(bot)['mistake']:
+                do_swap = not do_swap
+            await _bot_pause(bot, 0.8)
+            await handle_ability(s, bot['id'], {'doSwap': do_swap})
+            return True
+    return False
+
+# ── Schnapp-Phase ─────────────────────────────────────────────────────────────
+def _bot_race_wrong(s, bot, target):
+    """Danebengegriffen: ein Slot, der die abgelegte Karte gerade NICHT trifft.
+
+    Bevorzugt eine Karte, von der der Bot weiss, dass sie nicht passt – so hält
+    die Trefferquote aus dem Profil auch wirklich, statt sich über zufällig doch
+    passende Blindtipper nach oben zu verschieben. Nur wenn er nichts kennt,
+    greift er ins Ungewisse."""
+    known_wrong, unknown = [], []
+    for p in s['players']:
+        for i, v in _bot_slots(bot, p):
+            if v is None:
+                unknown.append((p['id'], i))
+            elif v != target:
+                known_wrong.append((p['id'], i))
+    pool = known_wrong or unknown
+    return random.choice(pool) if pool else None
+
+def _bot_race_pick(s, bot):
+    """(Ziel-Spieler-Id, Slot) für einen Schnapp-Versuch, oder None.
+
+    Geschnappt wird nur, wenn der Bot überhaupt eine passende Karte SIEHT – also
+    eine, deren Wert er kennt (bot_value) und die zur abgelegten passt. Ohne
+    Anlass tippt kein Bot ins Blaue.
+
+    Ob der Versuch dann sitzt, entscheidet race_accuracy: der leichte Bot greift
+    jedes zweite Mal daneben und kassiert die Strafkarte. Der leichte Bot sieht
+    ausserdem nur die eigene Hand als Beute; ab mittel wird auch auf gegnerische
+    Karten geschnappt – das ist die bessere Beute, weil der Bot die Karte los
+    wird UND eine eigene in die entstandene Lücke schieben darf."""
+    target = s['racing_card']['value']
+    prof = _prof(bot)
+
+    own = [(bot['id'], i) for i, v in _bot_slots(bot, bot) if v == target]
+    theirs = []
+    if prof['race_others']:
+        theirs = [(opp['id'], i) for opp in _bot_opponents(s, bot)
+                  for i, v in _bot_slots(bot, opp) if v == target]
+    if not own and not theirs:
+        return None
+
+    if random.random() >= prof['race_accuracy']:
+        return _bot_race_wrong(s, bot, target)
+
+    # Auf eine gegnerische Karte zu schnappen lohnt sich vor allem, wenn der Bot
+    # dabei etwas Teures loswird.
+    my_worst = max((v for _, v in _bot_slots(bot, bot) if v is not None), default=None)
+    if theirs and (not own or (my_worst is not None and my_worst >= 9)):
+        return random.choice(theirs)
+    return random.choice(own or theirs)
+
+async def _bot_race_step(s):
+    pending = [p for p in s['players']
+               if p.get('is_bot') and not p['race_done'] and p['id'] not in s['race_missed']]
+    if not pending:
+        return False
+    nxt = min(pending, key=lambda p: p['race_at'])
+    wait = nxt['race_at'] - _now()
+    if wait > 0:
+        await asyncio.sleep(wait)
+    if s['phase'] != 'racing':
+        # Jemand war schneller (oder die Zeit lief ab) – die Schleife übernimmt
+        # in der neuen Phase.
+        return True
+    nxt['race_done'] = True
+    pick = _bot_race_pick(s, nxt)
+    if pick:
+        await handle_race(s, nxt['id'], pick[0], pick[1])
+    return True
+
+def _bot_give_index(s, bot):
+    """Welche eigene Karte wandert nach einem Treffer zum Gegner? Die teuerste
+    bekannte – und wenn der Bot keine seiner Karten kennt, eine beliebige."""
+    slots = _bot_slots(bot, bot)
+    if not slots:
+        return None
+    known = [(i, v) for i, v in slots if v is not None]
+    if known and random.random() >= _prof(bot)['mistake']:
+        return max(known, key=lambda x: x[1])[0]
+    return random.choice(slots)[0]
+
+# ── Treiber ───────────────────────────────────────────────────────────────────
+def bot_kick(s):
+    """Bots anstossen. Läuft schon eine Schleife, passiert nichts – send_state
+    ruft diese Funktion auch aus der Schleife heraus wieder auf."""
+    if not any(p.get('is_bot') for p in s['players']):
+        return
+    task = s.get('bot_task')
+    if task and not task.done():
+        return
+    s['bot_task'] = asyncio.ensure_future(_bot_loop(s))
+
+async def _bot_loop(s):
+    """Arbeitet Bot-Aktionen nacheinander ab, bis nichts mehr zu tun ist.
+
+    Die Obergrenze ist eine reine Notbremse: jeder Schritt geht durch die
+    regulären handle_*-Funktionen, die einen unmöglichen Zug einfach verwerfen –
+    ohne Zähler könnte ein solcher Fall die Schleife heiss laufen lassen."""
+    try:
+        for _ in range(600):
+            if s['id'] not in sessions:
+                return
+            if not await _bot_step(s):
+                return
+    except asyncio.CancelledError:
+        raise
+    finally:
+        s['bot_task'] = None
+
+async def _bot_step(s):
+    phase = s['phase']
+
+    if phase == 'peek':
+        bot = next((p for p in s['players']
+                    if p.get('is_bot') and not p['peek_done'] and not p['peek_revealing']), None)
+        if not bot:
+            return False
+        await _bot_pause(bot, 0.8)
+        await _bot_peek(s, bot)
+        return True
+
+    if phase == 'racing':
+        return await _bot_race_step(s)
+
+    if phase == 'race_give':
+        gv = s.get('race_give')
+        bot = next((p for p in s['players'] if gv and p['id'] == gv['racer_id']), None)
+        if not bot or not bot.get('is_bot'):
+            return False
+        await _bot_pause(bot)
+        idx = _bot_give_index(s, bot)
+        if idx is None:
+            return False
+        await handle_race_give(s, bot['id'], idx)
+        return True
+
+    if phase == 'ability':
+        a = s.get('ability_state')
+        bot = next((p for p in s['players'] if a and p['id'] == a['activated_by']), None)
+        if not bot or not bot.get('is_bot') or a.get('resolved'):
+            return False
+        return await _bot_ability_step(s, bot, a)
+
+    if phase == 'playing':
+        if not s['players']:
+            return False
+        cp = s['players'][s['current_player_index']]
+        if not cp.get('is_bot'):
+            return False
+        return await _bot_turn_step(s, cp)
+
+    # lobby, swap_flight, scoring, done: die Bots haben nichts zu entscheiden.
+    # swap_flight endet von selbst in start_racing – und das ruft send_state,
+    # also auch bot_kick.
+    return False
+
+def add_bot(s, level):
+    """Einen Bot an einen freien Platz setzen. Gibt seine Id zurück, sonst None."""
+    if len(s['players']) >= 4:
+        return None
+    if level not in BOT_LEVELS:
+        level = 'medium'
+    used = {p['name'] for p in s['players']}
+    pool = [x for x in BOT_PERSONAS if x[0] not in used] or BOT_PERSONAS
+    name, avatar = random.choice(pool)
+    pid = 'bot-' + secrets.token_hex(4)
+    _add_player(s, pid, name, None, avatar, bot_level=level)
+    return pid
+
+def remove_bot(s, bot_id):
+    p = next((x for x in s['players'] if x['id'] == bot_id and x.get('is_bot')), None)
+    if not p:
+        return False
+    s['players'].remove(p)
+    s['match_scores'].pop(bot_id, None)
+    s['round_scores'].pop(bot_id, None)
+    return True
+
 # ── WebSocket Handler ─────────────────────────────────────────────────────────
 async def ws_handler(request):
     ws = web.WebSocketResponse()
@@ -1111,9 +1785,19 @@ async def dispatch(ws, msg):
         pid  = g('playerId', 'player_id')
         name = g('playerName', 'player_name')
         mode = g('gameMode', 'game_mode') or 'single'
-        s = new_session(pid, name, ws, mode)
+        s = new_session(pid, name, ws, mode, g('avatar'))
         if s is None:
             await send(ws, dict(type='error', key='err.noFreeCode')); return
+        # Einzelspieler: der Host bringt seine Gegner gleich mit. Sie sitzen ganz
+        # normal am Tisch, es bleibt also eine ganz normale Session – ein Freund
+        # kann sich immer noch auf einen freien Platz setzen.
+        try:
+            bots = int(g('bots') or 0)
+        except (TypeError, ValueError):
+            bots = 0
+        level = g('botLevel', 'bot_level')
+        for _ in range(max(0, min(3, bots))):
+            add_bot(s, level)
         ws_map[id(ws)].update(player_id=pid, session_id=s['id'])
         await send(ws, dict(type='created', sessionId=s['id']))
         await send_state(s)
@@ -1132,7 +1816,7 @@ async def dispatch(ws, msg):
             await send(ws, dict(type='error', key='err.sessionFull')); return
         if any(p['id'] == pid for p in s['players']):
             await send(ws, dict(type='error', key='err.alreadyIn')); return
-        _add_player(s, pid, name, ws)
+        _add_player(s, pid, name, ws, g('avatar'))
         ws_map[id(ws)].update(player_id=pid, session_id=sid)
         await send(ws, dict(type='joined', sessionId=sid))
         await broadcast(s, dict(type='toast', key='log.joined', params={'name': name}, color='#4CAF50'))
@@ -1170,9 +1854,43 @@ async def dispatch(ws, msg):
         await handle_race_give(s, pid, gi('handIndex'))
     elif t == 'ability':
         await handle_ability(s, pid, msg)
+    elif t == 'set_avatar':
+        # Das Profilbild darf jederzeit gewechselt werden, auch mitten im Spiel –
+        # es ist reine Anzeige und beeinflusst keine Spielregel. Der Wechsel ist
+        # für alle sichtbar, deshalb geht danach ein State an den ganzen Tisch.
+        p = next((x for x in s['players'] if x['id'] == pid), None)
+        if p:
+            p['avatar'] = _clean_avatar(g('avatar'))
+            await send_state(s)
+    elif t == 'add_bot':
+        # Freie Plätze mit Bots auffüllen. Nur der Host, nur in der Lobby – ein
+        # Bot, der mitten in der Runde dazukommt, hätte weder Hand noch Peek.
+        if pid == s['host_id'] and s['phase'] == 'lobby':
+            try:
+                count = int(g('count') or 1)
+            except (TypeError, ValueError):
+                count = 1
+            level = g('level')
+            added = []
+            for _ in range(max(1, min(4, count))):
+                bid = add_bot(s, level)
+                if not bid:
+                    break
+                added.append(next(x for x in s['players'] if x['id'] == bid))
+            for b in added:
+                await broadcast(s, dict(type='toast', key='log.botJoined',
+                                        params={'name': b['name']}, color='#4CAF50'))
+            if added:
+                await send_state(s)
+    elif t == 'remove_bot':
+        if pid == s['host_id'] and s['phase'] == 'lobby':
+            if remove_bot(s, g('botId', 'bot_id')):
+                await send_state(s)
     elif t == 'next_round':
-        if s['phase'] in ('scoring', 'done'):
+        if s['phase'] == 'scoring':
             await start_next_round(s)
+        elif s['phase'] == 'done':
+            await start_new_match(s)
 
 # ── Static File Handler ───────────────────────────────────────────────────────
 async def static_handler(request):
